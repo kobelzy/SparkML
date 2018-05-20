@@ -47,22 +47,19 @@ object TimeFuture {
     //评价表,user_id,comment_create_tm,o_id,score_level
     val comment_df=timeFuture.getSourceData(basePath+user_comment)
 
-    //    order_df.show()
-    //    user_df.show()
-    //    order_df.printSchema()
     /**
       * 做关联,基于订单表
       */
     //            val order2user_df:DataFrame = order_df.join(user_df, "user_id")
     //            val order2user2sku_df=order2user_df.join(sku_df,"sku_id")
     //            TimeSeriesRDD.timeSeriesRDDFromObservations()
-    println(timeFuture. createTimeIndexs1(order_df).size)
-    //      .toZonedDateTimeArray().foreach(println)
+      val timeIndex:IrregularDateTimeIndex=timeFuture.createTimeIndexsByNanos(order_df)
+    println(timeFuture. createTimeIndexsByNanos(order_df).size)
 
     //        joins.printSchema()
     //    println(user_df.count())
     //    println(order_df.select("user_id").distinct().count())
-    //    val result: RDD[((Int, Int), List[(Int, Timestamp, Int, Int, Array[Timestamp])])] =timeFuture.unionOrder2Action(order_df,user_df)
+        val result: RDD[((Int, Int), List[(Int, Timestamp, Int, Int, Array[Timestamp])])] =timeFuture.unionOrder2Action(order_df,user_df)
     //    result.foreach(tuple=>println(tuple._1,tuple._2,tuple._3,tuple._4,tuple._5,tuple._6.mkString(",")))
     //    result.foreach(tuple=>println(tuple._1,tuple._2,tuple._3,tuple._4,tuple._5,tuple._6.length))
     //    result.foreach(println)
@@ -232,10 +229,7 @@ class TimeFuture(spark: SparkSession) {
     val dt_arr=data.map{row=>
       val o_date: Timestamp =row.getTimestamp(3)
       val o_date_str=o_date.toString
-      //  val zoneTime=ZonedDateTime.of(o_date_str.substring(0, 4).toInt, o_date_str.substring(4,5).toInt, 1, 0, 0, 0, 0, zoneId)
-      //    zoneTime
       o_date_str
-      //  o_date.getNanos.toLong
     }.collect()
       .map(o_date_str=>{
         val zoneId=ZoneId.systemDefault()
@@ -247,24 +241,78 @@ class TimeFuture(spark: SparkSession) {
   }
 
 
-  def createTimeIndexs1(data:DataFrame):IrregularDateTimeIndex={
+  def createTimeIndexsByNanos(data:DataFrame):IrregularDateTimeIndex={
     val zoneId=ZoneId.systemDefault()
     val dt_arr=data.map{row=>
       val o_date: Timestamp =row.getTimestamp(3)
-      //  ZonedDateTime.of(startTime.substring(0, 4).toInt, startTime.substring(4).toInt, 1, 0, 0, 0, 0, zone)
       o_date.getTime*1000000
     }.collect()
         val irregularDTI: IrregularDateTimeIndex = DateTimeIndex.irregular(dt_arr)
-
-    //    irregularDTI
     irregularDTI
   }
 
+def test(df:DataFrame,dateTimeIndex:DateTimeIndex,tsCol:String,keyCol:String,valueCol:String)={
+    val timeSeriesRDD:TimeSeriesRDD[String]=TimeSeriesRDD.timeSeriesRDDFromObservations(dateTimeIndex,df,tsCol,keyCol,valueCol)
+
+
+}
 
 
 
+    /**
+      * Arima模型：
+      * 输出其p，d，q参数
+      * 输出其预测的predictedN个值
+      * @param trainTsrdd
+      */
+    def arimaModelTrain(trainTsrdd:TimeSeriesRDD[String],predictdN:Int): RDD[String] ={
+        /***参数设置******/
 
+        /***创建arima模型***/
+        //创建和训练arima模型.其RDD格式为(ArimaModel,Vector)
+        val arimaAndVectorRdd=trainTsrdd.map{line=>
+            line match {
+                case (key,denseVector)=>
+                    (ARIMA.autoFit(denseVector),denseVector)
+            }
+        }
 
+        //参数输出:p,d,q的实际值和其系数值
+        val coefficients=arimaAndVectorRdd.map{line=>
+            line match{
+                case (arimaModel,denseVector)=>{
+                    (arimaModel.coefficients.mkString(","),
+                            (arimaModel.p,
+                                    arimaModel.d,
+                                    arimaModel.q))
+                }
+            }
+        }
+        coefficients.collect().map{_ match{
+            case (coefficients,(p,d,q))=>
+                println("coefficients:"+coefficients+"=>"+"(p="+p+",d="+d+",q="+q+")")
+        }}
+
+        /***预测出后N个的值*****/
+        val forecast = arimaAndVectorRdd.map{row=>
+            row match{
+                case (arimaModel,denseVector)=>{
+                    arimaModel.forecast(denseVector, predictedN)
+                }
+            }
+        }
+        val forecastValue=forecast.map(_.toArray.mkString(","))
+
+        //取出预测值
+        val preditcedValueRdd=forecastValue.map{parts=>
+            val partArray=parts.split(",")
+            for(i<- partArray.length-predictedN until partArray.length) yield partArray(i)
+        }.map(_.toArray.mkString(","))
+        preditcedValueRdd.collect().map{row=>
+            println("forecast of next "+predictedN+" observations: "+row)
+        }
+        return preditcedValueRdd
+    }
 
 
 
