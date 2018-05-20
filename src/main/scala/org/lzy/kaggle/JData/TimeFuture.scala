@@ -343,12 +343,12 @@ class TimeFuture(spark: SparkSession) {
                     (arimaModel.p, arimaModel.d, arimaModel.q))
         }
         }
-        coefficients.collect().map {
-            _ match {
-                case (coefficients, (p, d, q)) =>
-                    println("coefficients:" + coefficients + "=>" + "(p=" + p + ",d=" + d + ",q=" + q + ")")
-            }
-        }
+//        coefficients.collect().map {
+////            _ match {
+////                case (coefficients, (p, d, q)) =>
+////                    println("coefficients:" + coefficients + "=>" + "(p=" + p + ",d=" + d + ",q=" + q + ")")
+////            }
+////        }
 
         /** *预测出后N个的值 *****/
         val forecast = arimaAndVectorRdd.map { row =>
@@ -365,9 +365,9 @@ class TimeFuture(spark: SparkSession) {
             val partArray = parts.split(",")
             for (i <- partArray.length - predictedN until partArray.length) yield partArray(i)
         }.map(_.toArray.mkString(","))
-        preditcedValueRdd.collect().map { row =>
-            println("forecast of next " + predictedN + " observations: " + row)
-        }
+//        preditcedValueRdd.collect().map { row =>
+//            println("forecast of next " + predictedN + " observations: " + row)
+//        }
         preditcedValueRdd
     }
 
