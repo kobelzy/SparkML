@@ -19,7 +19,8 @@ import org.apache.spark.sql.functions.udf
   * Created by Administrator on 2018/5/14.
   */
 object TimeFuture {
-    val basePath = "E:\\dataset\\JData_UserShop\\"
+//    val basePath = "E:\\dataset\\JData_UserShop\\"
+    val basePath="hdfs://10.95.3.172:9000/user/lzy/JData_UserShop/"
     val sku = "jdata_sku_basic_info.csv"
     val user_basic = "jdata_user_basic_info.csv"
     val user_action = "jdata_user_action.csv"
@@ -34,14 +35,12 @@ object TimeFuture {
 
     def main(args: Array[String]): Unit = {
         val spark = SparkSession.builder().appName("names")
-                .master("local[1]")
+//                .master("local[*]")
                 .getOrCreate()
-        spark.sparkContext.setLogLevel("WARN")
+//        spark.sparkContext.setLogLevel("WARN")
         val timeFuture = new TimeFuture(spark)
-
         //商品信息,sku_id,price,cate,para_1,para_2,para_3
         val sku_df = timeFuture.getSourceData(basePath + sku)
-
         //用户信息,user_id,age,sex,user_lv_cd
         val user_df = timeFuture.getSourceData(basePath + user_basic).cache()
         //用户行为，user_id,sku_id,a_date,a_num,a_type
@@ -85,6 +84,7 @@ class TimeFuture(spark: SparkSession) {
         val data = spark.read.option("header", "true")
                 .option("nullValue", "NA")
                 .option("inferSchema", "true")
+                .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
                 .csv(path)
         data
     }
@@ -314,6 +314,7 @@ class TimeFuture(spark: SparkSession) {
         val result: RDD[String] = arimaModelTrain(timeSeries_rdd, 30)
         result.take(10).foreach(println)
         println("长度：" + result.count())
+        result.coalesce(1).saveAsTextFile("hdfs://10.95.3.172:9000/user/lzy/JData_UserShop/output/testResult")
     }
 
 
