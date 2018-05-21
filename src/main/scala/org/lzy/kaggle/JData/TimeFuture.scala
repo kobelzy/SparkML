@@ -4,7 +4,7 @@ import java.sql.Timestamp
 import java.time.{ZoneId, ZonedDateTime}
 
 import com.cloudera.sparkts.models.{ARIMA, ARIMAModel, GARCH, HoltWinters}
-import com.cloudera.sparkts.{DateTimeIndex, IrregularDateTimeIndex, TimeSeriesRDD}
+import com.cloudera.sparkts._
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.linalg
 import org.apache.spark.mllib.linalg.{DenseVector, Vector, Vectors}
@@ -56,8 +56,16 @@ object TimeFuture {
     //            val order2user_df:DataFrame = order_df.join(user_df, "user_id")
     //            val order2user2sku_df=order2user_df.join(sku_df,"sku_id")
     //            TimeSeriesRDD.timeSeriesRDDFromObservations()
-    val timeIndex: IrregularDateTimeIndex = timeFuture.createTimeIndexsByNanos(order_df)
-    //        println(timeFuture.createTimeIndexsByNanos(order_df).size)
+//    val timeIndex: IrregularDateTimeIndex = timeFuture.createTimeIndexsByNanos(order_df)
+
+    val zoneId = ZoneId.systemDefault()
+
+    val timeIndex:UniformDateTimeIndex=DateTimeIndex.uniformFromInterval(
+      ZonedDateTime.of(2016, 5, 1, 0, 0, 0, 0,zoneId),
+      ZonedDateTime.of(2017, 4, 30, 0, 0, 0, 0, zoneId),
+      new DayFrequency(1))
+    println(timeIndex.toZonedDateTimeArray().mkString(","))
+
     timeFuture.makeTrainRDD(order_df, timeIndex)
     //        joins.printSchema()
     //    println(user_df.count())
@@ -230,7 +238,8 @@ class TimeFuture(spark: SparkSession) {
   def makeTrainRDD(df: DataFrame, dateTimeIndex: DateTimeIndex) = {
     //先用order——df来做一次测试
     //订单表，user_id,sku_id,o_id,o_date,o_area,o_sku_num
-    val df_filter=df.filter("user_id = 667")
+    val df_filter=df
+//      .filter("user_id = 667")
     //使用df来构建
     val assembler = new VectorAssembler()
       .setInputCols(Array("sku_id", "o_area", "o_sku_num"))
@@ -238,9 +247,8 @@ class TimeFuture(spark: SparkSession) {
     val train_df_str = assembler.transform(df_filter).withColumn("user_id_str",getStrColumn($"user_id"))
            val train_df= train_df_str.withColumn("o_area_Double",getDoubleColumn($"o_area")).withColumn("feature_vector",mlVector2MlibVector($"feature"))
             train_df.show(false)
-//            val timeSeries_rdd: TimeSeriesRDD[String] = TimeSeriesRDD.timeSeriesRDDFromObservations(dateTimeIndex, train_df, "o_date","user_id_str","o_area_Double")
-//
-
+            val timeSeries_rdd: TimeSeriesRDD[String] = TimeSeriesRDD.timeSeriesRDDFromObservations(dateTimeIndex, train_df, "o_date","user_id_str","o_area_Double")
+.fill("linear")
 //            val matricValues_arr=df.flatMap{case (user_id:Int,sku_id:Int,o_id:Int,o_date:Timestamp,o_area:Int,o_sku_num:Int)=>Array(o_area.toDouble,o_sku_num.toDouble)}.collect()
 //            val matrix=new DenseMatrix(matricValues_arr.length/2,2,matricValues_arr)
 //            val keys=df.select($"user_id".as[Int]).collect()
@@ -252,11 +260,11 @@ class TimeFuture(spark: SparkSession) {
 
 
     //通过new TimeSeriesRDD来构建
-    val user2feature_rdd: RDD[(String, Vector)] = train_df_str.select("user_id_str", "feature").map { case Row(user_id: String, feature: linalg.DenseVector) => (user_id, Vectors.dense(feature.toArray)) }.rdd
-    val timeSeries_rdd: TimeSeriesRDD[String] = new TimeSeriesRDD[String](dateTimeIndex, user2feature_rdd)
+//    val user2feature_rdd: RDD[(String, Vector)] = train_df_str.select("user_id_str", "feature").map { case Row(user_id: String, feature: linalg.DenseVector) => (user_id, Vectors.dense(feature.toArray)) }.rdd
+//    val timeSeries_rdd: TimeSeriesRDD[String] = new TimeSeriesRDD[String](dateTimeIndex, user2feature_rdd)
     timeSeries_rdd.take(10).foreach(println)
-//    val result: RDD[String] = arimaModelTrain(timeSeries_rdd, 30)
-    val result: RDD[Vector] = ARCHModelTrain(timeSeries_rdd, 2)
+    val result: RDD[String] = arimaModelTrain(timeSeries_rdd, 30)
+//    val result: RDD[Vector] = ARCHModelTrain(timeSeries_rdd, 2)
     result.take(10).foreach(println)
     println("长度：" + result.count())
 //    result.coalesce(1).saveAsTextFile("hdfs://10.95.3.172:9000/user/lzy/JData_UserShop/output/testResult")
