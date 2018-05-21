@@ -249,6 +249,7 @@ class TimeFuture(spark: SparkSession) {
             train_df.show(false)
             val timeSeries_rdd: TimeSeriesRDD[String] = TimeSeriesRDD.timeSeriesRDDFromObservations(dateTimeIndex, train_df, "o_date","user_id_str","o_area_Double")
 .fill("linear")
+
 //            val matricValues_arr=df.flatMap{case (user_id:Int,sku_id:Int,o_id:Int,o_date:Timestamp,o_area:Int,o_sku_num:Int)=>Array(o_area.toDouble,o_sku_num.toDouble)}.collect()
 //            val matrix=new DenseMatrix(matricValues_arr.length/2,2,matricValues_arr)
 //            val keys=df.select($"user_id".as[Int]).collect()
