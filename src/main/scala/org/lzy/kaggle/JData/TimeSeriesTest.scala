@@ -22,13 +22,18 @@ spark.sparkContext.setLogLevel("WARN")
     val df=spark.createDataFrame(arr).toDF("time","key","value")
     val zoneId = ZoneId.systemDefault()
 
+    val dateArr=Array(      ZonedDateTime.of(2018, 1, 1, 0, 0, 0, 0,zoneId), ZonedDateTime.of(2018, 1, 2, 0, 0, 0, 0, zoneId), ZonedDateTime.of(2018, 1, 3, 0, 0, 0, 0,zoneId))
+   val irregularTimeIndex= DateTimeIndex.irregular(dateArr)
     val timeIndex:UniformDateTimeIndex=DateTimeIndex.uniformFromInterval(
       ZonedDateTime.of(2018, 1, 1, 0, 0, 0, 0,zoneId),
       ZonedDateTime.of(2018, 1, 3, 0, 0, 0, 0, zoneId),
       new DayFrequency(1))
 
-    val ts_rdd=TimeSeriesRDD.timeSeriesRDDFromObservations(timeIndex,df,"time","key","value")
-    println(ts_rdd.collectAsTimeSeries().keys.mkString(","))
+    val hybridTimdeIndex=DateTimeIndex.hybrid(Array(irregularTimeIndex,timeIndex))
+
+
+    val ts_rdd=TimeSeriesRDD.timeSeriesRDDFromObservations(hybridTimdeIndex,df,"time","key","value")
+    println(ts_rdd.collectAsTimeSeries().index.toZonedDateTimeArray().mkString(","))
     ts_rdd.foreach(println)
   }
 }
