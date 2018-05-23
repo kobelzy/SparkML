@@ -22,6 +22,8 @@ spark.sparkContext.setLogLevel("WARN")
     val df=spark.createDataFrame(arr).toDF("time","key","value")
     val zoneId = ZoneId.systemDefault()
 
+
+
     val dateArr=Array(      ZonedDateTime.of(2018, 1, 1, 0, 0, 0, 0,zoneId), ZonedDateTime.of(2018, 1, 2, 0, 0, 0, 0, zoneId), ZonedDateTime.of(2018, 1, 3, 0, 0, 0, 0,zoneId))
    val irregularTimeIndex= DateTimeIndex.irregular(dateArr)
     val timeIndex:UniformDateTimeIndex=DateTimeIndex.uniformFromInterval(
