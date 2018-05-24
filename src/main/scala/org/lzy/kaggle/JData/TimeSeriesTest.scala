@@ -19,6 +19,12 @@ spark.sparkContext.setLogLevel("WARN")
       (Timestamp.valueOf("2018-01-02 00:00:00"),"k2",0.7),
       (Timestamp.valueOf("2018-01-01 00:00:00"),"k1",0.9)
     )
+
+
+
+
+
+
     val df=spark.createDataFrame(arr).toDF("time","key","value")
     val zoneId = ZoneId.systemDefault()
 
