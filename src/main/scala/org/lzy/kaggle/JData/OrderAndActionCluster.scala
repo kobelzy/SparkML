@@ -88,6 +88,11 @@ def getUnionDF(order_df:DataFrame,action_df:DataFrame,user_id:DataFrame,sku_df:D
                     o_user_id:Option[Int],o_sku_id:Option[Int],o_date:Option[Timestamp],o_sku_num:Option[Int])=>
                         //通过数据选择，将两种数据分隔开来，这里优先保证订单中数据的存在，之后才能保证浏览数据的存在。
                         //如果订单的数据也存在，浏览数据也存在，那么会用订单，但是浏览类型我觉得需要去掉了。嗯，那么就需要分开进行判断了。
+//                        //商品类别，需要用不同的。
+
+                        o_user_id match {
+                            case Some(id) =>(id,o_date.get,o_sku_id.get,0,0,user_lv_cd.get)
+                        }
                         val user_id_all=o_user_id.getOrElse(user_id.get)
                         val date=o_date.getOrElse(a_date.get)
                         val sku_id_all=o_sku_id.getOrElse(sku_id.get)
