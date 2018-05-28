@@ -35,7 +35,7 @@ class TimeSeriesKeyModel {
    * @param trainTsrdd
    * @return
    */
-  def arimaModelTrainKey(trainTsrdd:TimeSeriesRDD[String]):  (RDD[(String,Vector)],RDD[(String,(String,(String,String,String),String,String))]) ={
+  def  arimaModelTrainKey(trainTsrdd:TimeSeriesRDD[String]):  (RDD[(String,Vector)],RDD[(String,(String,(String,String,String),String,String))]) ={
     /***参数设置******/
     val predictedN=this.predictedN
 
