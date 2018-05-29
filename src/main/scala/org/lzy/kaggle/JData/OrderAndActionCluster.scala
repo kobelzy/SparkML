@@ -3,11 +3,13 @@ package org.lzy.kaggle.JData
 import com.ml.kaggle.JData.TimeFuture.basePath
 import com.sun.org.apache.xml.internal.utils.StringToStringTableVector
 import java.sql.Timestamp
+
 import org.apache.spark.ml.clustering.KMeans
 import org.apache.spark.ml.feature.{OneHotEncoder, StandardScaler, StringIndexer, VectorAssembler}
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
+import spire.std.map
 
 /**
   * Auther: lzy
@@ -59,20 +61,38 @@ val all_df_path = basePath + "cache/all_df"
         val features_df = orderAndActionCluster.featureProcess(all_df_cache)
         features_df.show(false)
 //        val kmeans_df=orderAndActionCluster.kmeansTrian(features_df)
-        for(k<-Array(10,20,30,40,50,60,70,80,90,100) ){
-            for (maxIter<- Array(10,20,30)) {
-                val kmeans_df = orderAndActionCluster.kmeansTrianByParam(features_df, k,maxIter)
-                val orderClass2Count_df = kmeans_df.select("types", "prediction").filter("types == 1").groupBy("prediction").count().sort("prediction")
-                orderClass2Count_df.show(50,false)
-                val arrs=orderClass2Count_df.map(_.getInt(0)).collect()
-                println("orderClass2Count_df的k数量：" + arrs.size)
-                println("means:"+ arrs.sum/arrs.size)
-            }
+//        for(k<-Array(10,20,30,40,50,60,70,80,90,100) ){
+//            for (maxIter<- Array(10,20,30)) {
+//                val kmeans_df = orderAndActionCluster.kmeansTrianByParam(features_df, k,maxIter)
+//                val orderClass2Count_df = kmeans_df.select("types", "prediction").filter("types == 1").groupBy("prediction").count().sort("prediction")
+//                orderClass2Count_df.show(50,false)
+//                val arrs=orderClass2Count_df.map(_.getInt(0)).collect()
+//                println("orderClass2Count_df的k数量：" + arrs.size)
+//                println("means:"+ arrs.sum/arrs.size)
+//            }
+//        }
+
+
+      val kmeans_df = orderAndActionCluster.kmeansTrianByParam(features_df, 100,30)
+      kmeans_df.show(50,false)
+      val action_arr = kmeans_df.filter("types == 0").select($"prediction".as[Int]).distinct().collect().sorted
+      val actionIndex_map:Map[Int, Int]=action_arr.zipWithIndex.toMap.mapValues(_+1)
+      val new_length=actionIndex_map.size
+      println("action:"+actionIndex_map)
+      println("action长度"+actionIndex_map.size)
+      val order_arr = kmeans_df.filter("types == 1").select($"prediction".as[Int]).distinct().collect().sorted
+      val orderIndex_map=order_arr.zipWithIndex.toMap.mapValues(_+new_length+1)
+      println("orderIndex_map:"+orderIndex_map)
+println("order长度："+orderIndex_map.size)
+      val allMap=actionIndex_map++orderIndex_map
+      println(allMap.mkString(","))
+      println("长度："+allMap.size)
+      val resultFuture_df=kmeans_df.select("user_id","types","prediction","date")
+        .map{case Row(user_id:Int,types:Int,prediction:Int,date:Timestamp)=>
+        val new_prediction=allMap(prediction)
+          (user_id.toString,types,new_prediction,date)
         }
-
-        /*
-
-        * */
+      resultFuture_df.write.parquet(basePath+"cache/kmeas_Result")
     }
 }
 

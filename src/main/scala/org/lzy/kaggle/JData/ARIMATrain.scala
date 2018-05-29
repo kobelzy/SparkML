@@ -28,10 +28,11 @@ object ARIMATrain{
         import spark.implicits._
         spark.sparkContext.setLogLevel("WARN")
 
-        val all_df_path = basePath + "cache/all_df"
-        val all_df_cache = spark.read.parquet(all_df_path).selectExpr("date","string(user_id)","double(types)" )
-       val key2classic2date= train(all_df_cache,"date","user_id","types")
-        val result=key2classic2date.filter(_._2>0.5).map(tuple=>tuple._1+","+tuple._2)
+        val all_df_path = basePath + "cache/kmeas_Result"
+        val all_df_cache = spark.read.parquet(all_df_path).toDF("user_id","types","prediction","date")
+        .selectExpr("user_id","double(prediction)","date")
+       val key2classic2date= train(all_df_cache,"date","user_id","prediction")
+        val result=key2classic2date.filter(_._2>47).map(tuple=>tuple._1+","+tuple._2)
         result.take(10).foreach(println)
         result.coalesce(1).saveAsTextFile("result")
 
