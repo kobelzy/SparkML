@@ -14,6 +14,8 @@ import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
   * Description:
   * Date Created by： 9:17 on 2018/5/28
   * Modified By：
+  *
+  * spark-submit --master yarn-cluster --queue lzy  --num-executors 12 --executor-memory 7g --executor-cores 3 --class org.lzy.kaggle.JData.OrderAndActionCluster SparkML.jar
   */
 
 
@@ -31,6 +33,7 @@ object OrderAndActionCluster {
         val spark = SparkSession.builder().appName("names")
 //                .master("local[*]")
                 .getOrCreate()
+        import spark.implicits._
         spark.sparkContext.setLogLevel("WARN")
         val orderAndActionCluster = new OrderAndActionCluster(spark)
 
@@ -46,26 +49,30 @@ object OrderAndActionCluster {
         val comment_df = orderAndActionCluster.getSourceData(basePath + user_comment)
 
         //合并数据
-        val all_df = orderAndActionCluster.getUnionDF(order_df, action_df, user_df, sku_df)
+//        val all_df = orderAndActionCluster.getUnionDF(order_df, action_df, user_df, sku_df)
 //        //预处理数据中间结果
 val all_df_path = basePath + "cache/all_df"
-        all_df.write.mode(SaveMode.Overwrite).parquet(all_df_path)
+//        all_df.write.mode(SaveMode.Overwrite).parquet(all_df_path)
 
         val all_df_cache = spark.read.parquet(all_df_path)
         //        val trains = all_df_cache.select("a_type", "a_num", "o_num", "user_lv_cd", "cate")       //其中a_num,o_num是连续变量
         val features_df = orderAndActionCluster.featureProcess(all_df_cache)
         features_df.show(false)
 //        val kmeans_df=orderAndActionCluster.kmeansTrian(features_df)
-        for(k<-(10 to 100,10) ){
-            for (maxIter<- (10 to 30 ,10)) {
+        for(k<-Array(10,20,30,40,50,60,70,80,90,100) ){
+            for (maxIter<- Array(10,20,30)) {
                 val kmeans_df = orderAndActionCluster.kmeansTrianByParam(features_df, k,maxIter)
-                kmeans_df.show(false)
                 val orderClass2Count_df = kmeans_df.select("types", "prediction").filter("types == 1").groupBy("prediction").count().sort("prediction")
-                orderClass2Count_df.show(false)
-                println("orderClass2Count_df的k数量：" + orderClass2Count_df.count())
+                orderClass2Count_df.show(50,false)
+                val arrs=orderClass2Count_df.map(_.getInt(0)).collect()
+                println("orderClass2Count_df的k数量：" + arrs.size)
+                println("means:"+ arrs.sum/arrs.size)
             }
         }
 
+        /*
+
+        * */
     }
 }
 
