@@ -25,7 +25,8 @@ object ArrayTest {
     println("arr:"+arr.toArray.mkString(","))
 
 
-
+val map=Map(1->1,2->2)
+    println(map)
   }
 
   def addTimeDependentEffects(ts: Vector, dest: Vector): Vector = {
