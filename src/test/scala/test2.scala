@@ -10,6 +10,9 @@ object test2 {
   }
   def getTime()={
     val time=Timestamp.valueOf("2018-01-11 11:11:11")
+    val time2=Timestamp.valueOf("2018-01-14 11:11:11")
+    println(time.compareTo(time2))
+    println((time2.getTime-time.getTime)/(60*60*24*1000))
     println(time)
     time.toLocalDateTime.getMonthValue
     time.toLocalDateTime.getDayOfMonth

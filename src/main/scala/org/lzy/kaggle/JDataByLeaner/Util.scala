@@ -15,6 +15,11 @@ import org.apache.spark.sql.functions.udf
 
 object Util{
 
+  def featNunique(df:DataFrame,df_feature:DataFrame,ge:Seq[String],value:String,name:String="")={
+    val df_ccount=df_feature.groupBy(ge.head,ge.tail:_*).pivot()
+
+
+  }
 }
 class Util(spark:SparkSession) {
   import spark.implicits._

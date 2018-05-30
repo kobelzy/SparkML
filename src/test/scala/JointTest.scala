@@ -16,12 +16,14 @@ import spark.implicits._
       .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
     val basePath = "E:\\dataset\\JData_UserShop\\"
 
-    val order=reader.csv(basePath+"jdata_user_order.csv")
+//    val order=reader.csv(basePath+"jd/ata_user_order.csv")
     val user=reader.csv(basePath+"jdata_user_basic_info.csv")
-    val data=user.join(order,Seq("user_id"),"outer")
-    data.printSchema()
-    data.show(false)
-      data.select("age")
-              .show()
+//    val data=user.join(order,Seq("user_id"),"outer")
+//    data.printSchema()
+//    data.show(false)
+//      data.select("age")
+//              .show()
+    println(user.count)
+    user.filter($"user_id"===1).show()
   }
 }
