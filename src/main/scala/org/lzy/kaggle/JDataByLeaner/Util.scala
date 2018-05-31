@@ -1,13 +1,14 @@
 package org.lzy.kaggle.JDataByLeaner
 
 import java.sql.Timestamp
-
 import breeze.linalg.*
 import com.ml.kaggle.JData.TimeFuture.basePath
 import kingpoint.timeSeries.time
+import org.apache.commons.lang3.StringUtils
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions.udf
+import org.apache.spark.sql.functions.col
 
 /**
   * Created by Administrator on 2018/5/30.
@@ -15,10 +16,16 @@ import org.apache.spark.sql.functions.udf
 
 object Util{
 
-  def featNunique(df:DataFrame,df_feature:DataFrame,ge:Seq[String],value:String,name:String="")={
-    val df_ccount=df_feature.groupBy(ge.head,ge.tail:_*).pivot()
-
-
+  def featNunique(df:DataFrame,df_feature:DataFrame,fe:Seq[String],value:String,name:String="")={
+    val df_count:DataFrame=df_feature.groupBy(fe.head,fe.tail:_*).count().select("count",fe:_*).withColumn(value,col("count")*0+1)
+    val df_count_newName=if(StringUtils.isBlank(name)){
+//      fe:+(value + fe.mkString("_","_","_")+"nunique")
+      df_count.withColumnRenamed("count",value + fe.mkString("_","_","_")+"nunique")
+    }else{
+//      fe:+name
+      df_count.withColumnRenamed("count",name)
+    }
+    df.join(df_count_newName,fe,"left").na.fill(0)
   }
 }
 class Util(spark:SparkSession) {
