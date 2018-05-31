@@ -1,12 +1,16 @@
 import java.sql.Timestamp
 import java.util.Calendar
+import org.apache.spark.sql.SparkSession
 
 /**
   * Created by Administrator on 2018/5/30.
   */
 object test2 {
   def main(args: Array[String]): Unit = {
-    println(getTime())
+//    println(getTime())
+val spark = SparkSession.builder().appName("names")
+        .master("local[*]")
+        .getOrCreate()
   }
   def getTime()={
     val time=Timestamp.valueOf("2018-01-11 11:11:11")
