@@ -7,7 +7,7 @@ import org.apache.spark.mllib.linalg.Vectors
 object ARIMATest {
   def main(args: Array[String]): Unit = {
     // The dataset is sampled from an ARIMA(1, 0, 1) model generated in R.
-    val lines = scala.io.Source.fromFile("D:\\WorkSpace\\ScalaWorkSpace\\SparkML\\src\\main\\resources\\data2\\R_ARIMA_DataSet1.csv").getLines()
+    val lines = scala.io.Source.fromFile("D:\\WorkSpace\\scala\\SparkML\\src\\main\\resources\\data2\\R_ARIMA_DataSet1.csv").getLines()
     val ts = Vectors.dense(lines.map(_.toDouble).toArray)
     val ts2 = Vectors.dense(ts.toArray.take(5).toArray)
     val naVector=Vectors.dense(Array[Double]())
