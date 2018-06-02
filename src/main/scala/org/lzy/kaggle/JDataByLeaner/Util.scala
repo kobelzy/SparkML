@@ -4,7 +4,8 @@ import java.sql.Timestamp
 
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.functions.{col}
+import org.apache.spark.sql.functions.{col,countDistinct,quarter}
+import org.apache.spark.sql.functions._
 /**
   * Created by Administrator on 2018/5/30.
   */
@@ -16,16 +17,25 @@ object Util {
         val spark = SparkSession.builder().appName("names")
                 .master("local[*]")
                 .getOrCreate()
+        spark.sparkContext.setLogLevel("WARN")
         val util = new Util(spark)
         val order = util.getSourceData(basePath + "jdata_user_order_test.csv")
-        val user = util.getSourceData(basePath + "jdata_user_basic_info_test.csv")
+        val user = util.getSourceData(basePath + "jdata_user_basic_info_test.csv").cache()
         //测试方法loadData
         //    val (order, action) = util.loadData(basePath)
         //    order.show()
         //    action.show()
 
         //测试方法featUnique
-        featUnique(user, order, Array("user_id"), "o_id").show(false)
+        featCount(user, order, Array("user_id"), "o_id",Some("index")).show(false)
+        featCount2(user, order, Array("user_id"), "o_id",Some("index")).show(false)
+
+//        feaStd(user, order, Array("user_id"), "o_id",Some("index")).show(false)
+//        featMean(user, order, Array("user_id"), "o_id",Some("index")).show(false)
+//        featMax(user, order, Array("user_id"), "o_id",Some("index")).show(false)
+//        featMin(user, order, Array("user_id"), "o_id",Some("index")).show(false)
+//        featSum(user, order, Array("user_id"), "o_id",Some("index")).show(false)
+//        featUnique(user, order, Array("user_id"), "o_id",Some("index")).show(false)
     }
 
 
@@ -34,7 +44,13 @@ object Util {
         val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "count")
         val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).count().select("count", fe: _*)
                 .withColumnRenamed("count", newName)
-        df_feature
+        df.join(df_count, fe, "left").na.fill(0)
+    }
+
+    def featCount2(df: DataFrame, df_feature: DataFrame, fe: Array[String], value: String, name: Option[String] = None) = {
+        val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "count")
+        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).agg(count(value).as(newName)).select(newName, fe: _*)
+        df.join(df_count, fe, "left").na.fill(0)
     }
     /***
      * 功能实现:标准差
@@ -46,15 +62,15 @@ object Util {
      */
     def feaStd(df: DataFrame, df_feature: DataFrame, fe: Array[String], value: String, name: Option[String] = None) = {
         val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "std")
-        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).select("std", fe: _*)
-                .withColumnRenamed("std", newName)
-        df_feature
+        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).agg(stddev(value).as(newName)).select(newName, fe: _*)
+        df.join(df_count, fe, "left").na.fill(0)
+
     }
     def featMean(df: DataFrame, df_feature: DataFrame, fe: Array[String], value: String, name: Option[String] = None) = {
         val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "mean")
-        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).mean(value).select("mean", fe: _*)
-                .withColumnRenamed("mean", newName)
-        df_feature
+        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).agg(mean(value).as(newName)).select(newName, fe: _*)
+        df.join(df_count, fe, "left").na.fill(0)
+
     }
     /***
      * 功能实现:非NA的算数中位数
@@ -64,29 +80,29 @@ object Util {
      * Param: [df, df_feature, fe, value, name]
      * Return: org.apache.spark.sql.Dataset<org.apache.spark.sql.Row>
      */
-    def featMedian(df: DataFrame, df_feature: DataFrame, fe: Array[String], value: String, name: Option[String] = None) = {
-        val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "nunique")
-        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).select("std", fe: _*)
-                .withColumnRenamed("std", newName)
-        df_feature
-    }
+//    def featMedian(df: DataFrame, df_feature: DataFrame, fe: Array[String], value: String, name: Option[String] = None) = {
+//        val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "nunique")
+//        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).agg(.select("std", fe: _*)
+//                .withColumnRenamed("std", newName)
+//        df_feature
+//    }
     def featMax(df: DataFrame, df_feature: DataFrame, fe: Array[String], value: String, name: Option[String] = None) = {
         val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "max")
-        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).max(value).select("max", fe: _*)
-                .withColumnRenamed("max", newName)
-        df_feature
-    }
+        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).agg(max(value).as(newName)).select(newName, fe: _*)
+    df.join(df_count, fe, "left").na.fill(0)
+
+}
     def featMin(df: DataFrame, df_feature: DataFrame, fe: Array[String], value: String, name: Option[String] = None) = {
         val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "min")
-        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).min(value).select("std", fe: _*)
-                .withColumnRenamed("std", newName)
-        df_feature
+        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).agg(min(value).as(newName)).select(newName ,fe: _*)
+        df.join(df_count, fe, "left").na.fill(0)
+
     }
     def featSum(df: DataFrame, df_feature: DataFrame, fe: Array[String], value: String, name: Option[String] = None) = {
         val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "sum")
-        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).sum(value).select("sum", fe: _*)
-                .withColumnRenamed("sum", newName)
-        df_feature
+        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).agg(sum(value).as(newName)).select(newName, fe: _*)
+        df.join(df_count, fe, "left").na.fill(0)
+
     }
     /***
      * 功能实现:方差
@@ -97,14 +113,13 @@ object Util {
      * Return: org.apache.spark.sql.Dataset<org.apache.spark.sql.Row>
      */
     def feaVar(df: DataFrame, df_feature: DataFrame, fe: Array[String], value: String, name: Option[String] = None) = {
-        val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "nunique")
-        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).agg.select("std", fe: _*)
-                .withColumnRenamed("std", newName)
-        df_feature
+        val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "var")
+        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).agg(variance(value).as(newName)).select(newName, fe: _*)
+        df.join(df_count, fe, "left").na.fill(0)
     }
     /** *
       * 功能实现:
-      * 特征种类，用于将df_feature的fe的去重后的数量放到一个新的字段中，该字段名称由name或者value来决定
+      * 特征种类，用于将df_feature的fe分组之后，选择每一组中的value字段去重后的数量放到一个新的字段中，该字段名称由name或者value来决定
       * 之后将该df_feature与df进行join，获得根据fe的join结果
       * 主要就是希望获得df中对应fe字段在字典表中的类型个数。
       * Author: Lzy
@@ -114,11 +129,60 @@ object Util {
       */
     def featUnique(df: DataFrame, df_feature: DataFrame, fe: Seq[String], value: String, name: Option[String] = None) = {
         val newName = name.getOrElse(value + fe.mkString("_", "_", "_") + "nunique")
-        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).count().select("count", fe: _*)
-                //.withColumn(value,col("count")*0+1)
-                .withColumnRenamed("count", newName)
+        val df_count: DataFrame = df_feature.groupBy(fe.head, fe.tail: _*).agg(countDistinct(value).as(newName))
+          .select(newName, fe: _*)
+//                .withColumnRenamed("count", newName)
         df.join(df_count, fe, "left").na.fill(0)
     }
+
+
+    //########################################################
+    def mergeCount(df:DataFrame,columns:Array[String],value:String,cname:String)={
+        val add=df.groupBy(columns.head,columns.tail:_*).agg(count(value).as(cname)).select(cname,columns:_*)
+        df.join(add,columns,"left")
+    }
+
+    def mergeNunique(df:DataFrame,columns:Array[String],value:String,cname:String)={
+        val add=df.groupBy(columns.head,columns.tail:_*).agg(countDistinct(value).as(cname)).select(cname,columns:_*)
+        df.join(add,columns,"left")
+    }
+
+    def mergeMin(df:DataFrame,columns:Array[String],value:String,cname:String)={
+        val add=df.groupBy(columns.head,columns.tail:_*).agg(min(value).as(cname)).select(cname,columns:_*)
+        df.join(add,columns,"left")
+    }
+
+    def mergeMax(df:DataFrame,columns:Array[String],value:String,cname:String)={
+        val add=df.groupBy(columns.head,columns.tail:_*).agg(max(value).as(cname)).select(cname,columns:_*)
+        df.join(add,columns,"left")
+    }
+
+    def mergeSum(df:DataFrame,columns:Array[String],value:String,cname:String)={
+        val add=df.groupBy(columns.head,columns.tail:_*).agg(sum(value).as(cname)).select(cname,columns:_*)
+        df.join(add,columns,"left")
+    }
+
+    def mergeStd(df:DataFrame,columns:Array[String],value:String,cname:String)={
+        val add=df.groupBy(columns.head,columns.tail:_*).agg(stddev(value).as(cname)).select(cname,columns:_*)
+        df.join(add,columns,"left")
+    }
+
+    def mergeMean(df:DataFrame,columns:Array[String],value:String,cname:String)={
+        val add=df.groupBy(columns.head,columns.tail:_*).agg(mean(value).as(cname)).select(cname,columns:_*)
+        df.join(add,columns,"left")
+    }
+
+//    def mergeMedian(df:DataFrame,columns:Array[String],value:String,cname:String)={
+//        val add=df.groupBy(columns.head,columns.tail:_*).agg(countDistinct(value).as(cname)).select(cname,columns:_*)
+//        df.join(add,columns,"left")
+//    }
+
+
+    //#####################################################
+    def encodeCount(df:DataFrame,ColumnName:String)={
+
+    }
+
 }
 
 class Util(spark: SparkSession) {

@@ -2,7 +2,6 @@ import com.cloudera.sparkts.{DateTimeIndex, DayFrequency, UniformDateTimeIndex}
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
-import org.lzy.kaggle.JData.ARIMATrain.format
 
 /**
   * Auther: lzy
