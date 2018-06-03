@@ -32,9 +32,9 @@ object FeaExact {
 
     val udf_getLabel = udf { (o_date: Timestamp) => if (o_date.after(startTime)) o_date.toLocalDateTime.getDayOfMonth else 0 }
     //    order_cache.withColumn("new",udf_getLabel(col("o_date"))).show(false)
-    val test = feaExact.createFeat(startTime, endTime, user, order_cache, action_cache)
-    test.show(false)
-
+    val df_label_joined = feaExact.createFeat(startTime, endTime, user, order_cache, action_cache)
+    df_label_joined.show(false)
+    df_label_joined.write.parquet(basePath+"cache/df_label_joined")
   }
 
 
@@ -70,15 +70,18 @@ class FeaExact(spark: SparkSession) {
 
         //找到用户在目标月份最早的订单日期，只获取目标时间与需要预测的30和101品类
         val order_label = order_df.filter($"o_month" === label_month).filter(order_df("cate") === 30 || order_df("cate") === 101)
+        //只留下每个用户在整个浏览记录中的第一次，最早的一次。sort默认升序
         val label = order_label.sort("o_date").dropDuplicates("user_id")
+        //将有浏览数据，并且提取为第一次的和用户数据进行join，获取用户详细信息
         val df_label_1 = user_df.join(label.select("user_id", "o_date"), Seq("user_id"), "left")
-        println("order_label")
         //label_1代表用户在目标月份购买的订单个数，label_2代表用户在一个月的几号下的订单
+        //获取每个用户的总下单数，Join到之前的数据中作为标签label1。
         val df_label_2 = Util.featUnique(df_label_1, order_label, Array("user_id"), "o_id", Some("label_1"))
         println("label2")
         df_label_2.show(false)
         df_label_2.printSchema()
-        val udf_getLabel = udf { (o_date: Timestamp) => if (o_date.after(startTime)) o_date.toLocalDateTime.getDayOfMonth else 0 }
+        val udf_getLabel = udf { (o_date: Timestamp) =>if(o_date==null) 0 else if (o_date.after(startTime)) o_date.toLocalDateTime.getDayOfMonth else 0 }
+        //如果下单时间在开始时间阀值之后，那么获取该时间对应的当月的天数。
         val df_label = df_label_2.withColumn("label_2", udf_getLabel(col("o_date"))).drop("o_date")
         df_label.show(false)
         df_label
@@ -99,7 +102,7 @@ class FeaExact(spark: SparkSession) {
     val action2Utils = action_tmp_filter.groupBy("user_id").agg(count("sku_id").as("a_sku_id_30_101_count"), countDistinct("a_date").as("a_date_30_101_nunique"))
       .select("user_id", "a_sku_id_30_101_count", "a_date_30_101_nunique")
 
-    val df_label_joine = df_label.join(order2Utils, Seq("user_id"), "left").join(action2Utils, Seq("user_id"), "left").na.fill(0)
+    val df_label_joined = df_label.join(order2Utils, Seq("user_id"), "left").join(action2Utils, Seq("user_id"), "left").na.fill(0)
 
 
     //      .join(order_tmp_filter.groupBy("user_id").agg(countDistinct("o_id").as("o_id_30_101_nunique")).select("o_id_30_101_nunique", "user_id"), Seq("user_id"), "left")
@@ -112,7 +115,7 @@ class FeaExact(spark: SparkSession) {
     //      .join(action_tmp_filter.groupBy("user_id").agg(countDistinct("a_date").as("a_date_30_101_nunique")).select("a_date_30_101_nunique", "user_id"), Seq("user_id"), "left")
     //      .na.fill(0)
 
-    df_label_joine
+    df_label_joined
   }
 
 

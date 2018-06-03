@@ -1,5 +1,8 @@
 import java.sql.Timestamp
 import java.util.Calendar
+
+import kingpoint.timeSeries
+import kingpoint.timeSeries.time
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -8,9 +11,9 @@ import org.apache.spark.sql.SparkSession
 object test2 {
   def main(args: Array[String]): Unit = {
 //    println(getTime())
-val spark = SparkSession.builder().appName("names")
-        .master("local[*]")
-        .getOrCreate()
+//val spark = SparkSession.builder().appName("names")
+//        .master("local[*]")
+//        .getOrCreate()
   }
   def getTime()={
     val time=Timestamp.valueOf("2018-01-11 11:11:11")
@@ -19,7 +22,7 @@ val spark = SparkSession.builder().appName("names")
     println((time2.getTime-time.getTime)/(60*60*24*1000))
     println(time)
     time.toLocalDateTime.getMonthValue
-    time.toLocalDateTime.getDayOfMonth
-    time.toLocalDateTime.getYear
+//    timeSeries.time.toLocalDateTime.getDayOfMonth
+//    timeSeries.time.toLocalDateTime.getYear
   }
 }
