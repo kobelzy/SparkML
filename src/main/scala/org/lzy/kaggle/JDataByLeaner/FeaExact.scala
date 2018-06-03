@@ -7,15 +7,13 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
   * Created by Administrator on 2018/5/30.
-  * spark-submit --master yarn-cluster --queue lzy  --num-executors 9 --executor-cores 4 --executor-memory 10g --class org.lzy.kaggle.JDataByLeaner.FeaExact SparkML.jar
+  * spark-submit --master yarn-cluster --queue xkl --driver-memory 10g  --num-executors 9 --executor-cores 4 --executor-memory 8g --class org.lzy.kaggle.JDataByLeaner.FeaExact SparkML.jar
   */
 
 
 object FeaExact {
   //  val basePath = "E:\\dataset\\JData_UserShop\\"
   val basePath = "hdfs://10.95.3.172:9000/user/lzy/JData_UserShop/"
-  val startTime = Timestamp.valueOf("2017-03-01 00:00:00")
-  val endTime = Timestamp.valueOf("2017-04-30 00:00:00")
 
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder().appName("names")
@@ -24,9 +22,9 @@ object FeaExact {
     spark.sparkContext.setLogLevel("WARN")
     val util = new Util(spark)
     val feaExact = new FeaExact(spark, basePath)
-    val (order, action) = util.loadData(basePath)
-    order.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/order")
-    action.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/action")
+//    val (order, action) = util.loadData(basePath)
+//    order.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/order")
+//    action.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/action")
     val order_cache = spark.read.parquet(basePath + "cache/order").cache()
     val action_cache = spark.read.parquet(basePath + "cache/action").cache()
     val user = util.getSourceData(basePath + "jdata_user_basic_info.csv").cache()
@@ -66,8 +64,8 @@ class FeaExact(spark: SparkSession, basePath: String) {
       .union(createFeat(getTime("2016-10-01"), getTime("2016-11-01"), order, action, user))
     val test = createFeat(getTime("2017-04-01"), getTime("2017-05-01"), order, action, user)
 
-    train.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_train")
-    test.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_test")
+    train.repartition(100).write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_train")
+    test.repartition(100).write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_test")
   }
 
   def getTime(yyyy_MM_dd: String) = {
