@@ -7,6 +7,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
   * Created by Administrator on 2018/5/30.
+  * spark-submit --master yarn-cluster --queue lzy  --num-executors 9 --executor-cores 4 --executor-memory 10g --class org.lzy.kaggle.JDataByLeaner.FeaExact SparkML.jar
   */
 
 
@@ -26,8 +27,8 @@ object FeaExact {
     val (order, action) = util.loadData(basePath)
     order.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/order")
     action.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/action")
-    val order_cache = spark.read.parquet(basePath + "cache/order")
-    val action_cache = spark.read.parquet(basePath + "cache/action")
+    val order_cache = spark.read.parquet(basePath + "cache/order").cache()
+    val action_cache = spark.read.parquet(basePath + "cache/action").cache()
     val user = util.getSourceData(basePath + "jdata_user_basic_info.csv").cache()
 
     feaExact.gen_Vali(order_cache, action_cache, user)
@@ -52,7 +53,6 @@ class FeaExact(spark: SparkSession, basePath: String) {
       .union(createFeat(getTime("2016-10-01"), getTime("2016-11-01"), order, action, user))
 
     val test = createFeat(getTime("2017-03-01"), getTime("2017-04-01"), order, action, user)
-    train.show(false)
     train.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/vali_train")
     test.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/vali_test")
   }
@@ -64,7 +64,6 @@ class FeaExact(spark: SparkSession, basePath: String) {
       .union(createFeat(getTime("2016-12-01"), getTime("2017-01-01"), order, action, user))
       .union(createFeat(getTime("2016-11-01"), getTime("2016-12-01"), order, action, user))
       .union(createFeat(getTime("2016-10-01"), getTime("2016-11-01"), order, action, user))
-    train.show(false)
     val test = createFeat(getTime("2017-04-01"), getTime("2017-05-01"), order, action, user)
 
     train.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_train")
@@ -76,6 +75,8 @@ class FeaExact(spark: SparkSession, basePath: String) {
   }
 
   def createFeat(startTime: Timestamp, endTime: Timestamp, order: DataFrame, action: DataFrame, user_df: DataFrame, test: Boolean = false) = {
+    println("开始时间："+startTime)
+    println("结束时间："+endTime)
     val order_sort_df = order.sort($"o_date")
     val action_sort_df = action.sort($"a_date")
     //预测目标的月份
@@ -85,8 +86,8 @@ class FeaExact(spark: SparkSession, basePath: String) {
     val udf_dateDiff = udf { date: Timestamp => (endTime.getTime - date.getTime) / (60 * 60 * 24 * 1000) }
 
     //计算order和action与预测月份之间的时间差值。
-    val order_df = order_sort_df.withColumn("day_gap", udf_dateDiff($"o_date")).cache()
-    val action_df = action_sort_df.withColumn("day_gap", udf_dateDiff(col("a_date"))).cache()
+    val order_df = order_sort_df.withColumn("day_gap", udf_dateDiff($"o_date"))
+    val action_df = action_sort_df.withColumn("day_gap", udf_dateDiff(col("a_date")))
 
     //构建标签，label1和label2
     val df_label =
@@ -144,20 +145,18 @@ class FeaExact(spark: SparkSession, basePath: String) {
     //      .join(action_tmp_filter.groupBy("user_id").agg(count("sku_id").as("a_sku_id_30_101_count")).select("a_sku_id_30_101_count", "user_id"), Seq("user_id"), "left")
     //      .join(action_tmp_filter.groupBy("user_id").agg(countDistinct("a_date").as("a_date_30_101_nunique")).select("a_date_30_101_nunique", "user_id"), Seq("user_id"), "left")
     //      .na.fill(0)
-    for (i <- Array(7, 14, 30, 90, 180)) {
-
-    }
     val df_label_7_df = getFeatureBySubDay(7, order_df, action_df, df_label_joined)
     val df_label_7And14_df = getFeatureBySubDay(14, order_df, action_df, df_label_7_df)
     val df_label_7And14And30_df = getFeatureBySubDay(30, order_df, action_df, df_label_7And14_df)
     val df_label_7And14And30And90_df = getFeatureBySubDay(90, order_df, action_df, df_label_7And14And30_df)
     val df_label_7And14And30And90And190_df = getFeatureBySubDay(180, order_df, action_df, df_label_7And14And30And90_df)
 
-    df_label_7And14And30And90And190_df
+    df_label_7And14And30And90And190_df.na.fill(0)
   }
 
 
   def getFeatureBySubDay(i: Int, order_df: DataFrame, action_df: DataFrame, df_label_joined: DataFrame) = {
+    println("天数为："+i)
     val order_tmp_byDay = order_df.filter($"day_gap" < i && $"day_gap" > 0)
     val action_tmp_byDay = action_df.filter($"day_gap" < i && $"day_gap" > 0)
     val a = s"AD${i}_"
@@ -173,7 +172,6 @@ class FeaExact(spark: SparkSession, basePath: String) {
       countDistinct("o_date").as(o + "o_date_30_101_nunique"),
       countDistinct("o_month").as(o + "o_month_30_101_nunique"))
       .select("user_id", o + "o_id_30_101_nunique", o + "sku_id_30_101_count", o + "sku_num_30_101_count", o + "day_30_101_max", o + "day_30_101_mean", o + "o_date_30_101_nunique", o + "o_month_30_101_nunique")
-    order_tmp_30And101.show(false)
     //#######################################################################################################################################
     //获取（30）
     val order_tmp_30 = order_tmp_byDay.filter($"cate" === 30)
@@ -185,7 +183,6 @@ class FeaExact(spark: SparkSession, basePath: String) {
       countDistinct("o_date").as(o + "o_date_30_nunique"),
       countDistinct("o_month").as(o + "o_month_30_nunique"))
       .select("user_id", o + "o_id_30_nunique", o + "sku_id_30_count", o + "sku_num_30_count", o + "day_30_max", o + "day_30_mean", o + "o_date_30_nunique", o + "o_month_30_nunique")
-    order_tmp_30.show(false)
     //#######################################################################################################################################
     //获取（101）
     val order_tmp_101 = order_tmp_byDay.filter($"cate" === 101)
@@ -197,7 +194,6 @@ class FeaExact(spark: SparkSession, basePath: String) {
       countDistinct("o_date").as(o + "o_date_101_nunique"),
       countDistinct("o_month").as(o + "o_month_101_nunique"))
       .select("user_id", o + "o_id_101_nunique", o + "sku_id_101_count", o + "sku_num_101_count", o + "day_101_max", o + "day_101_mean", o + "o_date_101_nunique", o + "o_month_101_nunique")
-    order_tmp_101.show(false)
     //#######################################################################################################################################
     //获取!（30,101）
     val order_tmp_other = order_tmp_byDay.filter($"cate" =!= 30 && $"cate" =!= 101)
@@ -205,11 +201,9 @@ class FeaExact(spark: SparkSession, basePath: String) {
       count("sku_id").as(o + "sku_id_other_count"),
       sum("o_sku_num").as(o + "sku_num_other_count"))
       .select("user_id", o + "o_id_other_nunique", o + "sku_id_other_count", o + "sku_num_other_count")
-    order_tmp_other.show(false)
     //#######################################################################################################################################
     //用户当月首次订单是哪一天
     val order_tmp_firstDay = order_tmp_byDay.filter($"cate" === 30 || $"cate" === 101).dropDuplicates("user_id").select("user_id", "o_day").withColumnRenamed( "o_day",o + "o_date_30_101_firstday")
-    order_tmp_firstDay.show(false)
     /*
     * action相关
     * */
@@ -226,13 +220,10 @@ class FeaExact(spark: SparkSession, basePath: String) {
       countDistinct("a_date").as(a + "a_date_30_101_nunique"),
       countDistinct("sku_id").as(a + "sku_id_30_101_nunique"))
       .select("user_id", a + "sku_id_30_101_count", a + "a_date_30_101_nunique", a + "sku_id_30_101_nunique")
-    action_tmp_30And101.show(false)
     val action_tmp_30And101_type1 = action_tmp_type_1.filter($"cate" === 30 || $"cate" === 101)
       .groupBy("user_id").agg(count("sku_id").as(a + "sku_id_type1_30_101_count")).select("user_id", a + "sku_id_type1_30_101_count")
-    action_tmp_30And101_type1.show(false)
     val action_tmp_30And101_type2 = action_tmp_type_2.filter($"cate" === 30 || $"cate" === 101)
       .groupBy("user_id").agg(count("sku_id").as(a + "sku_id_type2_30_101_count")).select("user_id", a + "sku_id_type2_30_101_count")
-    action_tmp_30And101_type2.show(false)
     //#######################################################################################################################################
     //获取（30）
     val action_tmp_30 = action_tmp_byDay.filter($"cate" === 30)
@@ -241,13 +232,10 @@ class FeaExact(spark: SparkSession, basePath: String) {
       countDistinct("a_date").as(a + "a_date_30_nunique"),
       countDistinct("sku_id").as(a + "sku_id_30_nunique"))
       .select("user_id", a + "sku_id_30_count", a + "a_date_30_nunique", a + "sku_id_30_nunique")
-    action_tmp_30.show(false)
     val action_tmp_30_type1 = action_tmp_type_1.filter($"cate" === 30)
       .groupBy("user_id").agg(count("sku_id").as(a + "sku_id_type1_30_count")).select("user_id", a + "sku_id_type1_30_count")
-    action_tmp_30_type1.show(false)
     val action_tmp_30_type2 = action_tmp_type_2.filter($"cate" === 30)
       .groupBy("user_id").agg(count("sku_id").as(a + "sku_id_type2_30_count")).select("user_id", a + "sku_id_type2_30_count")
-    action_tmp_30_type2.show(false)
     //#######################################################################################################################################
     //获取（101）
     val action_tmp_101 = action_tmp_byDay.filter($"cate" === 101)
@@ -256,13 +244,10 @@ class FeaExact(spark: SparkSession, basePath: String) {
       countDistinct("a_date").as(a + "a_date_101_nunique"),
       countDistinct("sku_id").as(a + "sku_id_101_nunique"))
       .select("user_id", a + "sku_id_101_count", a + "a_date_101_nunique", a + "sku_id_101_nunique")
-    action_tmp_101.show(false)
     val action_tmp_101_type1 = action_tmp_type_1.filter($"cate" === 101)
       .groupBy("user_id").agg(count("sku_id").as(a + "sku_id_type1_101_count")).select("user_id", a + "sku_id_type1_101_count")
-    action_tmp_101_type1.show(false)
     val action_tmp_101_type2 = action_tmp_type_2.filter($"cate" === 101)
       .groupBy("user_id").agg(count("sku_id").as(a + "sku_id_type2_101_count")).select("user_id", a + "sku_id_type2_101_count")
-    action_tmp_101_type2.show(false)
 
     df_label_joined.join(order_tmp_30And101, Seq("user_id"), "left")
       .join(order_tmp_30, Seq("user_id"), "left")
