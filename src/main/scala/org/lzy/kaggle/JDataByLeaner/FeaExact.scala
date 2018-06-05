@@ -7,7 +7,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
   * Created by Administrator on 2018/5/30.
-  * spark-submit --master yarn-cluster --queue xkl --driver-memory 10g  --num-executors 9 --executor-cores 4 --executor-memory 8g --class org.lzy.kaggle.JDataByLeaner.FeaExact SparkML.jar
+  * spark-submit --master yarn-cluster --queue lzy --driver-memory 10g --conf spark.driver.maxResultSize=5g  --num-executors 6 --executor-cores 6 --executor-memory 10g --class org.lzy.kaggle.JDataByLeaner.FeaExact SparkML.jar
   */
 
 
@@ -23,7 +23,7 @@ object FeaExact {
     val conf=spark.conf
     val sc=spark.sparkContext
     val config=sc.getConf
-    config.set("spark.driver.maxResultSize","8g")
+//    config.set("spark.driver.maxResultSize","0")
     config.set("spark.debug.maxToStringFields","100")
     config.set("spark.shuffle.io.maxRetries","60")
     config.set("spark.default.parallelism","54")
@@ -32,11 +32,11 @@ object FeaExact {
 //    val (order, action) = util.loadData(basePath)
 //    order.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/order")
 //    action.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/action")
-    val order_cache = spark.read.parquet(basePath + "cache/order").cache()
-    val action_cache = spark.read.parquet(basePath + "cache/action").cache()
-    val user = util.getSourceData(basePath + "jdata_user_basic_info.csv").cache()
+    val order_cache = spark.read.parquet(basePath + "cache/order").repartition(60).cache()
+    val action_cache = spark.read.parquet(basePath + "cache/action").repartition(60).cache()
+    val user = util.getSourceData(basePath + "jdata_user_basic_info.csv").repartition(60).cache()
 
-    feaExact.gen_Vali(order_cache, action_cache, user)
+//    feaExact.gen_Vali(order_cache, action_cache, user)
     feaExact.genTest(order_cache, action_cache, user)
     println("完毕：")
 
@@ -62,8 +62,8 @@ class FeaExact(spark: SparkSession, basePath: String) {
   }
 
   def genTest(order: DataFrame, action: DataFrame, user: DataFrame) = {
-    val test = createFeat(getTime("2017-04-01"), getTime("2017-05-01"), order, action, user)
-    test.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_test")
+//    val test = createFeat(getTime("2017-04-01"), getTime("2017-05-01"), order, action, user)
+//    test.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_test")
     val train = createFeat(getTime("2017-03-01"), getTime("2017-04-01"), order, action, user)
       .union(createFeat(getTime("2017-02-01"), getTime("2017-03-01"), order, action, user))
       .union(createFeat(getTime("2017-01-01"), getTime("2017-02-01"), order, action, user))
