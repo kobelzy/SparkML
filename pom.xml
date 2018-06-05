@@ -40,6 +40,29 @@
             <artifactId>sparkts</artifactId>
             <version>0.4.1</version>
         </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.github.hirofumi/xgboost4j-spark -->
+        <!--<dependency>-->
+            <!--<groupId>com.github.hirofumi</groupId>-->
+            <!--<artifactId>xgboost4j-spark_2.11</artifactId>-->
+            <!--<version>0.7.2-p1</version>-->
+        <!--</dependency>-->
+
+        <!--<dependency>-->
+            <!--<groupId>ml.dmlc</groupId>-->
+            <!--<artifactId>xgboost4j</artifactId>-->
+            <!--<version>0.7</version>-->
+        <!--</dependency>-->
+
+        <!--<dependency>-->
+            <!--<groupId>com.github.hirofumi</groupId>-->
+            <!--<artifactId>xgboost4j-spark_2.11</artifactId>-->
+            <!--<version>0.7.2-p1</version>-->
+        <!--</dependency>-->
+
+
+
+
     </dependencies>
 
 </project>

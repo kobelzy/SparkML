@@ -15,8 +15,7 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="scala-sdk-2.11.11" level="application" />
-    <orderEntry type="library" name="R User Library" level="project" />
-    <orderEntry type="library" name="R Skeletons" level="application" />
+    <orderEntry type="library" name="JDK" level="project" />
     <orderEntry type="library" name="Maven: org.scala-lang:scala-library:2.11.11" level="project" />
     <orderEntry type="library" name="Maven: org.apache.spark:spark-mllib_2.11:2.2.0" level="project" />
     <orderEntry type="library" name="Maven: org.apache.spark:spark-core_2.11:2.2.0" level="project" />
@@ -190,5 +189,14 @@
     <orderEntry type="library" name="Maven: com.lowagie:itext:2.1.5" level="project" />
     <orderEntry type="library" name="Maven: bouncycastle:bcmail-jdk14:138" level="project" />
     <orderEntry type="library" name="Maven: bouncycastle:bcprov-jdk14:138" level="project" />
+    <orderEntry type="module-library">
+      <library>
+        <CLASSES>
+          <root url="jar://F:/xgboost4j-spark-0.8-SNAPSHOT-jar-with-dependencies.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
