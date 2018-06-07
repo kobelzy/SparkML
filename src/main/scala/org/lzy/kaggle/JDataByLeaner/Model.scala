@@ -94,15 +94,14 @@ val useExternalMemory=true
             .setTrainRatio(0.8)
 
     val tvModel=tv.fit(train_df.withColumnRenamed(labelCol,"label"))
-      val result_df=tvModel.transform(test_df.withColumnRenamed(labelCol,"label"))
-              .withColumnRenamed("label",labelCol)
-              .withColumnRenamed("prediction",predictCol)
-              .select("user_id",labelCol,predictCol)
+//      val result_df=tvModel.transform(test_df.withColumnRenamed(labelCol,"label"))
+//              .withColumnRenamed("label",labelCol)
+//              .withColumnRenamed("prediction",predictCol)
+//              .select("user_id",labelCol,predictCol)
 //      val bestmodel = tvModel.bestModel.asInstanceOf[PipelineModel]
 //      val lrModel:Transformer=bestmodel.stages(0)
 //      println("round:"+lrModel.explainParam(xgbEstimator.round))
 //      println("eta:"+lrModel.explainParam(xgbEstimator.eta))
-      tvModel.write.overwrite().save(basePath+"model/tsModel")
-      result_df
+      tvModel
   }
 }
