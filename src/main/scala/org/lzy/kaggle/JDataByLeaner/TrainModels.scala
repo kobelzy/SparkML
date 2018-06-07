@@ -4,6 +4,7 @@ import java.io
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
+import org.lzy.kaggle.JDataByLeaner.Model.basePath
 import scala.collection.mutable
 /**
   * Created by Administrator on 2018/6/3
@@ -47,7 +48,7 @@ import spark.implicits._
       .withColumn("weight",udf_getWeight($"index"))
     val s1=weight_df.filter($"label_1" === $"weight").select($"label_1".as[Int]).collect().sum/4674.239
     val df_label_1=weight_df.filter($"label_1" ===1)
-    val s2=weight_df.select($"label_2".as[Int],$"pred_date".as[Int]).collect().map{case (label_2,pred_date)=>
+    val s2=weight_df.select($"label_2".as[Double],$"pred_date".as[Double]).collect().map{case (label_2,pred_date)=>
     10.0/(math.round(label_2)-pred_date*pred_date+10)
     }.sum /weight_df.count()
     println(s"s1 score is $s1 ,s2 score is $s2 , S is ${0.4 * s1 + 0.6 * s2}")
@@ -64,10 +65,27 @@ val train=spark.read.parquet(basePath + "cache/vali_train")
   val train_df=selecter.transform(train)
   val test_df=selecter.transform(test)
   //为resul通过label_1来计算 添加o_num列，
-val s1_df=Model.fitPredict(train_df,test_df,"label_1","o_num")
+val s1_Model=Model.fitPredict(train_df,test_df,"label_1","o_num")
+  s1_Model.write.overwrite().save(basePath+"model/s1_Model")
+
   //为result通过label_2来计算添加pred_date
-val s2_df=Model.fitPredict(train_df,test_df,"label_2","pred_date")
+val s2_Model=Model.fitPredict(train_df,test_df,"label_2","pred_date")
+  s2_Model.write.overwrite().save(basePath+"model/s2_Model")
+
   //result包括了"user_id","label_1","label_2","o_num","pred_date"
+
+  val labelCol="label_1"
+  val predictCol="o_num"
+  val s1_df=s1_Model.transform(test_df.withColumnRenamed(labelCol,"label"))
+              .withColumnRenamed("label",labelCol)
+              .withColumnRenamed("prediction",predictCol)
+              .select("user_id",labelCol,predictCol)
+  val labelCol2="label_2"
+  val s2_df=s1_Model.transform(test_df.withColumnRenamed(labelCol2,"label"))
+          .withColumnRenamed("label",labelCol2)
+          .withColumnRenamed("prediction",predictCol)
+          .select("user_id",labelCol2,predictCol)
+
   val result=s1_df.join(s2_df,"user_id")
   score(result)
    }
