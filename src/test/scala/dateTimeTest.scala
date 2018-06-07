@@ -1,3 +1,5 @@
+import java.sql.Timestamp
+
 import com.cloudera.sparkts.{DateTimeIndex, DayFrequency, UniformDateTimeIndex}
 import java.text.SimpleDateFormat
 import java.time.format.DateTimeFormatter
@@ -13,6 +15,7 @@ object dateTimeTest {
     val format=new SimpleDateFormat("yyyy-MM-dd")
 val formater=DateTimeFormatter.ofPattern("yyyy-MM-dd")
     def main(args: Array[String]): Unit = {
+        println(Timestamp.valueOf("2018-05-1 00:00:00"))
         val zoneId = ZoneId.systemDefault()
 
         val forcastTimeIndex:UniformDateTimeIndex=DateTimeIndex.uniformFromInterval(
