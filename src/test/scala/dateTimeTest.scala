@@ -15,18 +15,20 @@ object dateTimeTest {
     val format=new SimpleDateFormat("yyyy-MM-dd")
 val formater=DateTimeFormatter.ofPattern("yyyy-MM-dd")
     def main(args: Array[String]): Unit = {
-        println(Timestamp.valueOf("2018-05-1 00:00:00"))
+        val timestampe=Timestamp.valueOf("2018-05-1 00:00:00")
+        println(timestampe.setTime(timestampe.getTime+1000*60*60*24*30))
+        println(timestampe)
         val zoneId = ZoneId.systemDefault()
 
         val forcastTimeIndex:UniformDateTimeIndex=DateTimeIndex.uniformFromInterval(
             ZonedDateTime.of(2017, 5, 1, 0, 0, 0, 0,zoneId),
             ZonedDateTime.of(2017, 5, 31, 0, 0, 0, 0, zoneId),
             new DayFrequency(1))
-        val forcastTimeArr=forcastTimeIndex.toZonedDateTimeArray()
-                .map(date=>{
-                    date.format(formater)
-
-                })
-        forcastTimeArr.foreach(println)
+//        val forcastTimeArr=forcastTimeIndex.toZonedDateTimeArray()
+//                .map(date=>{
+//                    date.format(formater)
+//
+//                })
+//        forcastTimeArr.foreach(println)
     }
 }

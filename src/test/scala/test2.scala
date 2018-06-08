@@ -1,28 +1,41 @@
 import java.sql.Timestamp
 import java.util.Calendar
-
 import kingpoint.timeSeries
 import kingpoint.timeSeries.time
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.monotonically_increasing_id
+import org.apache.spark.sql.{Row, SparkSession}
 
 /**
   * Created by Administrator on 2018/5/30.
   */
 object test2 {
-  def main(args: Array[String]): Unit = {
-//    println(getTime())
-//val spark = SparkSession.builder().appName("names")
-//        .master("local[*]")
-//        .getOrCreate()
+//    val basePath = "hdfs://10.95.3.172:9000/user/lzy/JData_UserShop/"
+    val basePath = "E:\\dataset\\JData_UserShop\\"
+
+    def main(args: Array[String]): Unit = {
+
+    //    println(getTime())
+val spark = SparkSession.builder().appName("names")
+        .master("local[*]")
+        .getOrCreate()
+        val reader= spark.read.option("header", "true")
+                .option("nullValue", "NA")
+                .option("inferSchema", "true")
+                .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
+    val data=reader.csv(basePath+"jdata_user_basic_info_test.csv")
+    data.show(false)
+//    data.printSchema()
+//    println(data.count())
+//      val arr=List(   Row(Timestamp.valueOf("2018-01-11 11:11:11")),
+//     Row(Timestamp.valueOf("2018-01-14 11:11:11")))
+//      case class datas(date:Timestamp)
+      data.withColumn("index",monotonically_increasing_id+1).show(false)
   }
   def getTime()={
     val time=Timestamp.valueOf("2018-01-11 11:11:11")
     val time2=Timestamp.valueOf("2018-01-14 11:11:11")
-    println(time.compareTo(time2))
-    println((time2.getTime-time.getTime)/(60*60*24*1000))
-    println(time)
-    time.toLocalDateTime.getMonthValue
 //    timeSeries.time.toLocalDateTime.getDayOfMonth
 //    timeSeries.time.toLocalDateTime.getYear
+
   }
 }
