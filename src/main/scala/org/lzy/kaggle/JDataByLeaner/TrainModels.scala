@@ -1,15 +1,10 @@
 package org.lzy.kaggle.JDataByLeaner
 
-import java.io
 import java.sql.Timestamp
-
 import ml.dmlc.xgboost4j.scala.spark.XGBoostModel
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
-import org.lzy.kaggle.JDataByLeaner.Model.basePath
-
-import scala.collection.mutable
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * Created by Administrator on 2018/6/3
   spark-submit --master yarn-client --queue lzy --driver-memory 2g --conf spark.driver.maxResultSize=2g  \
@@ -24,7 +19,7 @@ object TrainModels{
   val basePath = "hdfs://10.95.3.172:9000/user/lzy/JData_UserShop/"
   def main(args: Array[String]): Unit = {
     val spark = SparkSession.builder().appName("names")
-            .master("local[*]")
+//            .master("local[*]")
       .getOrCreate()
     val sc=spark.sparkContext
     val config=sc.getConf
@@ -36,7 +31,9 @@ object TrainModels{
     val util = new Util(spark)
     val trainModel=new TrainModels(spark,basePath)
 //    trainModel.getTrain()
-    trainModel.getResult()
+   val submission= trainModel.getResult().na.fill(0)
+    submission.write.mode(SaveMode.Overwrite).parquet((basePath+"sub/result_parquet"))
+    println(submission.count())
   }
 }
 class TrainModels(spark: SparkSession, basePath: String) {
@@ -122,8 +119,9 @@ val s2_Model=Model.fitPredict(train_df,test_df,"label_2","pred_date")
       val days=1+math.round(pred_date+0.49-1)
       getTime(s"2017-05-${days}")
     }}
-    val submission=result.sort($"o_num").withColumn("result_date",udfs($"pred_date"))
-      .select("user_id","result_date")
+    val submission:DataFrame=result.sort($"o_num")
+//            .withColumn("result_date",udfs($"pred_date"))
+//      .select("user_id","result_date")
 //      .map(tuple=>class_result(tuple.getString(0),tuple.getString(1)))
     submission.show(20,false)
 //submission.coalesce(1).write
@@ -133,8 +131,9 @@ val s2_Model=Model.fitPredict(train_df,test_df,"label_2","pred_date")
 //      .option("nullValue", "NA")
 //  .csv(basePath+"sub/result")
 //
-    submission.write.mode(SaveMode.Overwrite).parquet((basePath+"sub/result_parquet"))
+//    submission.write.mode(SaveMode.Overwrite).parquet((basePath+"sub/result_parquet"))
 //submission.rdd.coalesce(1).saveAsTextFile(basePath+"sub/result")
+    submission
   }
   def getTime(yyyy_MM_dd: String) = {
     Timestamp.valueOf(yyyy_MM_dd + " 00:00:00")
