@@ -8,7 +8,7 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * Created by Administrator on 2018/6/3
   spark-submit --master yarn-client --queue lzy --driver-memory 2g --conf spark.driver.maxResultSize=2g  \
---num-executors 10 --executor-cores 4 --executor-memory 7g --jars \
+--num-executors 12 --executor-cores 4 --executor-memory 7g --jars \
 /root/lzy/xgboost/jvm-packages/xgboost4j-spark/target/xgboost4j-spark-0.8-SNAPSHOT-jar-with-dependencies.jar \
 --class org.lzy.kaggle.JDataByLeaner.TrainModels SparkML.jar
   */
@@ -31,9 +31,10 @@ object TrainModels{
     val util = new Util(spark)
     val trainModel=new TrainModels(spark,basePath)
 //    trainModel.getTrain()
-   val submission= trainModel.getResult().na.fill(0)
-    submission.write.mode(SaveMode.Overwrite).parquet((basePath+"sub/result_parquet"))
-    println(submission.count())
+      trainModel.fitPredict()
+//   val submission= trainModel.getResult().na.fill(0)
+//    submission.write.mode(SaveMode.Overwrite).parquet((basePath+"sub/result_parquet"))
+//    println(submission.count())
   }
 }
 class TrainModels(spark: SparkSession, basePath: String) {
@@ -47,15 +48,15 @@ class TrainModels(spark: SparkSession, basePath: String) {
     }
 
     val udf_binary=udf{label_1:Int=>if (label_1>0) 1 else 0}
-    val weight_df=result_df.sort("o_num").withColumn("new_label",udf_binary($"label_1")).drop("label_1").withColumnRenamed("new_label","label_1")
+    val weight_df=result_df.sort("o_num").withColumn("label_binary",udf_binary($"label_1"))
       .limit(50000)
-          .withColumn("index",monotonically_increasing_id)
+          .withColumn("index",monotonically_increasing_id+1)
       .withColumn("weight",udf_getWeight($"index"))
-    val s1=weight_df.filter($"label_1" === $"weight").select($"label_1".as[Int]).collect().sum/4674.239
-    val df_label_1=weight_df.filter($"label_1" ===1)
-    val s2=weight_df.select($"label_2".as[Double],$"pred_date".as[Double]).collect().map{case (label_2,pred_date)=>
-    10.0/(math.round(label_2)-pred_date*pred_date+10)
-    }.sum /weight_df.count()
+    val s1=weight_df.filter($"label_binary" === $"weight").select($"label_binary".as[Int]).collect().sum/4674.239
+    val weightEqual1_df=weight_df.filter($"label_binary" ===1)
+    val s2=weightEqual1_df.select($"label_2".as[Double],$"pred_date".as[Double]).collect().map{case (label_2,pred_date)=>
+    10.0/(math.pow(math.round(label_2-pred_date),2)+10)
+    }.sum /weight_df.count().toDouble
     println(s"s1 score is $s1 ,s2 score is $s2 , S is ${0.4 * s1 + 0.6 * s2}")
   }
 def getTrain()={
@@ -139,6 +140,19 @@ val s2_Model=Model.fitPredict(train_df,test_df,"label_2","pred_date")
     Timestamp.valueOf(yyyy_MM_dd + " 00:00:00")
   }
   def fitPredict()={
+      val train=spark.read.parquet(basePath + "cache/train_train")
+      val test=spark.read.parquet(basePath+"cache/train_test")
+      val dropColumns:Array[String]=Array("user_id","label_1","label_2")
+      val featureColumns:Array[String]=train.columns.filterNot(dropColumns.contains(_))
+      val selecter=new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
+      val train_df=selecter.transform(train)
+      val test_df=selecter.transform(test)
+      //为resul通过label_1来计算 添加o_num列，
+      val s1_Model=Model.fitPredict(train_df,test_df,"label_1","o_num")
+      s1_Model.write.overwrite().save(basePath+"model/s1_train_Model")
 
+      //为result通过label_2来计算添加pred_date
+      val s2_Model=Model.fitPredict(train_df,test_df,"label_2","pred_date")
+      s2_Model.write.overwrite().save(basePath+"model/s2_train_Model")
   }
 }
