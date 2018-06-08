@@ -140,8 +140,8 @@ val s2_Model=Model.fitPredict(train_df,test_df,"label_2","pred_date")
     Timestamp.valueOf(yyyy_MM_dd + " 00:00:00")
   }
   def fitPredict()={
-      val train=spark.read.parquet(basePath + "cache/train_train")
-      val test=spark.read.parquet(basePath+"cache/train_test")
+      val train=spark.read.parquet(basePath + "cache/test_train")
+      val test=spark.read.parquet(basePath+"cache/test_test")
       val dropColumns:Array[String]=Array("user_id","label_1","label_2")
       val featureColumns:Array[String]=train.columns.filterNot(dropColumns.contains(_))
       val selecter=new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
