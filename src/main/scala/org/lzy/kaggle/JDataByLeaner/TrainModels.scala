@@ -1,8 +1,11 @@
 package org.lzy.kaggle.JDataByLeaner
 
 import java.sql.Timestamp
-import ml.dmlc.xgboost4j.scala.spark.XGBoostModel
+
+import ml.dmlc.xgboost4j.scala.spark.{XGBoostEstimator, XGBoostModel}
+import org.apache.spark.ml.{PipelineModel, Transformer}
 import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.tuning.TrainValidationSplitModel
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
@@ -12,13 +15,12 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /root/lzy/xgboost/jvm-packages/xgboost4j-spark/target/xgboost4j-spark-0.8-SNAPSHOT-jar-with-dependencies.jar \
 --class org.lzy.kaggle.JDataByLeaner.TrainModels SparkML.jar
   */
-  case class class_result(user_id:String,result_date:String)
 object TrainModels{
 
   //  val basePath = "E:\\dataset\\JData_UserShop\\"
   val basePath = "hdfs://10.95.3.172:9000/user/lzy/JData_UserShop/"
   def main(args: Array[String]): Unit = {
-    val spark = SparkSession.builder().appName("names")
+    val spark = SparkSession.builder().appName("names2")
 //            .master("local[*]")
       .getOrCreate()
     val sc=spark.sparkContext
@@ -31,34 +33,45 @@ object TrainModels{
     val util = new Util(spark)
     val trainModel=new TrainModels(spark,basePath)
 //    trainModel.getTrain()
-      trainModel.fitPredict()
+//      trainModel.fitPredict()
 //   val submission= trainModel.getResult().na.fill(0)
 //    submission.write.mode(SaveMode.Overwrite).parquet((basePath+"sub/result_parquet"))
 //    println(submission.count())
+//trainModel.trainAndSaveModel("vali")
+
+    //验证结果模型
+//    trainModel.varifyTrainModel()
+    //验证训练模型
+    trainModel.varifyValiModel()
   }
 }
 class TrainModels(spark: SparkSession, basePath: String) {
 
   import spark.implicits._
 
-
+/*
+分数检验
+ */
   def score(result_df:DataFrame)={
     val udf_getWeight=udf{index:Int=>
-      1/(1+math.log(index+1))
+      1/(1+math.log(index))
     }
 
-    val udf_binary=udf{label_1:Int=>if (label_1>0) 1 else 0}
-    val weight_df=result_df.sort("o_num").withColumn("label_binary",udf_binary($"label_1"))
-      .limit(50000)
+    val udf_binary=udf{label_1:Int=>if (label_1>0) 1.0 else 0.0}
+    val weight_df=result_df.sort($"o_num".desc).limit(50000)
+      .withColumn("label_binary",udf_binary($"label_1"))
           .withColumn("index",monotonically_increasing_id+1)
       .withColumn("weight",udf_getWeight($"index"))
-    val s1=weight_df.filter($"label_binary" === $"weight").select($"label_binary".as[Int]).collect().sum/4674.239
+    val s1=weight_df.select($"label_binary".as[Double],$"weight".as[Double]).map(tuple=>tuple._1*tuple._2).collect().sum/4674.239
     val weightEqual1_df=weight_df.filter($"label_binary" ===1)
     val s2=weightEqual1_df.select($"label_2".as[Double],$"pred_date".as[Double]).collect().map{case (label_2,pred_date)=>
     10.0/(math.pow(math.round(label_2-pred_date),2)+10)
     }.sum /weight_df.count().toDouble
     println(s"s1 score is $s1 ,s2 score is $s2 , S is ${0.4 * s1 + 0.6 * s2}")
   }
+
+
+
 def getTrain()={
 val train=spark.read.parquet(basePath + "cache/vali_train")
   val test=spark.read.parquet(basePath+"cache/vali_test")
@@ -139,20 +152,95 @@ val s2_Model=Model.fitPredict(train_df,test_df,"label_2","pred_date")
   def getTime(yyyy_MM_dd: String) = {
     Timestamp.valueOf(yyyy_MM_dd + " 00:00:00")
   }
-  def fitPredict()={
-      val train=spark.read.parquet(basePath + "cache/test_train")
-      val test=spark.read.parquet(basePath+"cache/test_test")
+
+  /**
+    * 训练并保存数据
+    * dataType为test或者vali
+    */
+  def trainAndSaveModel(dataType:String="test")={
+      val train=spark.read.parquet(basePath + s"cache/${dataType}_test")
+      val test=spark.read.parquet(basePath+s"cache/${dataType}_test")
       val dropColumns:Array[String]=Array("user_id","label_1","label_2")
       val featureColumns:Array[String]=train.columns.filterNot(dropColumns.contains(_))
       val selecter=new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
       val train_df=selecter.transform(train)
       val test_df=selecter.transform(test)
       //为resul通过label_1来计算 添加o_num列，
-      val s1_Model=Model.fitPredict(train_df,test_df,"label_1","o_num")
-      s1_Model.write.overwrite().save(basePath+"model/s1_train_Model")
+      val s1_Model:TrainValidationSplitModel=Model.fitPredict(train_df,test_df,"label_1","o_num")
+      s1_Model.write.overwrite().save(basePath+s"model/s1_${dataType}_Model")
 
       //为result通过label_2来计算添加pred_date
       val s2_Model=Model.fitPredict(train_df,test_df,"label_2","pred_date")
-      s2_Model.write.overwrite().save(basePath+"model/s2_train_Model")
+      s2_Model.write.overwrite().save(basePath+s"model/s2_${dataType}_Model")
+  }
+
+
+
+  /**
+    * 检验模型准确性
+    */
+  def varifyTrainModel()={
+    val test=spark.read.parquet(basePath+s"cache/test_test")
+    val dropColumns:Array[String]=Array("user_id","label_1","label_2")
+    val featureColumns:Array[String]=test.columns.filterNot(dropColumns.contains(_))
+    val selecter=new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
+    val test_df=selecter.transform(test)
+
+    val s1_Model=XGBoostModel.read.load(basePath+s"model/s1_Model/bestModel")
+    val s2_Model=XGBoostModel.read.load(basePath+s"model/s2_Model/bestModel")
+    val labelCol="label_1"
+    val predictCol="o_num"
+    val labelCol2="label_2"
+    val predictCol2="pred_date"
+
+    val s1_df=s1_Model.transform(test_df.withColumnRenamed(labelCol,"label"))
+      .withColumnRenamed("label",labelCol)
+      .withColumnRenamed("prediction",predictCol)
+      .select("user_id",labelCol,predictCol)
+    val s2_df=s2_Model.transform(test_df.withColumnRenamed(labelCol2,"label"))
+      .withColumnRenamed("label",labelCol2)
+      .withColumnRenamed("prediction",predictCol2)
+      .select("user_id",labelCol2,predictCol2)
+
+    val result=s1_df.join(s2_df,"user_id")
+    score(result)
+  }
+
+  /**
+    * 检验模型准确性
+    */
+  def varifyValiModel()={
+    val test=spark.read.parquet(basePath+s"cache/vali_test")
+    val dropColumns:Array[String]=Array("user_id","label_1","label_2")
+    val featureColumns:Array[String]=test.columns.filterNot(dropColumns.contains(_))
+    val selecter=new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
+    val test_df=selecter.transform(test)
+
+    val s1_Model=XGBoostModel.read.load(basePath+s"model/s1_train_Model/bestModel")
+    val s2_Model=XGBoostModel.read.load(basePath+s"model/s2_train_Model/bestModel")
+    val labelCol="label_1"
+    val predictCol="o_num"
+    val labelCol2="label_2"
+    val predictCol2="pred_date"
+
+    val s1_df=s1_Model.transform(test_df.withColumnRenamed(labelCol,"label"))
+      .withColumnRenamed("label",labelCol)
+      .withColumnRenamed("prediction",predictCol)
+      .select("user_id",labelCol,predictCol)
+    val s2_df=s2_Model.transform(test_df.withColumnRenamed(labelCol2,"label"))
+      .withColumnRenamed("label",labelCol2)
+      .withColumnRenamed("prediction",predictCol2)
+      .select("user_id",labelCol2,predictCol2)
+
+    val result=s1_df.join(s2_df,"user_id")
+    score(result)
+  }
+
+  def showModelParams()={
+    val s1_Model=XGBoostModel.read.load(basePath+s"model/s1_train_Model/bestModel")
+//    val bestmodel = s1_Model.asInstanceOf[PipelineModel]
+//    val lrModel:Transformer=bestmodel.stages(2)
+//    println(lrModel.explainParam(XGBoostModel.regParam))
+//    println(lrModel.explainParam(XGBoost.elasticNetParam))
   }
 }
