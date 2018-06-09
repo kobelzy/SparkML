@@ -4,6 +4,7 @@ package org.lzy.kaggle.JDataByLeaner
 import ml.dmlc.xgboost4j.scala.spark.{XGBoostEstimator, XGBoostModel}
 import ml.dmlc.xgboost4j.scala.spark.XGBoostRegressionModel
 import org.apache.spark.ml
+import org.apache.spark.ml.param.DoubleParam
 import org.apache.spark.ml.{PipelineModel, Transformer}
 import org.apache.spark.ml.tuning.{TrainValidationSplit, TrainValidationSplitModel}
 import org.apache.spark.sql.SparkSession
@@ -20,10 +21,12 @@ object ShowModels {
     spark.sparkContext.setLogLevel("WARN")
 
     val model=TrainValidationSplitModel.read.load(basePath+s"model/s1_train_Model")
-    println(model.bestModel.explainParams())
-    val bestmodel = model.bestModel.asInstanceOf[XGBoostRegressionModel]
-    val params=bestmodel.params.foreach(println)
-println(    bestmodel.getParam("eta"))
+//    println(model.bestModel.explainParams())
+
+
+println(model.bestModel.extractParamMap())
+//    val params=bestmodel.params.foreach(println)
+//println(    bestmodel.getParam("eta"))
 //    println(bestmodel.getParam("round"))
 //    val lrModel:Transformer=bestmodel.stages(0)
 //    println(lrModel.explainParams())
@@ -31,7 +34,7 @@ println(    bestmodel.getParam("eta"))
 //    println(lrModel.explainParam(XGBoost.elasticNetParam))
 
 
-    val evaluator=model.evaluator
-    println(evaluator.doc)
+//    val evaluator=model.evaluator
+//    println(evaluator.doc)
   }
 }
