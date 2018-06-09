@@ -41,8 +41,8 @@ object TrainModels {
     trainModel.getResult()
 
     //训练模型
-//        trainModel.trainAndSaveModel("vali")
-//        trainModel.varifyModel("vali")
+        trainModel.trainAndSaveModel("vali")
+        trainModel.varifyModel("vali")
   }
 }
 
@@ -84,7 +84,7 @@ class TrainModels(spark: SparkSession, basePath: String) {
     * @return
     */
   def getResult(dataType:String="test") = {
-    val test = spark.read.parquet(basePath + "cache/${dataType}_test")
+    val test = spark.read.parquet(basePath + s"cache/${dataType}_test_start12")
     val dropColumns: Array[String] = Array("user_id", "label_1", "label_2")
     val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
@@ -111,7 +111,7 @@ class TrainModels(spark: SparkSession, basePath: String) {
     val result = s1_df.join(s2_df, "user_id")
     score(result)
     val udf_predDateToDate = udf { (pred_date: Double) => {
-      val days = 1+ math.round(pred_date  - 1)
+      val days =  math.round(pred_date  - 1)
       s"2017-05-${days}"
     }
     }
@@ -139,7 +139,7 @@ class TrainModels(spark: SparkSession, basePath: String) {
     * dataType为test或者vali
     */
   def trainAndSaveModel(dataType: String = "test") = {
-    val train = spark.read.parquet(basePath + s"cache/${dataType}_train")
+    val train = spark.read.parquet(basePath + s"cache/${dataType}_train_start12")
     val dropColumns: Array[String] = Array("user_id", "label_1", "label_2")
     val featureColumns: Array[String] = train.columns.filterNot(dropColumns.contains(_))
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
@@ -158,7 +158,7 @@ class TrainModels(spark: SparkSession, basePath: String) {
     * 检验模型准确性
     */
   def varifyModel(dataType: String = "test") = {
-    val test = spark.read.parquet(basePath + s"cache/${dataType}_test")
+    val test = spark.read.parquet(basePath + s"cache/${dataType}_test_start12")
     val dropColumns: Array[String] = Array("user_id", "label_1", "label_2")
     val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")

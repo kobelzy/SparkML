@@ -27,6 +27,8 @@ object FeaExact {
     config.set("spark.debug.maxToStringFields","100")
     config.set("spark.shuffle.io.maxRetries","60")
     config.set("spark.default.parallelism","54")
+    config.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+
     val util = new Util(spark)
     val feaExact = new FeaExact(spark, basePath)
 //    val (order, action) = util.loadData(basePath)
@@ -36,7 +38,7 @@ object FeaExact {
     val action_cache = spark.read.parquet(basePath + "cache/action").repartition(60).cache()
     val user = util.getSourceData(basePath + "jdata_user_basic_info.csv").repartition(60).cache()
 
-//    feaExact.gen_Vali(order_cache, action_cache, user)
+    feaExact.genVali(order_cache, action_cache, user)
     feaExact.genTest(order_cache, action_cache, user)
     println("完毕：")
 
@@ -50,28 +52,28 @@ class FeaExact(spark: SparkSession, basePath: String) {
   import spark.implicits._
 
 
-  def gen_Vali(order: DataFrame, action: DataFrame, user: DataFrame) = {
+  def genVali(order: DataFrame, action: DataFrame, user: DataFrame) = {
     val test = createFeat(getTime("2017-03-01"), getTime("2017-04-01"), order, action, user)
-    test.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/vali_test")
+    test.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/vali_test_start12")
     val train = createFeat(getTime("2017-02-01"), getTime("2017-03-01"), order, action, user)
       .union(createFeat(getTime("2017-01-01"), getTime("2017-02-01"), order, action, user))
       .union(createFeat(getTime("2016-12-01"), getTime("2017-01-01"), order, action, user))
-      .union(createFeat(getTime("2016-11-01"), getTime("2016-12-01"), order, action, user))
-      .union(createFeat(getTime("2016-10-01"), getTime("2016-11-01"), order, action, user))
-    train.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/vali_train")
+//      .union(createFeat(getTime("2016-11-01"), getTime("2016-12-01"), order, action, user))
+//      .union(createFeat(getTime("2016-10-01"), getTime("2016-11-01"), order, action, user))
+    train.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/vali_train_start12")
   }
 
   def genTest(order: DataFrame, action: DataFrame, user: DataFrame) = {
-//    val test = createFeat(getTime("2017-04-01"), getTime("2017-05-01"), order, action, user)
-//    test.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_test")
+    val test = createFeat(getTime("2017-04-01"), getTime("2017-05-01"), order, action, user)
+    test.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_test_start12")
     val train = createFeat(getTime("2017-03-01"), getTime("2017-04-01"), order, action, user)
       .union(createFeat(getTime("2017-02-01"), getTime("2017-03-01"), order, action, user))
       .union(createFeat(getTime("2017-01-01"), getTime("2017-02-01"), order, action, user))
       .union(createFeat(getTime("2016-12-01"), getTime("2017-01-01"), order, action, user))
-      .union(createFeat(getTime("2016-11-01"), getTime("2016-12-01"), order, action, user))
-      .union(createFeat(getTime("2016-10-01"), getTime("2016-11-01"), order, action, user))
+//      .union(createFeat(getTime("2016-11-01"), getTime("2016-12-01"), order, action, user))
+//      .union(createFeat(getTime("2016-10-01"), getTime("2016-11-01"), order, action, user))
 
-    train.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_train")
+    train.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/test_train_start12")
   }
 
   def getTime(yyyy_MM_dd: String) = {
@@ -140,15 +142,6 @@ class FeaExact(spark: SparkSession, basePath: String) {
     val df_label_joined = df_label.join(order2Utils, Seq("user_id"), "left").join(action2Utils, Seq("user_id"), "left").na.fill(0)
 
 
-    //      .jDoin(order_tmp_filter.groupBy("user_id").agg(countDistinct("o_id").as("o_id_30_101_nunique")).select("o_id_30_101_nunique", "user_id"), Seq("user_id"), "left")
-    //      .join(order_tmp_filter.groupBy("user_id").agg(count("sku_id").as("o_sku_id_30_101_count")).select("o_sku_id_30_101_count", "user_id"), Seq("user_id"), "left")
-    //      .join(order_tmp_filter.groupBy("user_id").agg(sum("o_sku_num").as("o_sku_num_30_101_count")).select("o_sku_num_30_101_count", "user_id"), Seq("user_id"), "left")
-    //      .join(order_tmp_filter.groupBy("user_id").agg(mean("o_day").as("day_30_101_mean")).select("day_30_101_mean", "user_id"), Seq("user_id"), "left")
-    //      .join(order_tmp_filter.groupBy("user_id").agg(countDistinct("o_date").as("o_date_30_101_mean")).select("o_date_30_101_mean", "user_id"), Seq("user_id"), "left")
-    //      .join(order_tmp_filter.groupBy("user_id").agg(countDistinct("o_month").as("o_month_30_101_nunique")).select("o_month_30_101_nunique", "user_id"), Seq("user_id"), "left")
-    //      .join(action_tmp_filter.groupBy("user_id").agg(count("sku_id").as("a_sku_id_30_101_count")).select("a_sku_id_30_101_count", "user_id"), Seq("user_id"), "left")
-    //      .join(action_tmp_filter.groupBy("user_id").agg(countDistinct("a_date").as("a_date_30_101_nunique")).select("a_date_30_101_nunique", "user_id"), Seq("user_id"), "left")
-    //      .na.fill(0)
     val df_label_7_df = getFeatureBySubDay(7, order_df, action_df, df_label_joined)
     val df_label_7And14_df = getFeatureBySubDay(14, order_df, action_df, df_label_7_df)
     val df_label_7And14And30_df = getFeatureBySubDay(30, order_df, action_df, df_label_7And14_df)

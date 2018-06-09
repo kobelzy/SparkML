@@ -75,17 +75,17 @@ val useExternalMemory=true
       "max_depth"->5,
 //      "eta"->0.05,
       "colsample_bytree"->0.9,
-//      "subsample"->0.8,
+      "subsample"->0.8,
       "verbose_eval"->0
     )
 
     val xgbEstimator = new XGBoostEstimator(xgboostParam)
 //            .setPredictionCol(predictCol)
     val paramGrid = new ParamGridBuilder()
-            .addGrid(xgbEstimator.round, Array(100,300,600))
-            .addGrid(xgbEstimator.eta, Array(0.01,0.02,0.05,0.1, 0.2,0.5,1.0))
+            .addGrid(xgbEstimator.round, Array(1000))
+            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
         .addGrid(xgbEstimator.nWorkers,Array(12))
-        .addGrid(xgbEstimator.subSample,Array(0.5,0.8))
+//        .addGrid(xgbEstimator.subSample,Array(0.5,0.8))
             .build()
     val tv=new TrainValidationSplit()
             .setEstimator(xgbEstimator)
