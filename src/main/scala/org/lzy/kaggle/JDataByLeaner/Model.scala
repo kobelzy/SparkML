@@ -44,7 +44,7 @@ def featModel(train_df:DataFrame,test_df:DataFrame,round:Int,nWorkers:Int)={
         "objection"->"reg:linear",
         "eval_metric"->"rmse",
         "max_depth"->4,
-//      "eta"->0.05,
+      "eta"->0.05,
         "colsample_bytree"->0.9,
         "subsample"->0.8,
         "verbose_eval"->0
@@ -73,7 +73,7 @@ val useExternalMemory=true
       "objection"->"reg:linear",
       "eval_metric"->"rmse",
       "max_depth"->5,
-//      "eta"->0.05,
+      "eta"->0.05,
       "colsample_bytree"->0.9,
       "subsample"->0.8,
       "verbose_eval"->0
@@ -82,10 +82,10 @@ val useExternalMemory=true
     val xgbEstimator = new XGBoostEstimator(xgboostParam)
 //            .setPredictionCol(predictCol)
     val paramGrid = new ParamGridBuilder()
-            .addGrid(xgbEstimator.round, Array(1000))
-            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
+            .addGrid(xgbEstimator.round, Array(2000))
+//            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
         .addGrid(xgbEstimator.nWorkers,Array(12))
-//        .addGrid(xgbEstimator.subSample,Array(0.5,0.8))
+//        .addGrid(xgbEstimator.subSample,Array(0.5))
             .build()
     val tv=new TrainValidationSplit()
             .setEstimator(xgbEstimator)
