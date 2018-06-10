@@ -45,18 +45,18 @@ object TrainModels {
     val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
     val data09_df = spark.read.parquet(basePath + "cache/trainMonth/09")
 
-    //训练模型
-    val valiTrain_df = data09_df.union(data10_df).union(data11_df).union(data12_df).union(data01_df).union(data02_df).repartition(200)
-    val valiTest_df = data03_df
-    trainModel.trainAndSaveModel("vali", valiTrain_df)
-    trainModel.varifyModel("vali", valiTest_df)
+    //验证模型
+//    val valiTrain_df = data09_df.union(data10_df).union(data11_df).union(data12_df).union(data01_df).union(data02_df).repartition(200)
+//    val valiTest_df = data03_df
+//    trainModel.trainAndSaveModel("vali", valiTrain_df)
+//    trainModel.varifyModel("vali", valiTest_df)
 
 
-    //验证结果模型
-    val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200)
+    //结果模型
+//    val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200)
     val testTest_df = data04_df
-    trainModel.trainAndSaveModel("test", testTrain_df)
-    trainModel.varifyModel("test", testTest_df)
+//    trainModel.trainAndSaveModel("test", testTrain_df)
+//    trainModel.varifyModel("test", testTest_df)
     trainModel.getResult("test", testTest_df)
 
 
@@ -126,19 +126,28 @@ class TrainModels(spark: SparkSession, basePath: String) {
 
     val result = s1_df.join(s2_df, "user_id")
     score(result)
+
     val udf_predDateToDate = udf { (pred_date: Double) => {
-      val days = math.round(pred_date)
+      val days = math.abs(math.round(pred_date))+1
       s"2017-05-${days}"
-    }
-    }
-    result.filter($"user_id" === 42463).show(false)
-    val submission: DataFrame = result.filter($"pred_date" < 32).sort($"o_num".desc).limit(50000)
+    }    }
+
+    println(result.filter($"pred_date" >0).count)
+    println(result.filter($"pred_date" <0).count)
+    val binalize=result.select(abs($"pred_date").as[Double]).collect().max /30.0
+    println("标准化值："+binalize)
+    val submission: DataFrame = result
+//      .filter($"pred_date"> -30.5 && $"pred_date" <0)
+      .sort($"o_num".desc).limit(50000)
       .withColumn("result_date", udf_predDateToDate($"pred_date"))
       .select($"user_id", to_date($"result_date").as("pred_date"))
     submission.show(20, false)
     val errorData = submission.filter($"pred_date".isNull)
-    errorData.show(false)
+    errorData.join(result,"user_id").show(false)
     println("数据不合法" + errorData.count())
+    println("结果数量："+submission.count())
+    println("最大：")
+    println(submission.sort($"pred_date".desc).head().getDate(1))
     submission.coalesce(1).write
       .option("header", "true")
       .mode(SaveMode.Overwrite)

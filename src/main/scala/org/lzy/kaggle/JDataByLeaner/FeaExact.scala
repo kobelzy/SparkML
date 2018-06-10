@@ -143,8 +143,8 @@ def save11To4MonthData(order: DataFrame, action: DataFrame, user: DataFrame) = {
       }
 
     //总体特征
-    val order_tmp = order_df.filter($"day_gap" <= 0)
-    val action_tmp = action_df.filter($"day_gap" <= 0)
+    val order_tmp = order_df.filter($"day_gap" < 0)
+    val action_tmp = action_df.filter($"day_gap" < 0)
 
     val order_30And101_df = order_tmp.filter($"cate" === 30 || $"cate" === 101).cache()
     val action_30And101_df = action_tmp.filter($"cate" === 30 || $"cate" === 101).cache()
