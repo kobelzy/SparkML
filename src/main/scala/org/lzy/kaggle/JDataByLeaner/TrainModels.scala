@@ -8,10 +8,10 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
   * Created by Administrator on 2018/6/3
-  * spark-submit --master yarn-client --queue lzy --driver-memory 2g --conf spark.driver.maxResultSize=2g  \
-  * --num-executors 12 --executor-cores 4 --executor-memory 7g --jars \
-  * /root/lzy/xgboost/jvm-packages/xgboost4j-spark/target/xgboost4j-spark-0.8-SNAPSHOT-jar-with-dependencies.jar \
-  * --class org.lzy.kaggle.JDataByLeaner.TrainModels SparkML.jar
+   spark-submit --master yarn-client --queue lzy --driver-memory 2g --conf spark.driver.maxResultSize=2g  \
+   --num-executors 12 --executor-cores 4 --executor-memory 7g --jars \
+   /root/lzy/xgboost/jvm-packages/xgboost4j-spark/target/xgboost4j-spark-0.8-SNAPSHOT-jar-with-dependencies.jar \
+   --class org.lzy.kaggle.JDataByLeaner.TrainModels SparkML.jar
   */
 object TrainModels {
 
@@ -53,10 +53,10 @@ object TrainModels {
 
 
     //结果模型
-//    val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200)
+    val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200)
     val testTest_df = data04_df
-//    trainModel.trainAndSaveModel("test", testTrain_df)
-//    trainModel.varifyModel("test", testTest_df)
+    trainModel.trainAndSaveModel("test", testTrain_df)
+    trainModel.varifyModel("test", testTest_df)
     trainModel.getResult("test", testTest_df)
 
 
@@ -71,13 +71,20 @@ class TrainModels(spark: SparkSession, basePath: String) {
   分数检验
    */
   def score(result_df: DataFrame) = {
-    //    *   people.select(when(people("gender") === "male", 0)
-    //      *     .when(people("gender") === "female", 1)
-    //    *     .otherwise(2))
+
     val udf_getWeight = udf { index: Int => 1.0 / (1 + math.log(index)) }
     val udf_binary = udf { label_1: Int => if (label_1 > 0) 1.0 else 0.0 }
+      println("总数："+result_df.count())
+      println("label_1预测结果大于0---->:"+result_df.filter($"o_num">0).count())
+      println("label_1实际结果大于0---->:"+result_df.filter($"label_1">0).count())
+
+      println("label_1预测结果小于0--->0:"+result_df.filter($"o_num"<0).count())
+
+    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
+    println("label_2预测结果小于0--->:"+result_df.filter($"pred_date"<0).count())
 
 
+    //按照label2预测的结果进行排序。
     val weight_df = result_df.sort($"o_num".desc).limit(50000)
       .withColumn("label_binary", when($"label_1" > 0, 1.0).otherwise(0.0))
       //      .withColumn("label_binary", udf_binary($"label_1"))
