@@ -154,7 +154,7 @@ def save11To4MonthData(order: DataFrame, action: DataFrame, user: DataFrame
         //如果下单时间在开始时间之后，那么获取该时间对应的当月的几号。
         val order_label1Andlabel2_df = order_label1_df
 //                .withColumn("label_2", udf_getLabel2($"o_date"))
-                .withColumn("label_2", when($"o_date".isNotNull && $"o_date" >= startTime , dayofmonth($"o_date")-1).otherwise(0))
+                .withColumn("label_2", when($"o_date" >= startTime , dayofmonth($"o_date")-1).otherwise(0))
                 .drop("o_date")
         order_label1Andlabel2_df.show(false)
         order_label1Andlabel2_df

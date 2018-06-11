@@ -38,26 +38,26 @@ object TrainModels {
      */
     val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
     val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
-    val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
-    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
-    val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
-    val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
-    val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
-    val data09_df = spark.read.parquet(basePath + "cache/trainMonth/09")
+//    val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
+//    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
+//    val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
+//    val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
+//    val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
+//    val data09_df = spark.read.parquet(basePath + "cache/trainMonth/09")
 
     //验证模型
 //    val valiTrain_df = data09_df.union(data10_df).union(data11_df).union(data12_df).union(data01_df).union(data02_df).repartition(200)
-//    val valiTest_df = data03_df
+    val valiTest_df = data03_df
 //    trainModel.trainAndSaveModel("vali", valiTrain_df)
-//    trainModel.varifyModel("vali", valiTest_df)
+    trainModel.varifyModel("vali", valiTest_df)
 
 
     //结果模型
-    val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200)
+//    val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200)
     val testTest_df = data04_df
-    trainModel.trainAndSaveModel("test", testTrain_df)
+//    trainModel.trainAndSaveModel("test", testTrain_df)
     trainModel.varifyModel("test", testTest_df)
-    trainModel.getResult("test", testTest_df)
+//    trainModel.getResult("test", testTest_df)
 
 
   }
@@ -74,14 +74,18 @@ class TrainModels(spark: SparkSession, basePath: String) {
 
     val udf_getWeight = udf { index: Int => 1.0 / (1 + math.log(index)) }
     val udf_binary = udf { label_1: Int => if (label_1 > 0) 1.0 else 0.0 }
-      println("总数："+result_df.count())
-      println("label_1预测结果大于0---->:"+result_df.filter($"o_num">0).count())
-      println("label_1实际结果大于0---->:"+result_df.filter($"label_1">0).count())
-
-      println("label_1预测结果小于0--->0:"+result_df.filter($"o_num"<0).count())
-
-    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
-    println("label_2预测结果小于0--->:"+result_df.filter($"pred_date"<0).count())
+//      println("总数："+result_df.count())
+//      println("label_1预测结果大于0---->:"+result_df.filter($"o_num">0).count())
+//      println("label_1实际结果大于0---->:"+result_df.filter($"label_1">0).count())
+//
+//      println("label_1预测结果小于0--->0:"+result_df.filter($"o_num"<0).count())
+//    println("label_1实际结果小于0---->:"+result_df.filter($"label_1"<0).count())
+//    println("label_1实际结果等于0---->:"+result_df.filter($"label_1"===0).count())
+//
+//    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
+//    println("label_2实际结果大于0---->:"+result_df.filter($"label_2">0).count())
+//    println("label_2预测结果小于0--->:"+result_df.filter($"pred_date"<0).count())
+//    println("label_2实际结果小于0--->:"+result_df.filter($"label_2"<0).count())
 
 
     //按照label2预测的结果进行排序。
@@ -90,6 +94,7 @@ class TrainModels(spark: SparkSession, basePath: String) {
       //      .withColumn("label_binary", udf_binary($"label_1"))
       .withColumn("index", monotonically_increasing_id + 1)
       .withColumn("weight", udf_getWeight($"index"))
+    weight_df.filter($"label_1" ===0).show(false)
     val s1 = weight_df.select($"label_binary".as[Double], $"weight".as[Double]).map(tuple => tuple._1 * tuple._2).collect().sum / 4674.32357
     //1 to 50000 map(i=>1.0/(1+math.log(i)))
     //计算s2
