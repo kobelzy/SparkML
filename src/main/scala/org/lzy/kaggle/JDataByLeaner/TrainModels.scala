@@ -179,18 +179,18 @@ class TrainModels(spark: SparkSession, basePath: String) {
     * 训练并保存数据
     * dataType为test或者vali
     */
-  def trainAndSaveModel(dataType: String = "test", train: DataFrame) = {
+  def trainAndSaveModel(dataType: String = "test", train: DataFrame,round:Int) = {
     //    val train = spark.read.parquet(basePath + s"cache/${dataType}_train_start12")
     val dropColumns: Array[String] = Array("user_id", "label_1", "label_2")
     val featureColumns: Array[String] = train.columns.filterNot(dropColumns.contains(_))
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
     val train_df = selecter.transform(train)
     //为resul通过label_1来计算 添加o_num列，
-    val s1_Model: TrainValidationSplitModel = Model.fitPredict(train_df, "label_1", "o_num")
+    val s1_Model: TrainValidationSplitModel = Model.fitPredict(train_df, "label_1", "o_num",round)
     s1_Model.write.overwrite().save(basePath + s"model/s1_${dataType}_Model")
 
     //为result通过label_2来计算添加pred_date
-    val s2_Model = Model.fitPredict(train_df, "label_2", "pred_date")
+    val s2_Model = Model.fitPredict(train_df, "label_2", "pred_date",round)
     s2_Model.write.overwrite().save(basePath + s"model/s2_${dataType}_Model")
   }
 
