@@ -28,7 +28,7 @@ object Run {
         /*
         处理特征数据
          */
-//        getFeatureData(spark)
+        getFeatureData(spark)
 
 
 

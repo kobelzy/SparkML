@@ -75,18 +75,18 @@ class TrainModels(spark: SparkSession, basePath: String) {
 
     val udf_getWeight = udf { index: Int => 1.0 / (1 + math.log(index)) }
     val udf_binary = udf { label_1: Int => if (label_1 > 0) 1.0 else 0.0 }
-      println("总数："+result_df.count())
-      println("label_1预测结果大于0---->:"+result_df.filter($"o_num">0).count())
-      println("label_1实际结果大于0---->:"+result_df.filter($"label_1">0).count())
-
-      println("label_1预测结果小于0--->0:"+result_df.filter($"o_num"<0).count())
-    println("label_1实际结果小于0---->:"+result_df.filter($"label_1"<0).count())
-    println("label_1实际结果等于0---->:"+result_df.filter($"label_1"===0).count())
-
-    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
-    println("label_2实际结果大于0---->:"+result_df.filter($"label_2">0).count())
-    println("label_2预测结果小于0--->:"+result_df.filter($"pred_date"<0).count())
-    println("label_2实际结果小于0--->:"+result_df.filter($"label_2"<0).count())
+//      println("总数："+result_df.count())
+//      println("label_1预测结果大于0---->:"+result_df.filter($"o_num">0).count())
+//      println("label_1实际结果大于0---->:"+result_df.filter($"label_1">0).count())
+//
+//      println("label_1预测结果小于0--->0:"+result_df.filter($"o_num"<0).count())
+//    println("label_1实际结果小于0---->:"+result_df.filter($"label_1"<0).count())
+//    println("label_1实际结果等于0---->:"+result_df.filter($"label_1"===0).count())
+//
+//    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
+//    println("label_2实际结果大于0---->:"+result_df.filter($"label_2">0).count())
+//    println("label_2预测结果小于0--->:"+result_df.filter($"pred_date"<0).count())
+//    println("label_2实际结果小于0--->:"+result_df.filter($"label_2"<0).count())
 
 
     //按照label2预测的结果进行排序。
