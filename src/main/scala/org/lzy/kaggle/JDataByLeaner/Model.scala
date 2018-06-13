@@ -95,7 +95,7 @@ val useExternalMemory=true
         val xgboostParam=Map(
             "booster"->"gbtree",
             "objection"->"reg:logistic",
-            "eval_metric"->"rmse",
+            "eval_metric"->"auc",
             "max_depth"->5,
             "eta"->0.05,
             "colsample_bytree"->0.9,

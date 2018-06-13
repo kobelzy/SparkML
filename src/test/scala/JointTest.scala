@@ -28,9 +28,11 @@ object JointTest {
 
 //    println(math.log(2.7))
 //    println(math.log1p(1))
-    val endTime=Timestamp.valueOf("2017-01-01 00:00:00")
-//    order.withColumn("news",datediff(lit(endTime),$"o_date")).show(false)
-      order                .withColumn("label_2", when($"o_date".isNotNull && $"o_date" >= endTime,dayofmonth($"o_date")-1).otherwise(0))
-              .show(false)
+//    val endTime=Timestamp.valueOf("2017-01-01 00:00:00")
+////    order.withColumn("news",datediff(lit(endTime),$"o_date")).show(false)
+//      order                .withColumn("label_2", when($"o_date".isNotNull && $"o_date" >= endTime,dayofmonth($"o_date")-1).otherwise(0))
+//              .show(false)
+    order.show(false)
+    order.withColumn("o_sku_num",when($"o_sku_num" >1,0).otherwise($"o_sku_num")).show(false)
   }
 }

@@ -35,7 +35,7 @@ object Run {
         /*
         训练测试模型
          */
-        trainValiModel(spark,100)
+        trainValiModel(spark,1000)
         //验证训练模型
         varifyValiModel(spark)
 

@@ -54,11 +54,11 @@
             <!--<version>0.7</version>-->
         <!--</dependency>-->
 
-        <!--<dependency>-->
-            <!--<groupId>com.github.hirofumi</groupId>-->
-            <!--<artifactId>xgboost4j-spark_2.11</artifactId>-->
-            <!--<version>0.7.2-p1</version>-->
-        <!--</dependency>-->
+        <dependency>
+            <groupId>com.github.hirofumi</groupId>
+            <artifactId>xgboost4j-spark_2.11</artifactId>
+            <version>0.7.2-p1</version>
+        </dependency>
 
 
 

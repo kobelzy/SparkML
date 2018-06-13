@@ -2,7 +2,7 @@ package org.lzy.kaggle.JDataByLeaner
 
 import ml.dmlc.xgboost4j.scala.spark.XGBoostModel
 import org.apache.spark.ml.Model
-import org.apache.spark.ml.feature.VectorAssembler
+import org.apache.spark.ml.feature.{PCA, VectorAssembler}
 import org.apache.spark.ml.tuning.{CrossValidatorModel, TrainValidationSplitModel}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.LongType
@@ -75,19 +75,19 @@ class TrainModels(spark: SparkSession, basePath: String) {
   def score(result_df: DataFrame) = {
 
     val udf_getWeight = udf { index: Int => 1.0 / (1 + math.log(index)) }
-    val udf_binary = udf { label_1: Int => if (label_1 > 0) 1.0 else 0.0 }
-//      println("总数："+result_df.count())
-//      println("label_1预测结果大于0---->:"+result_df.filter($"o_num">0).count())
-//      println("label_1实际结果大于0---->:"+result_df.filter($"label_1">0).count())
-//
-//      println("label_1预测结果小于0--->0:"+result_df.filter($"o_num"<0).count())
-//    println("label_1实际结果小于0---->:"+result_df.filter($"label_1"<0).count())
-//    println("label_1实际结果等于0---->:"+result_df.filter($"label_1"===0).count())
-//
-//    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
-//    println("label_2实际结果大于0---->:"+result_df.filter($"label_2">0).count())
-//    println("label_2预测结果小于0--->:"+result_df.filter($"pred_date"<0).count())
-//    println("label_2实际结果小于0--->:"+result_df.filter($"label_2"<0).count())
+    val udf_binary = udf { label_1: Int => if (label_1 > 0.5) 1.0 else 0.0 }
+      println("总数："+result_df.count())
+      println("label_1预测结果大于0---->:"+result_df.filter($"o_num">0).count())
+      println("label_1实际结果大于0---->:"+result_df.filter($"label_1">0).count())
+
+      println("label_1预测结果小于0--->0:"+result_df.filter($"o_num"<0).count())
+    println("label_1实际结果小于0---->:"+result_df.filter($"label_1"<0).count())
+    println("label_1实际结果等于0---->:"+result_df.filter($"label_1"===0).count())
+
+    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
+    println("label_2实际结果大于0---->:"+result_df.filter($"label_2">0).count())
+    println("label_2预测结果小于0--->:"+result_df.filter($"pred_date"<0).count())
+    println("label_2实际结果小于0--->:"+result_df.filter($"label_2"<0).count())
 
 
     //按照label2预测的结果进行排序。
@@ -98,7 +98,7 @@ class TrainModels(spark: SparkSession, basePath: String) {
       .withColumn("index", monotonically_increasing_id + 1)
       .withColumn("weight", udf_getWeight($"index"))
     println("之后总数："+weight_df.count())
-    weight_df.sort($"index".desc).show(false)
+    weight_df.show(false)
     val s1 = weight_df.select($"label_binary".as[Double], $"weight".as[Double]).map(tuple => tuple._1 * tuple._2).collect().sum / 4674.32357
     //1 to 50000 map(i=>1.0/(1+math.log(i)))
     //计算s2
@@ -197,7 +197,6 @@ class TrainModels(spark: SparkSession, basePath: String) {
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
     val train_df = selecter.transform(train)
 
-
 /*    //为resul通过label_1来计算 添加o_num列，
     val s1_Model: TrainValidationSplitModel = Model.fitPredict(train_df, "label_1", "o_num",round)
     s1_Model.write.overwrite().save(basePath + s"model/s1_${dataType}_Model")
@@ -231,6 +230,7 @@ class TrainModels(spark: SparkSession, basePath: String) {
     val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
     val test_df = selecter.transform(test)
+
 
 //    val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
 //    val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
