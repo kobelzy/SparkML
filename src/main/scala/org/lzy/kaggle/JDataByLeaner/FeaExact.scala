@@ -156,7 +156,7 @@ class FeaExact(spark: SparkSession, basePath: String) {
       //如果下单时间在开始时间之后，那么获取该时间对应的当月的几号。
       val order_label1Andlabel2_df = order_label1_df
         //                .withColumn("label_2", udf_getLabel2($"o_date"))
-        .withColumn("label_2", when($"o_date" >= startTime, dayofmonth($"o_date")).otherwise(0))
+        .withColumn("label_2", when($"o_date" >= startTime, dayofmonth($"o_date")-1).otherwise(0))
         .drop("o_date")
       order_label1Andlabel2_df.show(false)
       order_label1Andlabel2_df
@@ -195,23 +195,24 @@ class FeaExact(spark: SparkSession, basePath: String) {
     /*
     评价
      */
-    val comment1_df = order_30And101_BeforeEnd_df.filter($"score_level" === 1).groupBy("user_id").agg(sum($"score_level").as("score_1_sum")).select("user_id", "score_1_sum")
-    val comment2_df = order_30And101_BeforeEnd_df.filter($"score_level" === 2).groupBy("user_id").agg(sum($"score_level").as("score_2_sum")).select("user_id", "score_2_sum")
-    val comment3_df = order_30And101_BeforeEnd_df.filter($"score_level" === 3).groupBy("user_id").agg(sum($"score_level").as("score_3_sum")).select("user_id", "score_3_sum")
-    val comment_df = order_30And101_BeforeEnd_df.filter($"score_level" > 0).groupBy("user_id").agg(mean($"score_level").as("score_mean"), stddev($"score_level").as("score_std")).select("user_id", "score_mean", "score_std")
-
-    val commentAnd1_df = comment_df.join(comment1_df, "user_id")
-    val comment2And3_df = comment2_df.join(comment3_df, "user_id")
-    val comment = commentAnd1_df.join(comment2And3_df, "user_id")
+//    val comment1_df = order_30And101_BeforeEnd_df.filter($"score_level" === 1).groupBy("user_id").agg(sum($"score_level").as("score_1_sum")).select("user_id", "score_1_sum")
+//    val comment2_df = order_30And101_BeforeEnd_df.filter($"score_level" === 2).groupBy("user_id").agg(sum($"score_level").as("score_2_sum")).select("user_id", "score_2_sum")
+//    val comment3_df = order_30And101_BeforeEnd_df.filter($"score_level" === 3).groupBy("user_id").agg(sum($"score_level").as("score_3_sum")).select("user_id", "score_3_sum")
+//    val comment_df = order_30And101_BeforeEnd_df.filter($"score_level" > 0).groupBy("user_id").agg(mean($"score_level").as("score_mean"), stddev($"score_level").as("score_std")).select("user_id", "score_mean", "score_std")
+//
+//    val commentAnd1_df = comment_df.join(comment1_df, "user_id")
+//    val comment2And3_df = comment2_df.join(comment3_df, "user_id")
+//    val comment = commentAnd1_df.join(comment2And3_df, "user_id")
     //用当月有订单的用户来联合其在当月的一些基本特征。
     val df_label_joined = order_label_df.join(broadcast(order2Utils_df), Seq("user_id"), "left").join(broadcast(action2Utils_df), Seq("user_id"), "left")
-      .join(broadcast(comment), Seq("user_id"), "left").na.fill(0)
+//      .join(broadcast(comment), Seq("user_id"), "left")
+            .na.fill(0)
     //获取用户在endTime7天前，14天前，30天前，90天前，180天前的相关统计特征，并联合。
     val df_label_7_df = getFeatureBySubDay(7, order_df, action_df, df_label_joined)
     val df_label_7And14_df = getFeatureBySubDay(14, order_df, action_df, df_label_7_df)
-    val df_label_7And14And30_df = getFeatureBySubDay(30, order_df, action_df, df_label_7And14_df)
-    val df_label_7And14And30And90_df = getFeatureBySubDay(90, order_df, action_df, df_label_7And14And30_df)
-    val df_label_7And14And30And90And180_df = getFeatureBySubDay(180, order_df, action_df, df_label_7And14And30And90_df)
+    val df_label_7And14And30_df = getFeatureBySubDay(21, order_df, action_df, df_label_7And14_df)
+    val df_label_7And14And30And90_df = getFeatureBySubDay(30, order_df, action_df, df_label_7And14And30_df)
+    val df_label_7And14And30And90And180_df = getFeatureBySubDay(60, order_df, action_df, df_label_7And14And30And90_df)
 
     order_30And101_BeforeEnd_df.unpersist()
     action_30And101_BeforeEnd_df.unpersist()
@@ -346,19 +347,19 @@ class FeaExact(spark: SparkSession, basePath: String) {
 
 
     val feat_df = order_tmp_30And101.join(order_tmp_30, Seq("user_id"), "outer")
-      .join(order_tmp_101, Seq("user_id"), "outer")
-      .join(order_tmp_other, Seq("user_id"), "outer")
-      .join(order_tmp_firstDay, Seq("user_id"), "outer")
-      .join(action_tmp_30And101, Seq("user_id"), "outer")
-      .join(action_tmp_30And101_type1, Seq("user_id"), "outer")
-      .join(action_tmp_30And101_type2, Seq("user_id"), "outer")
-      .join(action_tmp_30, Seq("user_id"), "outer")
-      .join(action_tmp_30_type1, Seq("user_id"), "outer")
-      .join(action_tmp_30_type2, Seq("user_id"), "outer")
-      .join(action_tmp_101, Seq("user_id"), "outer")
-      .join(action_tmp_101_type1, Seq("user_id"), "outer")
-      .join(action_tmp_101_type2, Seq("user_id"), "outer").na.fill(0)
-    df_label_joined.join(feat_df, Seq("user_id"), "left").na.fill(0)
+      .join(broadcast(order_tmp_101), Seq("user_id"), "outer")
+      .join(broadcast(order_tmp_other), Seq("user_id"), "outer")
+      .join(broadcast(order_tmp_firstDay), Seq("user_id"), "outer")
+      .join(broadcast(action_tmp_30And101), Seq("user_id"), "outer")
+      .join(broadcast(action_tmp_30And101_type1), Seq("user_id"), "outer")
+      .join(broadcast(action_tmp_30And101_type2), Seq("user_id"), "outer")
+      .join(broadcast(action_tmp_30), Seq("user_id"), "outer")
+      .join(broadcast(action_tmp_30_type1), Seq("user_id"), "outer")
+      .join(broadcast(action_tmp_30_type2), Seq("user_id"), "outer")
+      .join(broadcast(action_tmp_101), Seq("user_id"), "outer")
+      .join(broadcast(action_tmp_101_type1), Seq("user_id"), "outer")
+      .join(broadcast(action_tmp_101_type2), Seq("user_id"), "outer").na.fill(0)
+    df_label_joined.join(broadcast(feat_df), Seq("user_id"), "left").na.fill(0)
 
   }
 }

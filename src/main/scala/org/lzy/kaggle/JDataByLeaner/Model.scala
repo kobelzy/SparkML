@@ -4,7 +4,7 @@ import ml.dmlc.xgboost4j.scala.spark.{XGBoost, XGBoostEstimator, XGBoostModel}
 import org.apache.spark.ml
 import org.apache.spark.ml.{PipelineModel, Transformer}
 import org.apache.spark.ml.evaluation.RegressionEvaluator
-import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
+import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -60,14 +60,61 @@ val useExternalMemory=true
             .setEstimatorParamMaps(paramGrid)
             .setTrainRatio(0.8)
     val tvModel=tv.fit(train_df.withColumnRenamed(labelCol,"label"))
-//      val result_df=tvModel.transform(test_df.withColumnRenamed(labelCol,"label"))
-//              .withColumnRenamed("label",labelCol)
-//              .withColumnRenamed("prediction",predictCol)
-//              .select("user_id",labelCol,predictCol)
-//      val bestmodel = tvModel.bestModel.asInstanceOf[PipelineModel]
-//      val lrModel:Transformer=bestmodel.stages(0)
-//      println("round:"+lrModel.explainParam(xgbEstimator.round))
-//      println("eta:"+lrModel.explainParam(xgbEstimator.eta))
       tvModel
   }
+
+    def fitPredictByCross(train_df:DataFrame,labelCol:String,predictCol:String,round:Int)={
+        val xgboostParam=Map(
+            "booster"->"gbtree",
+            "objection"->"reg:linear",
+            "eval_metric"->"rmse",
+            "max_depth"->5,
+            "eta"->0.05,
+            "colsample_bytree"->0.9,
+            "subsample"->0.8,
+            "verbose_eval"->0
+        )
+
+        val xgbEstimator = new XGBoostEstimator(xgboostParam)
+        val paramGrid = new ParamGridBuilder()
+                .addGrid(xgbEstimator.round, Array(round))
+//            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
+                .addGrid(xgbEstimator.nWorkers,Array(12))
+//        .addGrid(xgbEstimator.subSample,Array(0.5))
+                .build()
+        val tv=new CrossValidator()
+                .setEstimator(xgbEstimator)
+                .setEvaluator(new RegressionEvaluator())
+                .setEstimatorParamMaps(paramGrid)
+                .setNumFolds(4)
+        val tvModel=tv.fit(train_df.withColumnRenamed(labelCol,"label"))
+        tvModel
+    }
+
+    def fitPredictByCrossClassic(train_df:DataFrame,labelCol:String,predictCol:String,round:Int)={
+        val xgboostParam=Map(
+            "booster"->"gbtree",
+            "objection"->"reg:logistic",
+            "eval_metric"->"rmse",
+            "max_depth"->5,
+            "eta"->0.05,
+            "colsample_bytree"->0.9,
+            "subsample"->0.8,
+            "verbose_eval"->0
+        )
+        val xgbEstimator = new XGBoostEstimator(xgboostParam)
+        val paramGrid = new ParamGridBuilder()
+                .addGrid(xgbEstimator.round, Array(round))
+//            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
+                .addGrid(xgbEstimator.nWorkers,Array(12))
+//        .addGrid(xgbEstimator.subSample,Array(0.5))
+                .build()
+        val tv=new CrossValidator()
+                .setEstimator(xgbEstimator)
+                .setEvaluator(new RegressionEvaluator())
+                .setEstimatorParamMaps(paramGrid)
+                .setNumFolds(4)
+        val tvModel=tv.fit(train_df.withColumnRenamed(labelCol,"label"))
+        tvModel
+    }
 }

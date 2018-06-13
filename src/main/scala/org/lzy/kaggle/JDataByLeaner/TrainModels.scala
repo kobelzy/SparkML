@@ -1,8 +1,9 @@
 package org.lzy.kaggle.JDataByLeaner
 
 import ml.dmlc.xgboost4j.scala.spark.XGBoostModel
+import org.apache.spark.ml.Model
 import org.apache.spark.ml.feature.VectorAssembler
-import org.apache.spark.ml.tuning.TrainValidationSplitModel
+import org.apache.spark.ml.tuning.{CrossValidatorModel, TrainValidationSplitModel}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.LongType
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
@@ -103,7 +104,7 @@ class TrainModels(spark: SparkSession, basePath: String) {
     //计算s2
     val weightEqual1_df = result_df.filter($"label_1" > 0)
     val s2 = weight_df.filter($"label_1" > 0).select($"label_2".as[Double], $"pred_date".as[Double]).collect().map { case (label_2, pred_date) =>
-      10.0 / (math.pow(label_2 - math.round(pred_date), 2) + 10)
+      10.0 / (math.pow(label_2 - math.round(pred_date)-1, 2) + 10)
     }.sum / weightEqual1_df.count().toDouble
     println(s"s1 score is $s1 ,s2 score is $s2 , S is ${0.4 * s1 + 0.6 * s2}")
   }
@@ -121,10 +122,15 @@ class TrainModels(spark: SparkSession, basePath: String) {
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
     val test_df = selecter.transform(test)
 
-    //    val s1_Model = XGBoostModel.read.load(basePath + s"model/s1_${dataType}_Model/bestModel")
-    val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
-    //    val s2_Model = XGBoostModel.read.load(basePath + s"model/s2_${dataType}_Model/bestModel")
-    val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
+//    val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
+//    val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
+
+    /**
+      * 交叉验证方式
+      */
+    val s1_Model = CrossValidatorModel.read.load(basePath + s"model/s1_${dataType}_ModelByCross").bestModel
+    val s2_Model = CrossValidatorModel.read.load(basePath + s"model/s2_${dataType}_ModelByCross").bestModel
+
     val labelCol = "label_1"
     val predictCol = "o_num"
     val labelCol2 = "label_2"
@@ -175,40 +181,68 @@ class TrainModels(spark: SparkSession, basePath: String) {
   }
 
 
-  /**
-    * 训练并保存数据
-    * dataType为test或者vali
-    */
+  /***
+   * 功能实现:     训练并保存数据
+    * *dataType为test或者vali
+   *
+   * Author: Lzy
+   * Date: 2018/6/13 9:17
+   * Param: [dataType, train, round]
+   * Return: void
+   */
   def trainAndSaveModel(dataType: String = "test", train: DataFrame,round:Int) = {
     //    val train = spark.read.parquet(basePath + s"cache/${dataType}_train_start12")
-    val dropColumns: Array[String] = Array("user_id", "label_1", "label_2")
+    val dropColumns: Array[String] = Array("user_id",  "label_1", "label_2")
     val featureColumns: Array[String] = train.columns.filterNot(dropColumns.contains(_))
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
     val train_df = selecter.transform(train)
-    //为resul通过label_1来计算 添加o_num列，
+
+
+/*    //为resul通过label_1来计算 添加o_num列，
     val s1_Model: TrainValidationSplitModel = Model.fitPredict(train_df, "label_1", "o_num",round)
     s1_Model.write.overwrite().save(basePath + s"model/s1_${dataType}_Model")
-
     //为result通过label_2来计算添加pred_date
     val s2_Model = Model.fitPredict(train_df, "label_2", "pred_date",round)
-    s2_Model.write.overwrite().save(basePath + s"model/s2_${dataType}_Model")
+    s2_Model.write.overwrite().save(basePath + s"model/s2_${dataType}_Model")*/
+
+    /**
+      * 交叉验证方式
+      */
+    //为resul通过label_1来计算 添加o_num列，
+    val s1_Model = Model.fitPredictByCrossClassic(train_df, "label_1", "o_num",round)
+    s1_Model.write.overwrite().save(basePath + s"model/s1_${dataType}_ModelByCross")
+    //为result通过label_2来计算添加pred_date
+    val s2_Model = Model.fitPredictByCross(train_df, "label_2", "pred_date",round)
+    s2_Model.write.overwrite().save(basePath + s"model/s2_${dataType}_ModelByCross")
   }
 
 
-  /**
-    * 检验模型准确性
-    */
+  /***
+   * 功能实现:
+   *检验模型准确性
+   * Author: Lzy
+   * Date: 2018/6/13 9:16
+   * Param: [dataType, test]
+   * Return: void
+   */
   def varifyModel(dataType: String = "test", test: DataFrame) = {
     //    val test = spark.read.parquet(basePath + s"cache/${dataType}_test_start12")
-    val dropColumns: Array[String] = Array("user_id", "label_1", "label_2")
+    val dropColumns: Array[String] = Array("user_id",  "label_1", "label_2")
     val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
     val test_df = selecter.transform(test)
 
-    //    val s1_Model = XGBoostModel.read.load(basePath + s"model/s1_${dataType}_Model/bestModel")
-    val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
-    //    val s2_Model = XGBoostModel.read.load(basePath + s"model/s2_${dataType}_Model/bestModel")
-    val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
+//    val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
+//    val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
+
+
+    /**
+      * 交叉验证方式
+      */
+    val s1_Model = CrossValidatorModel.read.load(basePath + s"model/s1_${dataType}_ModelByCross").bestModel
+    val s2_Model = CrossValidatorModel.read.load(basePath + s"model/s2_${dataType}_ModelByCross").bestModel
+
+
     val labelCol = "label_1"
     val predictCol = "o_num"
     val labelCol2 = "label_2"
@@ -228,11 +262,4 @@ class TrainModels(spark: SparkSession, basePath: String) {
   }
 
 
-  def showModelParams() = {
-    val s1_Model = XGBoostModel.read.load(basePath + s"model/s1_train_Model/bestModel")
-    //    val bestmodel = s1_Model.asInstanceOf[PipelineModel]
-    //    val lrModel:Transformer=bestmodel.stages(2)
-    //    println(lrModel.explainParam(XGBoostModel.regParam))
-    //    println(lrModel.explainParam(XGBoost.elasticNetParam))
-  }
 }

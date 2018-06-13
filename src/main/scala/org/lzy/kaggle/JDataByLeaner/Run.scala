@@ -28,7 +28,7 @@ object Run {
         /*
         处理特征数据
          */
-        getFeatureData(spark)
+//        getFeatureData(spark)
 
 
 
@@ -43,7 +43,7 @@ object Run {
         /*
         训练结果模型并导出
          */
-        trainTestModel(spark,1000)
+//        trainTestModel(spark,1000)
     }
 
     /** *
