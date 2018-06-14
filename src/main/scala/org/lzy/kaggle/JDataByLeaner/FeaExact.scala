@@ -179,13 +179,11 @@ class FeaExact(spark: SparkSession, basePath: String) {
         countDistinct("o_month").as("o_month_30_101_nunique"),
         countDistinct("sku_id").as("sku_id_30_101_nunique"),
         sum("price").as("price_sum"),
-        mean("price").as("price_mean"),
-        min("price").as("price_min"),
-        max("price").as("price_max")
+        mean("price").as("price_mean")
 
       )
       .select("user_id", "o_id_30_101_nunique", "o_sku_id_30_101_count", "o_sku_num_30_101_count", "day_30_101_mean", "o_date_30_101_mean", "o_month_30_101_nunique",
-        "sku_id_30_101_nunique", "price_sum", "price_mean", "price_min", "price_max")
+        "sku_id_30_101_nunique", "price_sum", "price_mean")
 
     val action2Utils_df = action_30And101_BeforeEnd_df.groupBy("user_id")
       .agg(count("sku_id").as("a_sku_id_30_101_count"),
@@ -213,11 +211,12 @@ class FeaExact(spark: SparkSession, basePath: String) {
     val df_label_7And14And30_df = getFeatureBySubDay(21, order_df, action_df, df_label_7And14_df)
     val df_label_7And14And30And90_df = getFeatureBySubDay(30, order_df, action_df, df_label_7And14And30_df)
     val df_label_7And14And30And90And180_df = getFeatureBySubDay(60, order_df, action_df, df_label_7And14And30And90_df)
-
+    val df_label_7And14And30And90And180And90_df = getFeatureBySubDay(90, order_df, action_df, df_label_7And14And30And90And180_df)
+    val df_label_7And14And30And90And180And90And180_df = getFeatureBySubDay(180, order_df, action_df, df_label_7And14And30And90And180And90_df)
     order_30And101_BeforeEnd_df.unpersist()
     action_30And101_BeforeEnd_df.unpersist()
 
-    df_label_7And14And30And90And180_df
+    df_label_7And14And30And90And180And90And180_df
   }
 
 
@@ -275,8 +274,8 @@ class FeaExact(spark: SparkSession, basePath: String) {
       .groupBy("user_id").agg(countDistinct("o_id").as(o + "o_id_101_nunique"),
       count("sku_id").as(o + "sku_id_101_count"),
       sum("o_sku_num").as(o + "sku_num_101_count"),
-      max("o_day").as(o + "day_101_max"),
-      mean("o_day").as(o + "day_101_mean"),
+//      max("o_day").as(o + "day_101_max"),
+//      mean("o_day").as(o + "day_101_mean"),
       countDistinct("o_date").as(o + "o_date_101_nunique"),
       countDistinct("o_month").as(o + "o_month_101_nunique"),
       //添加测试
@@ -287,7 +286,9 @@ class FeaExact(spark: SparkSession, basePath: String) {
       stddev_samp("o_sku_num").as(o + "o_sku_num_101_std"),
       skewness("o_sku_num").as(o + "o_sku_num_101_skewness")
     )
-      .select("user_id", o + "o_id_101_nunique", o + "sku_id_101_count", o + "sku_num_101_count", o + "day_101_max", o + "day_101_mean", o + "o_date_101_nunique", o + "o_month_101_nunique",
+      .select("user_id", o + "o_id_101_nunique", o + "sku_id_101_count", o + "sku_num_101_count",
+//        o + "day_101_max", o + "day_101_mean",
+        o + "o_date_101_nunique", o + "o_month_101_nunique",
         o + "o_id_101_var", o + "o_id_101_std", o + "o_id_101_skewness", o + "o_sku_num_101_var", o + "o_sku_num_101_std", o + "o_sku_num_101_skewness"
       )
     //#######################################################################################################################################
@@ -337,9 +338,12 @@ class FeaExact(spark: SparkSession, basePath: String) {
     val action_tmp_101 = action_tmp_byDay.filter($"cate" === 101)
       .groupBy("user_id").agg(
       count("sku_id").as(a + "sku_id_101_count"),
-      countDistinct("a_date").as(a + "a_date_101_nunique"),
-      countDistinct("sku_id").as(a + "sku_id_101_nunique"))
-      .select("user_id", a + "sku_id_101_count", a + "a_date_101_nunique", a + "sku_id_101_nunique")
+      countDistinct("a_date").as(a + "a_date_101_nunique")
+//      ,countDistinct("sku_id").as(a + "sku_id_101_nunique")
+    )
+      .select("user_id", a + "sku_id_101_count", a + "a_date_101_nunique"
+//        , a + "sku_id_101_nunique"
+      )
     val action_tmp_101_type1 = action_tmp_type_1.filter($"cate" === 101)
       .groupBy("user_id").agg(count("sku_id").as(a + "sku_id_type1_101_count")).select("user_id", a + "sku_id_type1_101_count")
     val action_tmp_101_type2 = action_tmp_type_2.filter($"cate" === 101)

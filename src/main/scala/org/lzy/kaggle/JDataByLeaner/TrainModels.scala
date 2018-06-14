@@ -1,11 +1,8 @@
 package org.lzy.kaggle.JDataByLeaner
 
-import ml.dmlc.xgboost4j.scala.spark.XGBoostModel
-import org.apache.spark.ml.Model
-import org.apache.spark.ml.feature.{PCA, VectorAssembler}
+import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.tuning.{CrossValidatorModel, TrainValidationSplitModel}
 import org.apache.spark.sql.functions._
-import org.apache.spark.sql.types.LongType
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 
 /**
@@ -47,26 +44,15 @@ object TrainModels {
     val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
     val data09_df = spark.read.parquet(basePath + "cache/trainMonth/09")
 
-    //验证模型
-//    val valiTrain_df = data09_df.union(data10_df).union(data11_df).union(data12_df).union(data01_df).union(data02_df).repartition(200)
-    val valiTest_df = data03_df
-//    trainModel.trainAndSaveModel("vali", valiTrain_df)
-    trainModel.varifyModel("vali", valiTest_df)
+    val testTrain_df = data09_df.union(data10_df).union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(100)
 
-
-    //结果模型
-//    val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200)
-//    val testTest_df = data04_df
-//    trainModel.trainAndSaveModel("test", testTrain_df)
-//    trainModel.varifyModel("test", testTest_df)
-//    trainModel.getResult("test", testTest_df)
-
-
+    val featureCorr_list=trainModel.showFeatureLevel(testTrain_df,"label_1",Array("user_id","label_2"))
+    spark.createDataFrame(featureCorr_list).write.parquet(basePath+"corr/label1_corr")
   }
 }
 
 class TrainModels(spark: SparkSession, basePath: String) {
-
+  val dropColumns: Array[String] = Array("user_id", "label_1", "label_2","sex")
   import spark.implicits._
 
   /*
@@ -75,19 +61,19 @@ class TrainModels(spark: SparkSession, basePath: String) {
   def score(result_df: DataFrame) = {
 
     val udf_getWeight = udf { index: Int => 1.0 / (1 + math.log(index)) }
-    val udf_binary = udf { label_1: Int => if (label_1 > 0.5) 1.0 else 0.0 }
-      println("总数："+result_df.count())
-      println("label_1预测结果大于0---->:"+result_df.filter($"o_num">0).count())
-      println("label_1实际结果大于0---->:"+result_df.filter($"label_1">0).count())
+//      println("总数："+result_df.count())
+//      println("label_1预测结果大于0---->:"+result_df.filter($"o_num">0).count())
+//      println("label_1实际结果大于0---->:"+result_df.filter($"label_1">0).count())
+//
+//      println("label_1预测结果小于0--->0:"+result_df.filter($"o_num"<0).count())
+//    println("label_1实际结果小于0---->:"+result_df.filter($"label_1"<0).count())
+//    println("label_1实际结果等于0---->:"+result_df.filter($"label_1"===0).count())
+//
+//    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
+//    println("label_2实际结果大于0---->:"+result_df.filter($"label_2">0).count())
+//    println("label_2预测结果小于0--->:"+result_df.filter($"pred_date"<0).count())
+//    println("label_2实际结果小于0--->:"+result_df.filter($"label_2"<0).count())
 
-      println("label_1预测结果小于0--->0:"+result_df.filter($"o_num"<0).count())
-    println("label_1实际结果小于0---->:"+result_df.filter($"label_1"<0).count())
-    println("label_1实际结果等于0---->:"+result_df.filter($"label_1"===0).count())
-
-    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
-    println("label_2实际结果大于0---->:"+result_df.filter($"label_2">0).count())
-    println("label_2预测结果小于0--->:"+result_df.filter($"pred_date"<0).count())
-    println("label_2实际结果小于0--->:"+result_df.filter($"label_2"<0).count())
 
 
     //按照label2预测的结果进行排序。
@@ -99,6 +85,11 @@ class TrainModels(spark: SparkSession, basePath: String) {
       .withColumn("weight", udf_getWeight($"index"))
     println("之后总数："+weight_df.count())
     weight_df.show(false)
+    val sorted=weight_df.sort($"pred_date")
+    println("最大值--->:")
+    weight_df.sort($"pred_date").show(false)
+    println("最小值--->:")
+    weight_df.sort($"pred_date".desc).show(false)
     val s1 = weight_df.select($"label_binary".as[Double], $"weight".as[Double]).map(tuple => tuple._1 * tuple._2).collect().sum / 4674.32357
     //1 to 50000 map(i=>1.0/(1+math.log(i)))
     //计算s2
@@ -117,19 +108,18 @@ class TrainModels(spark: SparkSession, basePath: String) {
     */
   def getResult(dataType: String = "test", test: DataFrame) = {
     //    val test = spark.read.parquet(basePath + s"cache/${dataType}_test_start12")
-    val dropColumns: Array[String] = Array("user_id", "label_1", "label_2")
     val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
     val test_df = selecter.transform(test)
 
-//    val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
-//    val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
+    val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
+    val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
 
     /**
       * 交叉验证方式
       */
-    val s1_Model = CrossValidatorModel.read.load(basePath + s"model/s1_${dataType}_ModelByCross").bestModel
-    val s2_Model = CrossValidatorModel.read.load(basePath + s"model/s2_${dataType}_ModelByCross").bestModel
+//    val s1_Model = CrossValidatorModel.read.load(basePath + s"model/s1_${dataType}_ModelByCross").bestModel
+//    val s2_Model = CrossValidatorModel.read.load(basePath + s"model/s2_${dataType}_ModelByCross").bestModel
 
     val labelCol = "label_1"
     val predictCol = "o_num"
@@ -192,27 +182,27 @@ class TrainModels(spark: SparkSession, basePath: String) {
    */
   def trainAndSaveModel(dataType: String = "test", train: DataFrame,round:Int) = {
     //    val train = spark.read.parquet(basePath + s"cache/${dataType}_train_start12")
-    val dropColumns: Array[String] = Array("user_id",  "label_1", "label_2")
     val featureColumns: Array[String] = train.columns.filterNot(dropColumns.contains(_))
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
     val train_df = selecter.transform(train)
 
-/*    //为resul通过label_1来计算 添加o_num列，
+    //为resul通过label_1来计算 添加o_num列，
     val s1_Model: TrainValidationSplitModel = Model.fitPredict(train_df, "label_1", "o_num",round)
     s1_Model.write.overwrite().save(basePath + s"model/s1_${dataType}_Model")
     //为result通过label_2来计算添加pred_date
     val s2_Model = Model.fitPredict(train_df, "label_2", "pred_date",round)
-    s2_Model.write.overwrite().save(basePath + s"model/s2_${dataType}_Model")*/
+    s2_Model.write.overwrite().save(basePath + s"model/s2_${dataType}_Model")
 
     /**
       * 交叉验证方式
       */
     //为resul通过label_1来计算 添加o_num列，
-    val s1_Model = Model.fitPredictByCrossClassic(train_df, "label_1", "o_num",round)
+/*    val s1_Model = Model.fitPredictByCrossClassic(train_df, "label_1", "o_num",round)
+//    val s1_Model = Model.fitPredictByCross(train_df, "label_1", "o_num",round)
     s1_Model.write.overwrite().save(basePath + s"model/s1_${dataType}_ModelByCross")
     //为result通过label_2来计算添加pred_date
     val s2_Model = Model.fitPredictByCross(train_df, "label_2", "pred_date",round)
-    s2_Model.write.overwrite().save(basePath + s"model/s2_${dataType}_ModelByCross")
+    s2_Model.write.overwrite().save(basePath + s"model/s2_${dataType}_ModelByCross")*/
   }
 
 
@@ -226,21 +216,20 @@ class TrainModels(spark: SparkSession, basePath: String) {
    */
   def varifyModel(dataType: String = "test", test: DataFrame) = {
     //    val test = spark.read.parquet(basePath + s"cache/${dataType}_test_start12")
-    val dropColumns: Array[String] = Array("user_id",  "label_1", "label_2")
     val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
     val selecter = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features")
     val test_df = selecter.transform(test)
 
 
-//    val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
-//    val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
+    val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
+    val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
 
 
     /**
       * 交叉验证方式
       */
-    val s1_Model = CrossValidatorModel.read.load(basePath + s"model/s1_${dataType}_ModelByCross").bestModel
-    val s2_Model = CrossValidatorModel.read.load(basePath + s"model/s2_${dataType}_ModelByCross").bestModel
+//    val s1_Model = CrossValidatorModel.read.load(basePath + s"model/s1_${dataType}_ModelByCross").bestModel
+//    val s2_Model = CrossValidatorModel.read.load(basePath + s"model/s2_${dataType}_ModelByCross").bestModel
 
 
     val labelCol = "label_1"
@@ -260,6 +249,22 @@ class TrainModels(spark: SparkSession, basePath: String) {
     val result = s1_df.join(s2_df, "user_id")
     score(result)
   }
-
+/***
+ * 功能实现:计算多列的斯皮尔曼相关系数
+ *
+ * Author: Lzy
+ * Date: 2018/6/14 15:19
+ * Param: [df, label, noComputeColumn]
+ * Return: scala.collection.immutable.List<scala.Tuple2<java.lang.String,java.lang.Object>>
+ */
+  def showFeatureLevel(df:DataFrame,label:String,noComputeColumn:Array[String])={
+     val columns=df.columns.filterNot(column=>(noComputeColumn:+label) .contains(column))
+    var column2Corr_arr=List[(String,Double)]()
+    for(column<-columns){
+      val corr=df.stat.corr(label,column)
+      column2Corr_arr=column2Corr_arr:+ column->corr
+    }
+    column2Corr_arr.sortBy(_._2)
+  }
 
 }

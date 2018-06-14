@@ -86,7 +86,7 @@ val useExternalMemory=true
                 .setEstimator(xgbEstimator)
                 .setEvaluator(new RegressionEvaluator())
                 .setEstimatorParamMaps(paramGrid)
-                .setNumFolds(4)
+                .setNumFolds(3)
         val tvModel=tv.fit(train_df.withColumnRenamed(labelCol,"label"))
         tvModel
     }
@@ -113,7 +113,7 @@ val useExternalMemory=true
                 .setEstimator(xgbEstimator)
                 .setEvaluator(new RegressionEvaluator())
                 .setEstimatorParamMaps(paramGrid)
-                .setNumFolds(4)
+                .setNumFolds(3)
         val tvModel=tv.fit(train_df.withColumnRenamed(labelCol,"label"))
         tvModel
     }
