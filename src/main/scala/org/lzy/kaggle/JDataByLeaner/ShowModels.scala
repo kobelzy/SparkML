@@ -20,11 +20,11 @@ object ShowModels {
             .master("local[*]")
       .appName("model").getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
-
+import spark.implicits._
 //    val model=TrainValidationSplitModel.read.load(basePath+s"model/s1_train_Model")
 //    println(model.bestModel.explainParams())
-val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
-    data03_df.sort("user_id").show(false)
+//val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
+//    data03_df.sort("user_id").show(false)
 
 //println(model.bestModel.extractParamMap())
 //    val params=bestmodel.params.foreach(println)
@@ -38,5 +38,9 @@ val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
 
 //    val evaluator=model.evaluator
 //    println(evaluator.doc)
+    val data=spark.read.parquet(basePath+"corr/label1_corr")
+    val list=data.sort("_2").map(line=>(line.getString(0),line.getDouble(1))).collectAsList()
+    println(list)
+
   }
 }

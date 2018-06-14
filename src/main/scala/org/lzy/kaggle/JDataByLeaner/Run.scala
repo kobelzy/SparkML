@@ -79,7 +79,6 @@ object Run {
         val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
         val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
         val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
-        val data09_df = spark.read.parquet(basePath + "cache/trainMonth/09")
         //结果模型
         val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200)
         val testTest_df = data04_df
@@ -98,8 +97,6 @@ object Run {
       */
     def trainValiModel(spark: SparkSession,round:Int=100) = {
         val trainModel = new TrainModels(spark, basePath)
-        val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
-        val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
         val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
         val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
         val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")

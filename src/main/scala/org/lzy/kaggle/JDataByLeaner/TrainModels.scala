@@ -46,8 +46,8 @@ object TrainModels {
 
     val testTrain_df = data09_df.union(data10_df).union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(100)
 
-    val featureCorr_list=trainModel.showFeatureLevel(testTrain_df,"label_1",Array("user_id","label_2"))
-    spark.createDataFrame(featureCorr_list).write.parquet(basePath+"corr/label1_corr")
+    val featureCorr_list=trainModel.showFeatureLevel(testTrain_df,"label_2",Array("user_id","label_1"))
+    spark.createDataFrame(featureCorr_list).write.parquet(basePath+"corr/label2_corr")
   }
 }
 

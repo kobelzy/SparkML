@@ -239,13 +239,13 @@ class FeaExact(spark: SparkSession, basePath: String) {
       //添加测试
       var_samp("o_day").as(o + "o_id_30_101_var"),
       stddev_samp("o_day").as(o + "o_id_30_101_std"),
-      skewness("o_day").as(o + "o_id_30_101_skewness"),
-      var_samp("o_sku_num").as(o + "o_sku_num_30_101_var"),
+//      skewness("o_day").as(o + "o_id_30_101_skewness"),
+//      var_samp("o_sku_num").as(o + "o_sku_num_30_101_var"),
       stddev_samp("o_sku_num").as(o + "o_sku_num_30_101_std"),
       skewness("o_sku_num").as(o + "o_sku_num_30_101_skewness")
     )
       .select("user_id", o + "o_id_30_101_nunique", o + "sku_id_30_101_count", o + "sku_num_30_101_count", o + "day_30_101_max", o + "day_30_101_mean", o + "o_date_30_101_nunique", o + "o_month_30_101_nunique",
-        o + "o_id_30_101_var", o + "o_id_30_101_std", o + "o_id_30_101_skewness", o + "o_sku_num_30_101_var", o + "o_sku_num_30_101_std", o + "o_sku_num_30_101_skewness"
+        o + "o_id_30_101_var", o + "o_id_30_101_std", o + "o_sku_num_30_101_std", o + "o_sku_num_30_101_skewness"
       )
     //#######################################################################################################################################
     //获取（30）
@@ -260,13 +260,13 @@ class FeaExact(spark: SparkSession, basePath: String) {
       //添加测试
       var_samp("o_day").as(o + "o_id_30_var"),
       stddev_samp("o_day").as(o + "o_id_30_std"),
-      skewness("o_day").as(o + "o_id_30_skewness"),
-      var_samp("o_sku_num").as(o + "o_sku_num_30_var"),
+//      skewness("o_day").as(o + "o_id_30_skewness"),
+//      var_samp("o_sku_num").as(o + "o_sku_num_30_var"),
       stddev_samp("o_sku_num").as(o + "o_sku_num_30_std"),
       skewness("o_sku_num").as(o + "o_sku_num_30_skewness")
     )
       .select("user_id", o + "o_id_30_nunique", o + "sku_id_30_count", o + "sku_num_30_count", o + "day_30_max", o + "day_30_mean", o + "o_date_30_nunique", o + "o_month_30_nunique",
-        o + "o_id_30_var", o + "o_id_30_std", o + "o_id_30_skewness", o + "o_sku_num_30_var", o + "o_sku_num_30_std", o + "o_sku_num_30_skewness"
+        o + "o_id_30_var", o + "o_id_30_std", o + "o_sku_num_30_std", o + "o_sku_num_30_skewness"
       )
     //#######################################################################################################################################
     //获取（101）
@@ -281,15 +281,15 @@ class FeaExact(spark: SparkSession, basePath: String) {
       //添加测试
       var_samp("o_day").as(o + "o_id_101_var"),
       stddev_samp("o_day").as(o + "o_id_101_std"),
-      skewness("o_day").as(o + "o_id_101_skewness"),
-      var_samp("o_sku_num").as(o + "o_sku_num_101_var"),
+//      skewness("o_day").as(o + "o_id_101_skewness"),
+//      var_samp("o_sku_num").as(o + "o_sku_num_101_var"),
       stddev_samp("o_sku_num").as(o + "o_sku_num_101_std"),
       skewness("o_sku_num").as(o + "o_sku_num_101_skewness")
     )
       .select("user_id", o + "o_id_101_nunique", o + "sku_id_101_count", o + "sku_num_101_count",
 //        o + "day_101_max", o + "day_101_mean",
         o + "o_date_101_nunique", o + "o_month_101_nunique",
-        o + "o_id_101_var", o + "o_id_101_std", o + "o_id_101_skewness", o + "o_sku_num_101_var", o + "o_sku_num_101_std", o + "o_sku_num_101_skewness"
+        o + "o_id_101_var", o + "o_id_101_std",  o + "o_sku_num_101_std", o + "o_sku_num_101_skewness"
       )
     //#######################################################################################################################################
     //获取!（30,101）
