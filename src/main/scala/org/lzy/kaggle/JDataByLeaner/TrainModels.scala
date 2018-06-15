@@ -67,11 +67,10 @@ class TrainModels(spark: SparkSession, basePath: String) {
 
         val udf_getWeight = udf { index: Int => 1.0 / (1 + math.log(index)) }
 //      println("总数："+result_df.count())
-        println("label_1预测结果大于0---->:" + result_df.filter($"o_num" > 0).count())
-        println("label_1实际结果大于0---->:" + result_df.filter($"label_1" > 0).count())
-//
-        println("label_1预测结果小于0--->0:" + result_df.filter($"o_num" < 0).count())
-        println("label_1实际结果小于0---->:" + result_df.filter($"label_1" < 0).count())
+//        println("label_1预测结果大于0---->:" + result_df.filter($"o_num" > 0).count())
+//        println("label_1实际结果大于0---->:" + result_df.filter($"label_1" > 0).count())
+//        println("label_1预测结果小于0--->0:" + result_df.filter($"o_num" < 0).count())
+//        println("label_1实际结果小于0---->:" + result_df.filter($"label_1" < 0).count())
 //    println("label_1实际结果等于0---->:"+result_df.filter($"label_1"===0).count())
 //
 //    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
@@ -87,7 +86,7 @@ class TrainModels(spark: SparkSession, basePath: String) {
                 //      .withColumn("label_binary", udf_binary($"label_1"))
                 .withColumn("index", monotonically_increasing_id + 1)
                 .withColumn("weight", udf_getWeight($"index"))
-        println("之后总数：" + weight_df.count())
+
         weight_df.show(false)
         //        val sorted = weight_df.sort($"pred_date")
 //        println("最大值--->:")
@@ -99,9 +98,9 @@ val s1 = weight_df.select($"label_binary".as[Double], $"weight".as[Double]).map(
         //计算s2
         val weightEqual1_df = result_df.filter($"label_1" > 0)
         val s2 = weight_df.filter($"label_1" > 0).select($"label_2".as[Double], $"pred_date".as[Double]).collect().map { case (label_2, pred_date) =>
-            10.0 / (math.pow(label_2 - math.round(pred_date) + 1, 2) + 10)
+            10.0 / (math.pow(label_2 - math.round(pred_date), 2) + 10)
         }.sum / weightEqual1_df.count().toDouble
-        println(s"s1 score is $s1 ,s2 score is $s2 , S is ${0.4 * s1 + 0.6 * s2}")
+        println(s"s1 分数 is $s1 ,s2 分数 is $s2 , S is ${0.4 * s1 + 0.6 * s2}")
     }
 
 
