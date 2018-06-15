@@ -35,15 +35,21 @@ object Run {
         /*
         训练测试模型
          */
-        trainValiModel(spark,100)
-//        //验证训练模型
-        varifyValiModel(spark)
 
+//        trainValiModel(spark,100,200)
+////        //验证训练模型
+//        varifyValiModel(spark)
+
+    Range(100,300,20).map(num=>{
+        println("特征数量："+num)
+        trainValiModel(spark,100,num)
+        varifyValiModel(spark)
+    })
 
         /*
         训练结果模型并导出
          */
-        trainTestModel(spark,1000)
+//        trainTestModel(spark,1000)
     }
 
     /** *
@@ -70,7 +76,7 @@ object Run {
       *
       * @param spark
       */
-    def trainTestModel(spark: SparkSession,round:Int=1000): Unit = {
+    def trainTestModel(spark: SparkSession,round:Int=1000,topNumFeatures:Int): Unit = {
         val trainModel = new TrainModels(spark, basePath)
         val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
         val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
@@ -82,7 +88,7 @@ object Run {
         //结果模型
         val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200)
         val testTest_df = data04_df
-        trainModel.trainAndSaveModel("test", testTrain_df, round)
+        trainModel.trainAndSaveModel("test", testTrain_df, round,topNumFeatures)
         trainModel.varifyModel("test", testTest_df)
         trainModel.getResult("test", testTest_df)
     }
@@ -95,7 +101,7 @@ object Run {
       * Param: [spark]
       * Return: void
       */
-    def trainValiModel(spark: SparkSession,round:Int=100) = {
+    def trainValiModel(spark: SparkSession,round:Int=100,topNumFeatures:Int) = {
         val trainModel = new TrainModels(spark, basePath)
         val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
         val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
@@ -106,7 +112,8 @@ object Run {
 
         //验证模型
         val valiTrain_df = data09_df.union(data10_df).union(data11_df).union(data12_df).union(data01_df).union(data02_df).repartition(200)
-        trainModel.trainAndSaveModel("vali", valiTrain_df, round)
+        trainModel.trainAndSaveModel("vali", valiTrain_df, round,topNumFeatures)
+//        trainModel.trainValiModel("vali", valiTrain_df, round)
     }
 
     /** *
@@ -122,6 +129,7 @@ object Run {
         val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
         val valiTest_df = data03_df
         trainModel.varifyModel("vali", valiTest_df)
+//        trainModel.varifyValiModel("vali", valiTest_df)
 
     }
 }

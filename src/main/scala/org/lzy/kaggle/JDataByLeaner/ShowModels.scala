@@ -38,9 +38,21 @@ import spark.implicits._
 
 //    val evaluator=model.evaluator
 //    println(evaluator.doc)
-    val data=spark.read.parquet(basePath+"corr/label1_corr")
-    val list=data.sort("_2").map(line=>(line.getString(0),line.getDouble(1))).collectAsList()
-    println(list)
-
+//    val data=spark.read.parquet(basePath+"corr/label1_corr")
+//    val list=data.sort("_2").map(line=>(line.getString(0),line.getDouble(1))).collectAsList()
+//    println(list)
+showMonth(spark,1)
+showMonth(spark,2)
+showMonth(spark,3)
+showMonth(spark,4)
   }
+
+    def showMonth(spark:SparkSession,month:Int): Unit ={
+        import spark.implicits._
+        val data = spark.read.parquet(basePath + s"cache/trainMonth/0${month}")
+        val datas=data.filter($"label_1" >0)
+        println(s"第$month 月label_1>0:"+datas.count())
+        println(s"第$month 月label_2>0:"+data.filter($"label_2" >0).count())
+
+    }
 }

@@ -33,7 +33,6 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
 
 
   def fitPredict(train_df:DataFrame,labelCol:String,predictCol:String,round:Int)={
-val useExternalMemory=true
     val xgboostParam=Map(
       "booster"->"gbtree",
       "objection"->"reg:linear",
@@ -59,6 +58,7 @@ val useExternalMemory=true
             .setEvaluator(new RegressionEvaluator())
             .setEstimatorParamMaps(paramGrid)
             .setTrainRatio(0.8)
+
     val tvModel=tv.fit(train_df.withColumnRenamed(labelCol,"label"))
       tvModel
   }
