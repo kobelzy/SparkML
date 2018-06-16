@@ -2,9 +2,11 @@ package org.lzy.kaggle.JDataByLeaner
 
 import java.sql.Timestamp
 
+import org.apache.spark.ml.PipelineStage
+import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer}
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.apache.spark.sql.functions.{col,countDistinct,quarter}
+import org.apache.spark.sql.functions.{col, countDistinct, quarter}
 import org.apache.spark.sql.functions._
 /**
   * Created by Administrator on 2018/5/30.
@@ -183,6 +185,17 @@ object Util {
 
     }
 
+    def stageByOneHot(column: String): Array[PipelineStage] = {
+        var stages = Array[PipelineStage]()
+        val string2vector = new StringIndexer()
+          .setInputCol(column)
+          .setOutputCol(column + "_string2vector")
+        stages = stages :+ string2vector
+        val onehoter: OneHotEncoder = new OneHotEncoder()
+          .setInputCol(column + "_string2vector").setOutputCol(column + "_onehot")
+        stages = stages :+ onehoter
+        stages
+    }
 }
 
 class Util(spark: SparkSession) {
@@ -257,5 +270,7 @@ class Util(spark: SparkSession) {
     val getMonthFromTime = udf { (time: Timestamp) => time.toLocalDateTime.getMonthValue }
     val getDayFromTime = udf { (time: Timestamp) => time.toLocalDateTime.getDayOfMonth }
     val getYearFromTime = udf { (time: Timestamp) => time.toLocalDateTime.getYear }
+
+
 }
 

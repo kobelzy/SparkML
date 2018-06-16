@@ -23,7 +23,8 @@ object ShowModels {
 import spark.implicits._
 //    val model=TrainValidationSplitModel.read.load(basePath+s"model/s1_train_Model")
 //    println(model.bestModel.explainParams())
-//val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
+val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
+    data03_df.show(false)
 //    data03_df.sort("user_id").show(false)
 
 //println(model.bestModel.extractParamMap())
@@ -41,10 +42,10 @@ import spark.implicits._
 //    val data=spark.read.parquet(basePath+"corr/label1_corr")
 //    val list=data.sort("_2").map(line=>(line.getString(0),line.getDouble(1))).collectAsList()
 //    println(list)
-showMonth(spark,1)
-showMonth(spark,2)
-showMonth(spark,3)
-showMonth(spark,4)
+//showMonth(spark,1)
+//showMonth(spark,2)
+//showMonth(spark,3)
+//showMonth(spark,4)
   }
 
     def showMonth(spark:SparkSession,month:Int): Unit ={

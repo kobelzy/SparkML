@@ -1,5 +1,6 @@
 package org.lzy.kaggle.JDataByLeaner
 
+import org.apache.spark.ml.{Pipeline, PipelineModel, PipelineStage}
 import org.apache.spark.ml.feature.{ChiSqSelector, ChiSqSelectorModel, VectorAssembler}
 import org.apache.spark.ml.tuning.{CrossValidatorModel, TrainValidationSplitModel}
 import org.apache.spark.sql.functions._
@@ -52,7 +53,10 @@ object TrainModels {
 }
 
 class TrainModels(spark: SparkSession, basePath: String) {
-    val dropColumns: Array[String] = Array("user_id", "label_1", "label_2")
+    val dropColumns: Array[String] = Array("user_id", "label_1", "label_2"
+//      ,"price_min","price_max","score_1_sum","score_1_sum","score_1_sum","score_mean", "score_std"
+//  ,"sex","sku_id_30_101_nunique","o_date_30_101_mean","o_month_30_101_nunique","OD90_o_date_30_101_nunique","OD180_o_date_30_101_nunique"
+    )
     val labelCol = "label_1"
     val predictCol = "o_num"
     val labelCol2 = "label_2"
@@ -67,11 +71,11 @@ class TrainModels(spark: SparkSession, basePath: String) {
 
         val udf_getWeight = udf { index: Int => 1.0 / (1 + math.log(index)) }
 //      println("总数："+result_df.count())
-//        println("label_1预测结果大于0---->:" + result_df.filter($"o_num" > 0).count())
-//        println("label_1实际结果大于0---->:" + result_df.filter($"label_1" > 0).count())
-//        println("label_1预测结果小于0--->0:" + result_df.filter($"o_num" < 0).count())
-//        println("label_1实际结果小于0---->:" + result_df.filter($"label_1" < 0).count())
-//    println("label_1实际结果等于0---->:"+result_df.filter($"label_1"===0).count())
+        println("label_1预测结果大于0---->:" + result_df.filter($"o_num" > 0).count())
+        println("label_1实际结果大于0---->:" + result_df.filter($"label_1" > 0).count())
+        println("label_1预测结果小于0--->0:" + result_df.filter($"o_num" < 0).count())
+        println("label_1实际结果小于0---->:" + result_df.filter($"label_1" < 0).count())
+    println("label_1实际结果等于0---->:"+result_df.filter($"label_1"===0).count())
 //
 //    println("label_2预测结果大于0---->:"+result_df.filter($"pred_date">0).count())
 //    println("label_2实际结果大于0---->:"+result_df.filter($"label_2">0).count())
@@ -111,14 +115,14 @@ val s1 = weight_df.select($"label_binary".as[Double], $"weight".as[Double]).map(
       */
     def getResult(dataType: String = "test", test: DataFrame) = {
         //    val test = spark.read.parquet(basePath + s"cache/${dataType}_test_start12")
-        val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
-        val vectorAssembler = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features1")
-        val test_df = vectorAssembler.transform(test)
+//        val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
+//        val vectorAssembler = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features1")
+//        val test_df = vectorAssembler.transform(test)
 
-        val chiSelector1_model = ChiSqSelectorModel.read.load(basePath + s"selector/s1_chiSelector")
-        val chiSelector2_model = ChiSqSelectorModel.read.load(basePath + s"selector/s2_chiSelector")
-        val test_select_df1 = chiSelector1_model.transform(test_df)
-        val test_select_df2 = chiSelector2_model.transform(test_df)
+        val chiSelector1_model = PipelineModel.read.load(basePath + s"selector/s1_chiSelector")
+        val chiSelector2_model = PipelineModel.read.load(basePath + s"selector/s2_chiSelector")
+        val test_select_df1 = chiSelector1_model.transform(test)
+        val test_select_df2 = chiSelector2_model.transform(test)
 
         val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
         val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
@@ -177,30 +181,43 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
       * Return: void
       */
     def trainAndSaveModel(dataType: String = "test", train: DataFrame, round: Int,topNumFeatures:Int=200) = {
-
-        val featureColumns: Array[String] = train.columns.filterNot(dropColumns.contains(_))
-        val vectorAssembler = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features1")
-        val train_df = vectorAssembler.transform(train)
-        val (chiSelector1_Model, chiSelector2_Model) =
+      val enumColumn_arr=Array("age","sex","user_lv_cd")
+        val featureColumns: Array[String] = train.columns.filterNot((dropColumns++enumColumn_arr).contains(_))
+      val onehots_arr=featureColumns.filter(_.contains("nunique"))++enumColumn_arr
+      var stages = Array[PipelineStage]()
+      val pipeline = new Pipeline()
+      for(column<-onehots_arr){
+      stages=stages++Util.stageByOneHot(column)
+      }
+      val newFeatureColumn_arr=featureColumns.map(column=>if(column.contains("nunique")) column+"_onehot" else column)++enumColumn_arr.map(_+"_onehot")
+        val vectorAssembler = new VectorAssembler().setInputCols(newFeatureColumn_arr).setOutputCol("assemblerFeature")
+      stages=stages:+vectorAssembler
+//        val train_df = vectorAssembler.transform(train)
+        val (s1_pipModel, s2_pipModel) =
         //如果是验证集，那么需要进行卡方选择，
             if (dataType.equals("vali")) {
-                val chiSelector1 = new ChiSqSelector().setOutputCol("features").setFeaturesCol("features1").setLabelCol(labelCol).setNumTopFeatures(topNumFeatures)
-                val chiSelector1_Model = chiSelector1.fit(train_df)
-                chiSelector1_Model.write.overwrite().save(basePath + s"selector/s1_chiSelector")
+                val chiSelector1 = new ChiSqSelector().setOutputCol("features").setFeaturesCol("assemblerFeature").setLabelCol(labelCol).setNumTopFeatures(topNumFeatures)
+              val s1_pip=pipeline.setStages(stages:+chiSelector1)
 
-                val chiSelector2 = new ChiSqSelector().setOutputCol("features").setFeaturesCol("features1").setLabelCol(labelCol2).setNumTopFeatures(topNumFeatures)
-                val chiSelector2_Model = chiSelector2.fit(train_df)
-                chiSelector2_Model.write.overwrite().save(basePath + s"selector/s2_chiSelector")
-                (chiSelector1_Model, chiSelector2_Model)
+              val s1_pipModel=s1_pip.fit(train)
+
+              s1_pipModel.write.overwrite().save(basePath + s"selector/s1_chiSelector")
+
+                val chiSelector2 = new ChiSqSelector().setOutputCol("features").setFeaturesCol("assemblerFeature").setLabelCol(labelCol2).setNumTopFeatures(topNumFeatures)
+              val s2_pip=pipeline.setStages(stages:+chiSelector2)
+              val s2_pipModel: PipelineModel =s2_pip.fit(train)
+              s2_pipModel.write.overwrite().save(basePath + s"selector/s2_chiSelector")
+
+              (s1_pipModel, s2_pipModel)
             } else {
-                val chiSelector1_Model = ChiSqSelectorModel.read.load(basePath + s"selector/s1_${dataType}_chiSelector")
-                val chiSelector2_Model = ChiSqSelectorModel.read.load(basePath + s"selector/s2_${dataType}_chiSelector")
-                (chiSelector1_Model, chiSelector2_Model)
+                val s1_pipModel = PipelineModel.read.load(basePath + s"selector/s1_chiSelector")
+                val s2_pipModel = PipelineModel.read.load(basePath + s"selector/s2_chiSelector")
+                (s1_pipModel, s2_pipModel)
 
             }
 
-        val train_selector1_df = chiSelector1_Model.transform(train_df)
-        val train_selector2_df = chiSelector2_Model.transform(train_df)
+        val train_selector1_df = s1_pipModel.transform(train)
+        val train_selector2_df = s2_pipModel.transform(train)
 
 
         //为resul通过label_1来计算 添加o_num列，
@@ -233,13 +250,13 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
       */
     def varifyModel(dataType: String = "test", test: DataFrame) = {
         //    val test = spark.read.parquet(basePath + s"cache/${dataType}_test_start12")
-        val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
-        val vectorAssembler = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features1")
-        val test_df = vectorAssembler.transform(test)
+//        val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
+//        val vectorAssembler = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features1")
+//        val test_df = vectorAssembler.transform(test)
 
 
-        val test_select_df1 = ChiSqSelectorModel.read.load(basePath + s"selector/s1_chiSelector").transform(test_df)
-        val test_select_df2 = ChiSqSelectorModel.read.load(basePath + s"selector/s2_chiSelector").transform(test_df)
+        val test_select_df1 = PipelineModel.read.load(basePath + s"selector/s1_chiSelector").transform(test)
+        val test_select_df2 = PipelineModel.read.load(basePath + s"selector/s2_chiSelector").transform(test)
 
 
         val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel

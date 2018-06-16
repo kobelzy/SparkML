@@ -28,7 +28,7 @@ object Run {
         /*
         处理特征数据
          */
-        getFeatureData(spark)
+//        getFeatureData(spark)
 
 
 
@@ -36,20 +36,20 @@ object Run {
         训练测试模型
          */
 
-//        trainValiModel(spark,100,200)
-////        //验证训练模型
-//        varifyValiModel(spark)
+        trainValiModel(spark,100,200)
+//        //验证训练模型
+        varifyValiModel(spark)
 
-    Range(100,300,20).map(num=>{
+/*    Range(100,300,20).map(num=>{
         println("特征数量："+num)
         trainValiModel(spark,100,num)
         varifyValiModel(spark)
-    })
+    })*/
 
         /*
         训练结果模型并导出
          */
-//        trainTestModel(spark,1000)
+//        trainTestModel(spark,1000,200)
     }
 
     /** *
