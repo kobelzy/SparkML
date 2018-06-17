@@ -126,7 +126,9 @@ class FeaExact(spark: SparkSession, basePath: String) {
 
     //计算order和action与预测月份之间的时间差值。
     val order_df = order.sort($"o_date").withColumn("day_gap", datediff($"o_date", lit(endTime))) //距离5月1号的天数，一定为负数,其他月份不一定为负数。
+      .withColumn("o_sku_num",when($"o_sku_num" < 20,$"o_sku_num").otherwise(20))
     val action_df = action.sort($"a_date").withColumn("day_gap", datediff($"a_date", lit(endTime)))
+      .withColumn("a_num",when($"a_num" < 50,$"a_num").otherwise(50))
 
     //构建标签，label1和label2
     //label_1代表用户在目标月份购买的订单个数，label_2代表用户在一个月的几号下的订单

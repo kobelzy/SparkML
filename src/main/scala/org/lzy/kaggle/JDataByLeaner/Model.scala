@@ -31,26 +31,37 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
   }
 
 
+  /**
+    * 分裂训练集验证+线性label1
+    * @param train_df
+    * @param labelCol
+    * @param predictCol
+    * @param round
+    * @return
+    */
+  def fitPredict(train_df:DataFrame,labelCol:String,predictCol:String,round:Int,objection:String="reg:linear")={
+    val evalMetric:String= objection match {
+      case "reg:linear" => "rmse"
+      case "reg:logistic" => "auc"
+    }
 
-  def fitPredict(train_df:DataFrame,labelCol:String,predictCol:String,round:Int)={
     val xgboostParam=Map(
       "booster"->"gbtree",
-      "objection"->"reg:linear",
-      "eval_metric"->"rmse",
+      "objection"->objection,
+      "eval_metric"-> evalMetric,
       "max_depth"->5,
       "eta"->0.05,
       "colsample_bytree"->0.9,
       "subsample"->0.8,
       "verbose_eval"->0
     )
-
     val xgbEstimator = new XGBoostEstimator(xgboostParam)
 //            .setPredictionCol(predictCol)
 
     val paramGrid = new ParamGridBuilder()
             .addGrid(xgbEstimator.round, Array(round))
 //            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
-        .addGrid(xgbEstimator.nWorkers,Array(12))
+        .addGrid(xgbEstimator.nWorkers,Array(15))
 //        .addGrid(xgbEstimator.subSample,Array(0.5))
             .build()
     val tv=new TrainValidationSplit()
@@ -63,6 +74,54 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
       tvModel
   }
 
+  /**
+    * 分裂训练集验证+逻辑回归
+    * * @param train_df
+    * @param labelCol
+    * @param predictCol
+    * @param round
+    * @return
+    */
+  def fitPredictByLogistic(train_df:DataFrame,labelCol:String,predictCol:String,round:Int)={
+    val xgboostParam=Map(
+      "booster"->"gbtree",
+      "objection"->"reg:logistic",
+      "eval_metric"->"rmse",
+      "max_depth"->5,
+      "eta"->0.05,
+      "colsample_bytree"->0.9,
+      "subsample"->0.8,
+      "verbose_eval"->0
+    )
+
+    val xgbEstimator = new XGBoostEstimator(xgboostParam)
+    //            .setPredictionCol(predictCol)
+    val paramGrid = new ParamGridBuilder()
+      .addGrid(xgbEstimator.round, Array(round))
+      //            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
+      .addGrid(xgbEstimator.nWorkers,Array(15))
+      //        .addGrid(xgbEstimator.subSample,Array(0.5))
+      .build()
+    val tv=new TrainValidationSplit()
+      .setEstimator(xgbEstimator)
+      .setEvaluator(new RegressionEvaluator())
+      .setEstimatorParamMaps(paramGrid)
+      .setTrainRatio(0.8)
+
+    val tvModel=tv.fit(train_df.withColumnRenamed(labelCol,"label"))
+    tvModel
+  }
+
+
+
+  /**
+    * 交叉验证+线性label1
+    * @param train_df
+    * @param labelCol
+    * @param predictCol
+    * @param round
+    * @return
+    */
     def fitPredictByCross(train_df:DataFrame,labelCol:String,predictCol:String,round:Int)={
         val xgboostParam=Map(
             "booster"->"gbtree",
@@ -79,7 +138,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
         val paramGrid = new ParamGridBuilder()
                 .addGrid(xgbEstimator.round, Array(round))
 //            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
-                .addGrid(xgbEstimator.nWorkers,Array(12))
+                .addGrid(xgbEstimator.nWorkers,Array(15))
 //        .addGrid(xgbEstimator.subSample,Array(0.5))
                 .build()
         val tv=new CrossValidator()
@@ -91,10 +150,19 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
         tvModel
     }
 
+  /**
+    * 交叉验证+逻辑回归label1
+    * @param train_df
+    * @param labelCol
+    * @param predictCol
+    * @param round
+    * @return
+    */
     def fitPredictByCrossClassic(train_df:DataFrame,labelCol:String,predictCol:String,round:Int)={
         val xgboostParam=Map(
             "booster"->"gbtree",
             "objection"->"reg:logistic",
+//            "objection"->"binary:logistic",
             "eval_metric"->"auc",
             "max_depth"->5,
             "eta"->0.05,
@@ -106,7 +174,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
         val paramGrid = new ParamGridBuilder()
                 .addGrid(xgbEstimator.round, Array(round))
 //            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
-                .addGrid(xgbEstimator.nWorkers,Array(12))
+                .addGrid(xgbEstimator.nWorkers,Array(15))
 //        .addGrid(xgbEstimator.subSample,Array(0.5))
                 .build()
         val tv=new CrossValidator()

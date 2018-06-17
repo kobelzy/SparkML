@@ -225,9 +225,8 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
         val train_selector1_df = s1_pipModel.transform(train)
         val train_selector2_df = s2_pipModel.transform(train)
 
-
         //为resul通过label_1来计算 添加o_num列，
-        val s1_Model: TrainValidationSplitModel = Model.fitPredict(train_selector1_df, labelCol, predictCol, round)
+        val s1_Model: TrainValidationSplitModel = Model.fitPredict(train_selector1_df, labelCol, predictCol, round,"reg:logistic")
         s1_Model.write.overwrite().save(basePath + s"model/s1_${dataType}_Model")
         //为result通过label_2来计算添加pred_date
         val s2_Model = Model.fitPredict(train_selector2_df, labelCol2, predictCol2, round)
@@ -236,12 +235,12 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
         /**
           * 交叉验证方式
           */
-        //为resul通过label_1来计算 添加o_num列，
-/*    val s1_Model = Model.fitPredictByCrossClassic(train_df, "label_1", "o_num",round)
-//    val s1_Model = Model.fitPredictByCross(train_df, "label_1", "o_num",round)
+/*        //为resul通过label_1来计算 添加o_num列，
+    val s1_Model = Model.fitPredictByCrossClassic(train_selector1_df, labelCol, predictCol,round)
+//    val s1_Model = Model.fitPredictByCross(train_selector1_df, labelCol, predictCol,round)
     s1_Model.write.overwrite().save(basePath + s"model/s1_${dataType}_ModelByCross")
     //为result通过label_2来计算添加pred_date
-    val s2_Model = Model.fitPredictByCross(train_df, "label_2", "pred_date",round)
+    val s2_Model = Model.fitPredictByCross(train_selector2_df, labelCol2, predictCol2,round)
     s2_Model.write.overwrite().save(basePath + s"model/s2_${dataType}_ModelByCross")*/
     }
 
@@ -272,8 +271,8 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
         /**
           * 交叉验证方式
           */
-        //    val s1_Model = CrossValidatorModel.read.load(basePath + s"model/s1_${dataType}_ModelByCross").bestModel
-        //    val s2_Model = CrossValidatorModel.read.load(basePath + s"model/s2_${dataType}_ModelByCross").bestModel
+//            val s1_Model = CrossValidatorModel.read.load(basePath + s"model/s1_${dataType}_ModelByCross").bestModel
+//            val s2_Model = CrossValidatorModel.read.load(basePath + s"model/s2_${dataType}_ModelByCross").bestModel
 
 
         //训练测试数据并修改列名

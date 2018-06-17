@@ -1,5 +1,6 @@
 import java.sql.Timestamp
 
+import org.apache.spark.ml.feature.{OneHotEncoder, StandardScaler}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.FileStreamSource.Timestamp
 import org.lzy.kaggle.JDataByLeaner.FeaExact.basePath
@@ -26,8 +27,8 @@ object csvTest {
 //order_cache.show(false)
 //    order_cache.dropDuplicates("user_id").show(false)
 val order_df = util.getSourceData(basePath + user_order)
-val user_df = util.getSourceData(basePath + user_basic)
-    val df=user_df.join(order_df,Seq("user_id"),"left")
+//val user_df = util.getSourceData(basePath + user_basic)
+//    val df=user_df.join(order_df,Seq("user_id"),"left")
 //        .sort($"o_date")
 //    order_df.show(false)
 //    order_df.dropDuplicates("user_id").show()
@@ -37,11 +38,18 @@ val user_df = util.getSourceData(basePath + user_basic)
 //    news.show(false)
 //    val fun2=udf((age:Int,index:Int)=>age+index)
 //    order_df.withColumn("index",fun2($"o_id",lit(index))).show(false)
-    val startTime=Timestamp.valueOf("2017-01-01 00:00:00")
-    val s=df.withColumn("diff",datediff($"o_date",lit("2017-03-09 00:00:00")))
-    .withColumn("diff2",when($"o_sku_num" <=2,$"o_sku_num").otherwise(0))
-  .withColumn("label_2", when($"o_date".isNotNull && $"o_date" >= startTime , dayofmonth($"o_date")-1).otherwise(0)).sort("user_id")
-    s.show(false)
+//    val startTime=Timestamp.valueOf("2017-01-01 00:00:00")
+//    val s=df.withColumn("diff",datediff($"o_date",lit("2017-03-09 00:00:00")))
+//    .withColumn("diff2",when($"o_sku_num" <=2,$"o_sku_num").otherwise(0))
+//  .withColumn("label_2", when($"o_date".isNotNull && $"o_date" >= startTime , dayofmonth($"o_date")-1).otherwise(0)).sort("user_id")
+//    s.show(false)
+order_df.show(false)
+//val new_order_df=order_df    .withColumn("o_sku_num",when($"o_sku_num" <=2,$"o_sku_num").otherwise(0))
+//new_order_df.show(false)
+//val scaler=new StandardScaler().setInputCol("o_sku_num")
+//    scaler.fit(order_df).transform(order_df).show(false)
 
+    val onehot=new OneHotEncoder().setInputCol("o_sku_num")
+    onehot.transform(order_df).show(false)
   }
 }
