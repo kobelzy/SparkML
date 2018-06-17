@@ -182,14 +182,20 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
       */
     def trainAndSaveModel(dataType: String = "test", train: DataFrame, round: Int,topNumFeatures:Int=200) = {
       val enumColumn_arr=Array("age","sex","user_lv_cd")
-        val featureColumns: Array[String] = train.columns.filterNot((dropColumns++enumColumn_arr).contains(_))
-      val onehots_arr=featureColumns.filter(_.contains("nunique"))++enumColumn_arr
+        val featureColumns: Array[String] = train.columns.filterNot((dropColumns
+//          ++enumColumn_arr
+          ).contains(_))
+      val onehots_arr=
+//        featureColumns.filter(_.contains("nunique"))++
+        enumColumn_arr
       var stages = Array[PipelineStage]()
       val pipeline = new Pipeline()
-      for(column<-onehots_arr){
-      stages=stages++Util.stageByOneHot(column)
-      }
-      val newFeatureColumn_arr=featureColumns.map(column=>if(column.contains("nunique")) column+"_onehot" else column)++enumColumn_arr.map(_+"_onehot")
+//      for(column<-onehots_arr){
+//      stages=stages++Util.stageByOneHot(column)
+//      }
+      val newFeatureColumn_arr=featureColumns
+//      ++enumColumn_arr.map(_+"_onehot")
+//        .map(column=>if(column.contains("nunique")) column+"_onehot" else column)
         val vectorAssembler = new VectorAssembler().setInputCols(newFeatureColumn_arr).setOutputCol("assemblerFeature")
       stages=stages:+vectorAssembler
 //        val train_df = vectorAssembler.transform(train)
