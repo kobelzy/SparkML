@@ -196,21 +196,29 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
       val newFeatureColumn_arr=featureColumns
 //      ++enumColumn_arr.map(_+"_onehot")
 //        .map(column=>if(column.contains("nunique")) column+"_onehot" else column)
-        val vectorAssembler = new VectorAssembler().setInputCols(newFeatureColumn_arr).setOutputCol("assemblerFeature")
+        val vectorAssembler = new VectorAssembler().setInputCols(newFeatureColumn_arr).setOutputCol("features")
       stages=stages:+vectorAssembler
 //        val train_df = vectorAssembler.transform(train)
         val (s1_pipModel, s2_pipModel) =
         //如果是验证集，那么需要进行卡方选择，
             if (dataType.equals("vali")) {
                 val chiSelector1 = new ChiSqSelector().setOutputCol("features").setFeaturesCol("assemblerFeature").setLabelCol(labelCol).setNumTopFeatures(topNumFeatures)
-              val s1_pip=pipeline.setStages(stages:+chiSelector1)
+
+              val s1_pip=pipeline
+                .setStages(stages
+//                  :+chiSelector1
+                )
 
               val s1_pipModel=s1_pip.fit(train)
 
               s1_pipModel.write.overwrite().save(basePath + s"selector/s1_chiSelector")
 
                 val chiSelector2 = new ChiSqSelector().setOutputCol("features").setFeaturesCol("assemblerFeature").setLabelCol(labelCol2).setNumTopFeatures(topNumFeatures)
-              val s2_pip=pipeline.setStages(stages:+chiSelector2)
+              val s2_pip=pipeline
+                .setStages(stages
+//                  :+chiSelector2
+                )
+
               val s2_pipModel: PipelineModel =s2_pip.fit(train)
               s2_pipModel.write.overwrite().save(basePath + s"selector/s2_chiSelector")
 
@@ -226,7 +234,8 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
         val train_selector2_df = s2_pipModel.transform(train)
 
         //为resul通过label_1来计算 添加o_num列，
-        val s1_Model: TrainValidationSplitModel = Model.fitPredict(train_selector1_df, labelCol, predictCol, round,"reg:logistic")
+//        val s1_Model: TrainValidationSplitModel = Model.fitPredict(train_selector1_df, labelCol, predictCol, round,"reg:logistic")
+        val s1_Model: TrainValidationSplitModel = Model.fitPredictByLogistic(train_selector1_df, labelCol, predictCol,round)
         s1_Model.write.overwrite().save(basePath + s"model/s1_${dataType}_Model")
         //为result通过label_2来计算添加pred_date
         val s2_Model = Model.fitPredict(train_selector2_df, labelCol2, predictCol2, round)

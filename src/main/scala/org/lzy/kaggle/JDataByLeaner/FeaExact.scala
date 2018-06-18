@@ -181,14 +181,14 @@ class FeaExact(spark: SparkSession, basePath: String) {
         countDistinct("o_month").as("o_month_30_101_nunique"),
         countDistinct("sku_id").as("sku_id_30_101_nunique"),
         sum("price").as("price_sum"),
-//        min("price").as("price_min"),
-//        max("price").as("price_max"),
+        min("price").as("price_min"),
+        max("price").as("price_max"),
         mean("price").as("price_mean")
 
       )
       .select("user_id", "o_id_30_101_nunique", "o_sku_id_30_101_nunique","o_sku_id_30_101_count", "o_sku_num_30_101_count", "day_30_101_mean", "o_date_30_101_mean", "o_month_30_101_nunique",
         "sku_id_30_101_nunique", "price_sum",
-//        "price_min","price_max",
+        "price_min","price_max",
     "price_mean"
       )
 
@@ -200,17 +200,17 @@ class FeaExact(spark: SparkSession, basePath: String) {
     /*
     评价
      */
-//    val comment1_df = order_30And101_BeforeEnd_df.filter($"score_level" === 1).groupBy("user_id").agg(sum($"score_level").as("score_1_sum")).select("user_id", "score_1_sum")
-//    val comment2_df = order_30And101_BeforeEnd_df.filter($"score_level" === 2).groupBy("user_id").agg(sum($"score_level").as("score_2_sum")).select("user_id", "score_2_sum")
-//    val comment3_df = order_30And101_BeforeEnd_df.filter($"score_level" === 3).groupBy("user_id").agg(sum($"score_level").as("score_3_sum")).select("user_id", "score_3_sum")
-//    val comment_df = order_30And101_BeforeEnd_df.filter($"score_level" > 0).groupBy("user_id").agg(mean($"score_level").as("score_mean"), stddev($"score_level").as("score_std")).select("user_id", "score_mean", "score_std")
-//
-//    val commentAnd1_df = comment_df.join(comment1_df, "user_id")
-//    val comment2And3_df = comment2_df.join(comment3_df, "user_id")
-//    val comment = commentAnd1_df.join(comment2And3_df, "user_id")
+    val comment1_df = order_30And101_BeforeEnd_df.filter($"score_level" === 1).groupBy("user_id").agg(sum($"score_level").as("score_1_sum")).select("user_id", "score_1_sum")
+    val comment2_df = order_30And101_BeforeEnd_df.filter($"score_level" === 2).groupBy("user_id").agg(sum($"score_level").as("score_2_sum")).select("user_id", "score_2_sum")
+    val comment3_df = order_30And101_BeforeEnd_df.filter($"score_level" === 3).groupBy("user_id").agg(sum($"score_level").as("score_3_sum")).select("user_id", "score_3_sum")
+    val comment_df = order_30And101_BeforeEnd_df.filter($"score_level" > 0).groupBy("user_id").agg(mean($"score_level").as("score_mean"), stddev($"score_level").as("score_std")).select("user_id", "score_mean", "score_std")
+
+    val commentAnd1_df = comment_df.join(comment1_df, "user_id")
+    val comment2And3_df = comment2_df.join(comment3_df, "user_id")
+    val comment = commentAnd1_df.join(comment2And3_df, "user_id")
     //用当月有订单的用户来联合其在当月的一些基本特征。
     val df_label_joined = order_label_df.join(broadcast(order2Utils_df), Seq("user_id"), "left").join(broadcast(action2Utils_df), Seq("user_id"), "left")
-//      .join(broadcast(comment), Seq("user_id"), "left")
+      .join(broadcast(comment), Seq("user_id"), "left")
             .na.fill(0)
     //获取用户在endTime7天前，14天前，30天前，90天前，180天前的相关统计特征，并联合。
     val df_label_7_df = getFeatureBySubDay(7, order_df, action_df, df_label_joined)

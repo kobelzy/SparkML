@@ -45,6 +45,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
       case "reg:logistic" => "auc"
     }
 
+
     val xgboostParam=Map(
       "booster"->"gbtree",
       "objection"->objection,
@@ -57,7 +58,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
     )
     val xgbEstimator = new XGBoostEstimator(xgboostParam)
 //            .setPredictionCol(predictCol)
-
+//val evaluator=new UDRegressionEvaluator()
     val paramGrid = new ParamGridBuilder()
             .addGrid(xgbEstimator.round, Array(round))
 //            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
@@ -66,6 +67,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
             .build()
     val tv=new TrainValidationSplit()
             .setEstimator(xgbEstimator)
+//            .setEvaluator(evaluator)
             .setEvaluator(new RegressionEvaluator())
             .setEstimatorParamMaps(paramGrid)
             .setTrainRatio(0.8)
@@ -94,6 +96,8 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
       "verbose_eval"->0
     )
 
+    val evaluator:UDLogisticEvaluator=new UDLogisticEvaluator()
+
     val xgbEstimator = new XGBoostEstimator(xgboostParam)
     //            .setPredictionCol(predictCol)
     val paramGrid = new ParamGridBuilder()
@@ -104,7 +108,8 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
       .build()
     val tv=new TrainValidationSplit()
       .setEstimator(xgbEstimator)
-      .setEvaluator(new RegressionEvaluator())
+        .setEvaluator(evaluator)
+//      .setEvaluator(new RegressionEvaluator())
       .setEstimatorParamMaps(paramGrid)
       .setTrainRatio(0.8)
 

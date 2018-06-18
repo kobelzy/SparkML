@@ -102,6 +102,7 @@ object CustomObjective {
       * @return result of the metric
       */
     override def eval(predicts: Array[Array[Float]], dmat: DMatrix): Float = {
+
       var error: Float = 0f
       var labels: Array[Float] = null
       try {
