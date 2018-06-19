@@ -1,7 +1,7 @@
 package org.lzy.kaggle.JDataByLeaner
 
-import org.apache.spark.sql.functions.{to_date, udf}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.functions._
+import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 
 /**
   * Auther: lzy
@@ -50,7 +50,7 @@ object Run {
      */
 //            trainTestModel(spark,1000,200)
     trainTestModelByBagging(spark,1000)
-
+    bagging(spark)
 //    val trainModel = new TrainModels(spark, basePath)
 //    val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
 //    trainModel.getResult("test", data04_df)
@@ -113,18 +113,48 @@ object Run {
     val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
     //结果模型
     val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200).cache()
-        Range(200,350,50).map(num=>{
-        println("特征数量："+num)
-    trainModel.trainAndSaveModel("test", testTrain_df, round, num)
+//        Range(200,350,50).map(num=>{
+        Range(1000,1250,1500).map(rounds=>{
+        println("特征数量："+rounds)
+    trainModel.trainAndSaveModel("test", testTrain_df, rounds, 200)
     val news=trainModel.getSDF("test", data04_df)
 //            .select($"user_id",$"o_num".as("new_num"),$"pred_date".as("new_pred_date"))
 //          df.join(news,"user_id").select("user_id","o_num","pred_date","new_num","new_pred_date")
 //                  .map{case(Row(user_id:Int,o_num:Double,pred_date:Double,new_num:Double,new_pred_date:Double))=>
 //                  }
-          news.write.parquet(basePath+s"sub/${num}")
+          news.write.parquet(basePath+s"sub/${rounds}")
     })
 
 
+  }
+
+  def bagging(spark:SparkSession)={
+    import spark.implicits._
+    val df_200=spark.read.parquet(basePath + "sub/1000").select($"user_id",$"o_num".as("o_num_200"),$"pred_date".as("pred_date_200"))
+    val df_250=spark.read.parquet(basePath + "sub/1250").select($"user_id",$"o_num".as("o_num_250"),$"pred_date".as("pred_date_250"))
+    val df_300=spark.read.parquet(basePath + "sub/1500").select($"user_id",$"o_num".as("o_num_300"),$"pred_date".as("pred_date_300"))
+    val all_df=df_200.join(broadcast(df_250),"user_id").join(broadcast(df_300),"user_id")
+    val result=all_df.withColumn("o_num",($"o_num_200"+$"o_num_250"+$"o_num_300")/3.0)
+      .withColumn("pred_date",($"pred_date_200"+$"pred_date_250"+$"pred_date_300")/3.0)
+    val udf_predDateToDate = udf { (pred_date: Double) => s"2017-05-${math.round(pred_date)}" }
+    val submission: DataFrame = result
+      //      .filter($"pred_date"> -30.5 && $"pred_date" <0)
+      .sort($"o_num".desc).limit(50000)
+      .withColumn("result_date", udf_predDateToDate($"pred_date"))
+      .select($"user_id", to_date($"result_date").as("pred_date"))
+    submission.show(20, false)
+    val errorData = submission.filter($"pred_date".isNull)
+    errorData.join(result, "user_id").show(false)
+    println("数据不合法" + errorData.count())
+    println("结果数量：" + submission.count())
+    println("最大：")
+    println(submission.sort($"pred_date".desc).head().getDate(1))
+    submission.coalesce(1).write
+      .option("header", "true")
+      .mode(SaveMode.Overwrite)
+      .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
+      //          .option("nullValue", "NA")
+      .csv(basePath + "sub/result")
   }
 
   /** *

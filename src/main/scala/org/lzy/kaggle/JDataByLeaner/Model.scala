@@ -90,7 +90,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
       "objection"->"reg:logistic",
       "eval_metric"->"rmse",
       "max_depth"->5,
-      "eta"->0.05,
+//      "eta"->0.05,
       "colsample_bytree"->0.9,
       "subsample"->0.8,
       "verbose_eval"->0
@@ -102,7 +102,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
     //            .setPredictionCol(predictCol)
     val paramGrid = new ParamGridBuilder()
       .addGrid(xgbEstimator.round, Array(round))
-      //            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
+                  .addGrid(xgbEstimator.eta, Array(0.01,0.05))
       .addGrid(xgbEstimator.nWorkers,Array(15))
       //        .addGrid(xgbEstimator.subSample,Array(0.5))
       .build()

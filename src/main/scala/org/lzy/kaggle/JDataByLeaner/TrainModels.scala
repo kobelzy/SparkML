@@ -234,7 +234,7 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
       val newFeatureColumn_arr=featureColumns
 //      ++enumColumn_arr.map(_+"_onehot")
 //        .map(column=>if(column.contains("nunique")) column+"_onehot" else column)
-        val vectorAssembler = new VectorAssembler().setInputCols(newFeatureColumn_arr).setOutputCol("assemblerFeature")
+        val vectorAssembler = new VectorAssembler().setInputCols(newFeatureColumn_arr).setOutputCol("features")
       stages=stages:+vectorAssembler
 //        val train_df = vectorAssembler.transform(train)
 //        val (s1_pipModel, s2_pipModel) =
@@ -244,7 +244,7 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
 
               val s1_pip=pipeline
                 .setStages(stages
-                  :+chiSelector1
+//                  :+chiSelector1
                 )
 
               val s1_pipModel=s1_pip.fit(train)
@@ -254,7 +254,7 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
                 val chiSelector2 = new ChiSqSelector().setOutputCol("features").setFeaturesCol("assemblerFeature").setLabelCol(labelCol2).setNumTopFeatures(topNumFeatures)
               val s2_pip=pipeline
                 .setStages(stages
-                  :+chiSelector2
+//                  :+chiSelector2
                 )
 
               val s2_pipModel: PipelineModel =s2_pip.fit(train)
