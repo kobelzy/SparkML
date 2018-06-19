@@ -185,6 +185,7 @@ class FeaExact(spark: SparkSession, basePath: String) {
         max("price").as("price_max"),
         mean("price").as("price_mean")
 
+
       )
       .select("user_id", "o_id_30_101_nunique", "o_sku_id_30_101_nunique","o_sku_id_30_101_count", "o_sku_num_30_101_count", "day_30_101_mean", "o_date_30_101_mean", "o_month_30_101_nunique",
         "sku_id_30_101_nunique", "price_sum",

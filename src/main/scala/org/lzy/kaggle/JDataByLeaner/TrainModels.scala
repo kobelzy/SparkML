@@ -169,7 +169,45 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
                 .csv(basePath + "sub/result")
         submission
     }
+    /** *
+      * 获取最终的计算结果。
+      *
+      * @return
+      */
+    def getSDF(dataType: String = "test", test: DataFrame) = {
+        //    val test = spark.read.parquet(basePath + s"cache/${dataType}_test_start12")
+//        val featureColumns: Array[String] = test.columns.filterNot(dropColumns.contains(_))
+//        val vectorAssembler = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features1")
+//        val test_df = vectorAssembler.transform(test)
 
+        val chiSelector1_model = PipelineModel.read.load(basePath + s"selector/s1_chiSelector")
+        val chiSelector2_model = PipelineModel.read.load(basePath + s"selector/s2_chiSelector")
+        val test_select_df1 = chiSelector1_model.transform(test)
+        val test_select_df2 = chiSelector2_model.transform(test)
+
+        val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
+        val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel
+
+        /**
+          * 交叉验证方式
+          */
+//    val s1_Model = CrossValidatorModel.read.load(basePath + s"model/s1_${dataType}_ModelByCross").bestModel
+//    val s2_Model = CrossValidatorModel.read.load(basePath + s"model/s2_${dataType}_ModelByCross").bestModel
+
+
+val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "label"))
+        .withColumnRenamed("label", labelCol)
+        .withColumnRenamed("prediction", predictCol)
+        .select("user_id", labelCol, predictCol)
+        val s2_df = s2_Model.transform(test_select_df2.withColumnRenamed(labelCol2, "label"))
+                .withColumnRenamed("label", labelCol2)
+                .withColumnRenamed("prediction", predictCol2)
+                .select("user_id", labelCol2, predictCol2)
+
+        val result = s1_df.join(s2_df, "user_id")
+
+        result
+    }
 
     /** *
       * 功能实现:     训练并保存数据
@@ -196,17 +234,17 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
       val newFeatureColumn_arr=featureColumns
 //      ++enumColumn_arr.map(_+"_onehot")
 //        .map(column=>if(column.contains("nunique")) column+"_onehot" else column)
-        val vectorAssembler = new VectorAssembler().setInputCols(newFeatureColumn_arr).setOutputCol("features")
+        val vectorAssembler = new VectorAssembler().setInputCols(newFeatureColumn_arr).setOutputCol("assemblerFeature")
       stages=stages:+vectorAssembler
 //        val train_df = vectorAssembler.transform(train)
-        val (s1_pipModel, s2_pipModel) =
-        //如果是验证集，那么需要进行卡方选择，
-            if (dataType.equals("vali")) {
+//        val (s1_pipModel, s2_pipModel) =
+//        //如果是验证集，那么需要进行卡方选择，
+//            if (dataType.equals("vali")) {
                 val chiSelector1 = new ChiSqSelector().setOutputCol("features").setFeaturesCol("assemblerFeature").setLabelCol(labelCol).setNumTopFeatures(topNumFeatures)
 
               val s1_pip=pipeline
                 .setStages(stages
-//                  :+chiSelector1
+                  :+chiSelector1
                 )
 
               val s1_pipModel=s1_pip.fit(train)
@@ -216,19 +254,19 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
                 val chiSelector2 = new ChiSqSelector().setOutputCol("features").setFeaturesCol("assemblerFeature").setLabelCol(labelCol2).setNumTopFeatures(topNumFeatures)
               val s2_pip=pipeline
                 .setStages(stages
-//                  :+chiSelector2
+                  :+chiSelector2
                 )
 
               val s2_pipModel: PipelineModel =s2_pip.fit(train)
               s2_pipModel.write.overwrite().save(basePath + s"selector/s2_chiSelector")
 
-              (s1_pipModel, s2_pipModel)
-            } else {
-                val s1_pipModel = PipelineModel.read.load(basePath + s"selector/s1_chiSelector")
-                val s2_pipModel = PipelineModel.read.load(basePath + s"selector/s2_chiSelector")
-                (s1_pipModel, s2_pipModel)
-
-            }
+//              (s1_pipModel, s2_pipModel)
+//            } else {
+//                val s1_pipModel = PipelineModel.read.load(basePath + s"selector/s1_chiSelector")
+//                val s2_pipModel = PipelineModel.read.load(basePath + s"selector/s2_chiSelector")
+//                (s1_pipModel, s2_pipModel)
+//
+//            }
 
         val train_selector1_df = s1_pipModel.transform(train)
         val train_selector2_df = s2_pipModel.transform(train)

@@ -1,6 +1,7 @@
 package org.lzy.kaggle.JDataByLeaner
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions.{to_date, udf}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
 /**
   * Auther: lzy
@@ -34,9 +35,9 @@ object Run {
     训练测试模型
      */
 
-            trainValiModel(spark,50,200)
+//            trainValiModel(spark,50,200)
     //        //验证训练模型
-            varifyValiModel(spark)
+//            varifyValiModel(spark)
 
     /*    Range(100,300,20).map(num=>{
             println("特征数量："+num)
@@ -47,7 +48,8 @@ object Run {
     /*
     训练结果模型并导出
      */
-            trainTestModel(spark,1000,200)
+//            trainTestModel(spark,1000,200)
+    trainTestModelByBagging(spark,1000)
 
 //    val trainModel = new TrainModels(spark, basePath)
 //    val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
@@ -93,6 +95,36 @@ object Run {
     trainModel.trainAndSaveModel("test", testTrain_df, round, topNumFeatures)
     trainModel.varifyModel("test", data04_df)
     trainModel.getResult("test", data04_df)
+  }
+  /**
+    * 训练结果模型，测试，并将数据导出
+    *
+    * @param spark
+    */
+  def trainTestModelByBagging(spark: SparkSession, round: Int = 1000): Unit = {
+    import spark.implicits._
+    val trainModel = new TrainModels(spark, basePath)
+    val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
+    val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
+    val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
+    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
+    val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
+    val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
+    val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
+    //结果模型
+    val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200).cache()
+        Range(200,350,50).map(num=>{
+        println("特征数量："+num)
+    trainModel.trainAndSaveModel("test", testTrain_df, round, num)
+    val news=trainModel.getSDF("test", data04_df)
+//            .select($"user_id",$"o_num".as("new_num"),$"pred_date".as("new_pred_date"))
+//          df.join(news,"user_id").select("user_id","o_num","pred_date","new_num","new_pred_date")
+//                  .map{case(Row(user_id:Int,o_num:Double,pred_date:Double,new_num:Double,new_pred_date:Double))=>
+//                  }
+          news.write.parquet(basePath+s"sub/${num}")
+    })
+
+
   }
 
   /** *
