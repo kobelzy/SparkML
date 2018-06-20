@@ -7,7 +7,7 @@ import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.sql.{DataFrame, SparkSession}
-
+import org.apache.spark.sql.functions._
 /**
   * Created by Administrator on 2018/6/5.
   */
@@ -72,7 +72,11 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
             .setEstimatorParamMaps(paramGrid)
             .setTrainRatio(0.8)
 
-    val tvModel=tv.fit(train_df.withColumnRenamed(labelCol,"label"))
+    val tvModel=tv.fit(train_df
+//            .withColumnRenamed(labelCol,"label")
+            //使用对数进行转换
+                .withColumn("label",log(labelCol)+1).drop(labelCol)
+    )
       tvModel
   }
 

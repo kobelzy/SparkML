@@ -234,7 +234,7 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
       val newFeatureColumn_arr=featureColumns
 //      ++enumColumn_arr.map(_+"_onehot")
 //        .map(column=>if(column.contains("nunique")) column+"_onehot" else column)
-        val vectorAssembler = new VectorAssembler().setInputCols(newFeatureColumn_arr).setOutputCol("features")
+        val vectorAssembler = new VectorAssembler().setInputCols(newFeatureColumn_arr).setOutputCol("assemblerFeature")
       stages=stages:+vectorAssembler
 //        val train_df = vectorAssembler.transform(train)
 //        val (s1_pipModel, s2_pipModel) =
@@ -244,7 +244,7 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
 
               val s1_pip=pipeline
                 .setStages(stages
-//                  :+chiSelector1
+                  :+chiSelector1
                 )
 
               val s1_pipModel=s1_pip.fit(train)
@@ -254,7 +254,7 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
                 val chiSelector2 = new ChiSqSelector().setOutputCol("features").setFeaturesCol("assemblerFeature").setLabelCol(labelCol2).setNumTopFeatures(topNumFeatures)
               val s2_pip=pipeline
                 .setStages(stages
-//                  :+chiSelector2
+                  :+chiSelector2
                 )
 
               val s2_pipModel: PipelineModel =s2_pip.fit(train)
@@ -327,8 +327,13 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
                 .withColumnRenamed("label", labelCol)
                 .withColumnRenamed("prediction", predictCol)
                 .select("user_id", labelCol, predictCol)
-        val s2_df = s2_Model.transform(test_select_df2.withColumnRenamed(labelCol2, "label"))
+        val s2_df = s2_Model.transform(test_select_df2
+//                .withColumn("label",log(labelCol)+1).drop(labelCol)
+                .withColumnRenamed(labelCol2, "label")
+        )
                 .withColumnRenamed("label", labelCol2)
+
+//                .withColumn(labelCol2,exp("label")-1)//使用对数转换
                 .withColumnRenamed("prediction", predictCol2)
                 .select("user_id", labelCol2, predictCol2)
 

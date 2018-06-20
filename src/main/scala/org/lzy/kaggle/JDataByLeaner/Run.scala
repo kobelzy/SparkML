@@ -35,7 +35,7 @@ object Run {
     训练测试模型
      */
 
-//            trainValiModel(spark,50,200)
+//            trainValiModel(spark,100,200)
     //        //验证训练模型
 //            varifyValiModel(spark)
 
@@ -49,8 +49,11 @@ object Run {
     训练结果模型并导出
      */
 //            trainTestModel(spark,1000,200)
+
     trainTestModelByBagging(spark,1000)
     bagging(spark)
+
+
 //    val trainModel = new TrainModels(spark, basePath)
 //    val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
 //    trainModel.getResult("test", data04_df)
@@ -113,16 +116,16 @@ object Run {
     val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
     //结果模型
     val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200).cache()
-//        Range(200,350,50).map(num=>{
-        Range(1000,1250,1500).map(rounds=>{
-        println("特征数量："+rounds)
-    trainModel.trainAndSaveModel("test", testTrain_df, rounds, 200)
+        Range(200,350,50).map(num=>{
+//        Array(1250,1500).map(rounds=>{
+        println("特征数量："+num)
+    trainModel.trainAndSaveModel("test", testTrain_df, round, 200)
     val news=trainModel.getSDF("test", data04_df)
 //            .select($"user_id",$"o_num".as("new_num"),$"pred_date".as("new_pred_date"))
 //          df.join(news,"user_id").select("user_id","o_num","pred_date","new_num","new_pred_date")
 //                  .map{case(Row(user_id:Int,o_num:Double,pred_date:Double,new_num:Double,new_pred_date:Double))=>
 //                  }
-          news.write.parquet(basePath+s"sub/${rounds}")
+          news.write.parquet(basePath+s"sub/${num}")
     })
 
 
