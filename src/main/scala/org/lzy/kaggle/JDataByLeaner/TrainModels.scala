@@ -180,10 +180,8 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
 //        val vectorAssembler = new VectorAssembler().setInputCols(featureColumns).setOutputCol("features1")
 //        val test_df = vectorAssembler.transform(test)
 
-        val chiSelector1_model = PipelineModel.read.load(basePath + s"selector/s1_chiSelector")
-        val chiSelector2_model = PipelineModel.read.load(basePath + s"selector/s2_chiSelector")
-        val test_select_df1 = chiSelector1_model.transform(test)
-        val test_select_df2 = chiSelector2_model.transform(test)
+        val test_select_df1 = PipelineModel.read.load(basePath + s"selector/s1_chiSelector").transform(test)
+        val test_select_df2 = PipelineModel.read.load(basePath + s"selector/s2_chiSelector").transform(test)
 
         val s1_Model = TrainValidationSplitModel.read.load(basePath + s"model/s1_${dataType}_Model").bestModel
         val s2_Model = TrainValidationSplitModel.read.load(basePath + s"model/s2_${dataType}_Model").bestModel

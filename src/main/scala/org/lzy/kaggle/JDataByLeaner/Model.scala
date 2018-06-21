@@ -73,9 +73,9 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
             .setTrainRatio(0.8)
 
     val tvModel=tv.fit(train_df
-//            .withColumnRenamed(labelCol,"label")
+            .withColumnRenamed(labelCol,"label")
             //使用对数进行转换
-                .withColumn("label",log(labelCol)+1).drop(labelCol)
+//                .withColumn("label",log(labelCol)+1).drop(labelCol)
     )
       tvModel
   }

@@ -28,7 +28,7 @@ object Run {
     /*
     处理特征数据
      */
-    //        getFeatureData(spark)
+            getFeatureData(spark)
 
 
     /*
@@ -56,7 +56,11 @@ object Run {
 
 //    val trainModel = new TrainModels(spark, basePath)
 //    val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
-//    trainModel.getResult("test", data04_df)
+////    trainModel.getResult("test", data04_df)
+//    val reuslt=trainModel.getSDF("test", data04_df)
+//    reuslt.show(false)
+//
+//    reuslt.write.mode(SaveMode.Overwrite).parquet(basePath+s"sub/200")
 
   }
 
