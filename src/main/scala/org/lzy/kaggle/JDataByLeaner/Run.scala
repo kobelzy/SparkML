@@ -125,7 +125,7 @@ object Run {
 //          df.join(news,"user_id").select("user_id","o_num","pred_date","new_num","new_pred_date")
 //                  .map{case(Row(user_id:Int,o_num:Double,pred_date:Double,new_num:Double,new_pred_date:Double))=>
 //                  }
-          news.write.parquet(basePath+s"sub/${num}")
+          news.write.mode(SaveMode.Overwrite).parquet(basePath+s"sub/${num}")
     })
 
 
