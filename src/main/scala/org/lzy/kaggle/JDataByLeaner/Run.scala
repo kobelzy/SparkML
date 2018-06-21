@@ -28,7 +28,7 @@ object Run {
     /*
     处理特征数据
      */
-            getFeatureData(spark)
+    //        getFeatureData(spark)
 
 
     /*
@@ -50,17 +50,13 @@ object Run {
      */
 //            trainTestModel(spark,1000,200)
 
-    trainTestModelByBagging(spark,1000)
+//    trainTestModelByBagging(spark,1000)
     bagging(spark)
 
 
 //    val trainModel = new TrainModels(spark, basePath)
 //    val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
-////    trainModel.getResult("test", data04_df)
-//    val reuslt=trainModel.getSDF("test", data04_df)
-//    reuslt.show(false)
-//
-//    reuslt.write.mode(SaveMode.Overwrite).parquet(basePath+s"sub/200")
+//    trainModel.getResult("test", data04_df)
 
   }
 
@@ -137,9 +133,9 @@ object Run {
 
   def bagging(spark:SparkSession)={
     import spark.implicits._
-    val df_200=spark.read.parquet(basePath + "sub/1000").select($"user_id",$"o_num".as("o_num_200"),$"pred_date".as("pred_date_200"))
-    val df_250=spark.read.parquet(basePath + "sub/1250").select($"user_id",$"o_num".as("o_num_250"),$"pred_date".as("pred_date_250"))
-    val df_300=spark.read.parquet(basePath + "sub/1500").select($"user_id",$"o_num".as("o_num_300"),$"pred_date".as("pred_date_300"))
+    val df_200=spark.read.parquet(basePath + "sub/200").select($"user_id",$"o_num".as("o_num_200"),$"pred_date".as("pred_date_200"))
+    val df_250=spark.read.parquet(basePath + "sub/250").select($"user_id",$"o_num".as("o_num_250"),$"pred_date".as("pred_date_250"))
+    val df_300=spark.read.parquet(basePath + "sub/300").select($"user_id",$"o_num".as("o_num_300"),$"pred_date".as("pred_date_300"))
     val all_df=df_200.join(broadcast(df_250),"user_id").join(broadcast(df_300),"user_id")
     val result=all_df.withColumn("o_num",($"o_num_200"+$"o_num_250"+$"o_num_300")/3.0)
       .withColumn("pred_date",($"pred_date_200"+$"pred_date_250"+$"pred_date_300")/3.0)
