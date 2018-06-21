@@ -126,7 +126,7 @@ class FeaExact(spark: SparkSession, basePath: String) {
 
     //计算order和action与预测月份之间的时间差值。
     val order_df = order.sort($"o_date").withColumn("day_gap", datediff($"o_date", lit(endTime))) //距离5月1号的天数，一定为负数,其他月份不一定为负数。
-      .withColumn("o_sku_num",when($"o_sku_num" < 20,$"o_sku_num").otherwise(20))
+      .withColumn("o_sku_num",when($"o_sku_num" < 50,$"o_sku_num").otherwise(50))
     val action_df = action.sort($"a_date").withColumn("day_gap", datediff($"a_date", lit(endTime)))
       .withColumn("a_num",when($"a_num" < 50,$"a_num").otherwise(50))
 
@@ -153,7 +153,6 @@ class FeaExact(spark: SparkSession, basePath: String) {
         .withColumn("label_1", when($"label_unique1" <= 3, $"label_unique1").otherwise(3))
         .drop("label_unique1")
       println("label2")
-      val udf_getLabel2 = udf { (o_date: Timestamp) => if (o_date == null) 0 else if (o_date.after(startTime) || o_date.equals(startTime)) o_date.toLocalDateTime.getDayOfMonth - 1 else 0 }
       //如果下单时间在开始时间之后，那么获取该时间对应的当月的几号。
       val order_label1Andlabel2_df = order_label1_df
         //                .withColumn("label_2", udf_getLabel2($"o_date"))
@@ -184,6 +183,7 @@ class FeaExact(spark: SparkSession, basePath: String) {
         min("price").as("price_min"),
         max("price").as("price_max"),
         mean("price").as("price_mean")
+
 
 
       )
@@ -309,6 +309,8 @@ class FeaExact(spark: SparkSession, basePath: String) {
     //#######################################################################################################################################
     //用户当月首次订单是哪一天
     val order_tmp_firstDay = order_tmp_byDay.filter($"cate" === 30 || $"cate" === 101).dropDuplicates("user_id").select("user_id", "o_day").withColumnRenamed("o_day", o + "o_date_30_101_firstday")
+    //用户最后订单是哪一天
+    val order_tmp_lastDay = order_tmp_byDay.filter($"cate" === 30 || $"cate" === 101).sort($"o_day".desc).dropDuplicates("user_id").select("user_id", "o_day").withColumnRenamed("o_day", o + "o_date_30_101_lastday")
     /*
     * action相关
     * */
@@ -362,6 +364,7 @@ class FeaExact(spark: SparkSession, basePath: String) {
       .join(broadcast(order_tmp_101), Seq("user_id"), "outer")
       .join(broadcast(order_tmp_other), Seq("user_id"), "outer")
       .join(broadcast(order_tmp_firstDay), Seq("user_id"), "outer")
+      .join(broadcast(order_tmp_lastDay), Seq("user_id"), "outer")
       .join(broadcast(action_tmp_30And101), Seq("user_id"), "outer")
       .join(broadcast(action_tmp_30And101_type1), Seq("user_id"), "outer")
       .join(broadcast(action_tmp_30And101_type2), Seq("user_id"), "outer")
