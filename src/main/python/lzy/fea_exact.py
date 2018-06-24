@@ -226,7 +226,7 @@ if __name__ == '__main__':
     gen_test()
     s1,s2 = get_result()
 
-    #gen_vali(True)
-    #feat_imp_s1,feat_imp_s2 = get_train()
+    gen_vali(True)
+    feat_imp_s1,feat_imp_s2 = get_train()
 
     print "feature exacting tasks %d second"%(time.time()-s_time)

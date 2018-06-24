@@ -79,7 +79,29 @@ class FeaExact(spark: SparkSession, basePath: String) {
     //  }
 
   }
+  /** *
+    * 功能实现:
+    * 获取从9月份开始到4月份的 相关用户特征，包含每个月中参与订单的用户，以及其过去一段时间的消费特征。
+    * Author: Lzy
+    * Date: 2018/6/11 9:50
+    * Param: [order, action, user]
+    * Return: void
+    */
+  def save2To8MonthData(order: DataFrame, action: DataFrame, user: DataFrame
+                         //                       ,months:Array[Int]
+                        ) = {
 
+
+    createFeat(getTime("2017-01-01"), getTime("2017-02-01"), order, action, user).write.mode(SaveMode.Overwrite).parquet(basePath + "cache/trainMonth/01")
+    createFeat(getTime("2017-02-01"), getTime("2017-03-01"), order, action, user).write.mode(SaveMode.Overwrite).parquet(basePath + "cache/trainMonth/02")
+    createFeat(getTime("2017-03-01"), getTime("2017-04-01"), order, action, user).write.mode(SaveMode.Overwrite).parquet(basePath + "cache/trainMonth/03")
+    createFeat(getTime("2017-04-01"), getTime("2017-05-01"), order, action, user).write.mode(SaveMode.Overwrite).parquet(basePath + "cache/trainMonth/04")
+    createFeat(getTime("2017-05-01"), getTime("2017-06-01"), order, action, user).write.mode(SaveMode.Overwrite).parquet(basePath + "cache/trainMonth/05")
+    createFeat(getTime("2017-06-01"), getTime("2017-07-01"), order, action, user).write.mode(SaveMode.Overwrite).parquet(basePath + "cache/trainMonth/06")
+    createFeat(getTime("2017-07-01"), getTime("2017-08-01"), order, action, user).write.mode(SaveMode.Overwrite).parquet(basePath + "cache/trainMonth/07")
+    createFeat(getTime("2017-08-01"), getTime("2017-09-01"), order, action, user).write.mode(SaveMode.Overwrite).parquet(basePath + "cache/trainMonth/08")
+
+  }
   def getAndSaveValiData(order: DataFrame, action: DataFrame, user: DataFrame) = {
     val test = createFeat(getTime("2017-03-01"), getTime("2017-04-01"), order, action, user)
     test.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/vali_test_start12")

@@ -1,5 +1,7 @@
 package org.lzy.kaggle.JDataByLeaner
 
+import org.apache
+import org.apache.spark
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 
@@ -25,10 +27,15 @@ object Run {
     config.set("spark.default.parallelism", "100")
     config.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
 
+/*
+生成基本数据
+ */
+//    runLoadData(spark)
+
     /*
     处理特征数据
      */
-    //        getFeatureData(spark)
+//            getFeatureData(spark)
 
 
     /*
@@ -50,7 +57,7 @@ object Run {
      */
 //            trainTestModel(spark,1000,200)
 
-//    trainTestModelByBagging(spark,1000)
+    trainTestModelByBagging(spark,1000)
     bagging(spark)
 
 
@@ -59,7 +66,15 @@ object Run {
 //    trainModel.getResult("test", data04_df)
 
   }
-
+  /*
+生成基本数据
+*/
+  def runLoadData(spark:SparkSession): Unit ={
+    val util = new Util(spark)
+    val (order, action) = util.loadData(basePath+"data/")
+    order.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/order")
+    action.write.mode(SaveMode.Overwrite).parquet(basePath + "cache/action")
+  }
   /** *
     * 功能实现:
     * 处理特征数据
@@ -71,11 +86,13 @@ object Run {
   def getFeatureData(spark: SparkSession): Unit = {
     val feaExact = new FeaExact(spark, basePath)
     val util = new Util(spark)
-    val order_cache = spark.read.parquet(basePath + "cache/order").repartition(60).cache()
+    val order_cache =spark.read.parquet(basePath + "cache/order").repartition(60).cache()
     val action_cache = spark.read.parquet(basePath + "cache/action").repartition(60).cache()
     val user = util.getSourceData(basePath + "jdata_user_basic_info.csv").repartition(60).cache()
 
-    feaExact.save11To4MonthData(order_cache, action_cache, user)
+//    feaExact.save11To4MonthData(order_cache, action_cache, user)
+    feaExact.save2To8MonthData(order_cache, action_cache, user)
+
     println("特征处理完毕")
   }
 
@@ -86,15 +103,25 @@ object Run {
     */
   def trainTestModel(spark: SparkSession, round: Int = 1000, topNumFeatures: Int): Unit = {
     val trainModel = new TrainModels(spark, basePath)
+//    val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
+//    val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
+//    val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
+//    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
+//    val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
+//    val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
+//    val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
+
+    val data08_df = spark.read.parquet(basePath + "cache/trainMonth/08")
+    val data07_df = spark.read.parquet(basePath + "cache/trainMonth/07")
+    val data06_df = spark.read.parquet(basePath + "cache/trainMonth/06")
+    val data05_df = spark.read.parquet(basePath + "cache/trainMonth/05")
     val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
     val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
     val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
-    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
-    val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
-    val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
-    val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
+
+
     //结果模型
-    val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200).cache()
+    val testTrain_df = data02_df.union(data03_df).union(data04_df).union(data05_df).union(data06_df).union(data07_df).repartition(200).cache()
     trainModel.trainAndSaveModel("test", testTrain_df, round, topNumFeatures)
     trainModel.varifyModel("test", data04_df)
     trainModel.getResult("test", data04_df)
@@ -107,20 +134,30 @@ object Run {
   def trainTestModelByBagging(spark: SparkSession, round: Int = 1000): Unit = {
     import spark.implicits._
     val trainModel = new TrainModels(spark, basePath)
+//    val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
+//    val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
+//    val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
+//    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
+//    val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
+//    val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
+//    val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
+
+    val data08_df = spark.read.parquet(basePath + "cache/trainMonth/08")
+        val data07_df = spark.read.parquet(basePath + "cache/trainMonth/07")
+    val data06_df = spark.read.parquet(basePath + "cache/trainMonth/06")
+    val data05_df = spark.read.parquet(basePath + "cache/trainMonth/05")
     val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
     val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
     val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
-    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
-    val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
-    val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
-    val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
+
+
     //结果模型
-    val testTrain_df = data10_df.union(data11_df).union(data12_df).union(data01_df).union(data02_df).union(data03_df).repartition(200).cache()
+    val testTrain_df = data02_df.union(data03_df).union(data04_df).union(data05_df).union(data06_df).union(data07_df).repartition(200).cache()
         Range(200,350,50).map(num=>{
 //        Array(1250,1500).map(rounds=>{
         println("特征数量："+num)
     trainModel.trainAndSaveModel("test", testTrain_df, round, 200)
-    val news=trainModel.getSDF("test", data04_df)
+    val news=trainModel.getSDF("test", data08_df)
 //            .select($"user_id",$"o_num".as("new_num"),$"pred_date".as("new_pred_date"))
 //          df.join(news,"user_id").select("user_id","o_num","pred_date","new_num","new_pred_date")
 //                  .map{case(Row(user_id:Int,o_num:Double,pred_date:Double,new_num:Double,new_pred_date:Double))=>
@@ -170,15 +207,23 @@ object Run {
     */
   def trainValiModel(spark: SparkSession, round: Int = 100, topNumFeatures: Int) = {
     val trainModel = new TrainModels(spark, basePath)
+//    val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
+//    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
+//    val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
+//    val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
+//    val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
+//    val data09_df = spark.read.parquet(basePath + "cache/trainMonth/09")
+
+//val data02_df = spark.read.parquet(basePath + "cache/trainMonth/08")
+//    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/07")
+    val data06_df = spark.read.parquet(basePath + "cache/trainMonth/06")
+    val data05_df = spark.read.parquet(basePath + "cache/trainMonth/05")
+val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
+    val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
     val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
     val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
-    val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
-    val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
-    val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
-    val data09_df = spark.read.parquet(basePath + "cache/trainMonth/09")
-
     //验证模型
-    val valiTrain_df = data09_df.union(data10_df).union(data11_df).union(data12_df).union(data01_df).union(data02_df).repartition(200).cache()
+    val valiTrain_df = data01_df.union(data02_df).union(data03_df).union(data04_df).union(data05_df).union(data06_df).repartition(200).cache()
     trainModel.trainAndSaveModel("vali", valiTrain_df, round, topNumFeatures)
     //        trainModel.trainValiModel("vali", valiTrain_df, round)
   }
@@ -193,10 +238,23 @@ object Run {
     */
   def varifyValiModel(spark: SparkSession) = {
     val trainModel = new TrainModels(spark, basePath)
-    val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03").cache()
-    val valiTest_df = data03_df
+    val data07_df = spark.read.parquet(basePath + "cache/trainMonth/07").cache()
+    val valiTest_df = data07_df
     trainModel.varifyModel("vali", valiTest_df)
     //        trainModel.varifyValiModel("vali", valiTest_df)
 
+  }
+
+  def getData(spark: SparkSession,start:Int,end:Int)={
+    val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
+    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
+    val data12_df = spark.read.parquet(basePath + "cache/trainMonth/12")
+    val data11_df = spark.read.parquet(basePath + "cache/trainMonth/11")
+    val data10_df = spark.read.parquet(basePath + "cache/trainMonth/10")
+    val data09_df = spark.read.parquet(basePath + "cache/trainMonth/09")
+
+    Range(start,end,1).map(date=>{
+
+    })
   }
 }

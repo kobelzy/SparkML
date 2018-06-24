@@ -199,7 +199,7 @@ object Util {
 }
 
 class Util(spark: SparkSession) {
-
+import spark.implicits._
     /**
       * 获取csv转换为DF
       *
@@ -242,28 +242,28 @@ class Util(spark: SparkSession) {
         //评价表,user_id,comment_create_tm,o_id,score_level
         val comment_df = getSourceData(basePath + user_comment)
 
-        val user_action_df = action_df.withColumn("a_year", getYearFromTime(action_df("a_date")))
-                .withColumn("a_month", getMonthFromTime(action_df("a_date")))
-                .withColumn("a_day", getDayFromTime(action_df("a_date")))
+        val user_action_df = action_df.withColumn("a_year", year(action_df("a_date")))
+                .withColumn("a_month",month($"a_date"))
+                .withColumn("a_day", dayofmonth($"a_date"))
 
-        val user_order_df = order_df.withColumn("o_year", getYearFromTime(order_df("o_date")))
-                .withColumn("o_month", getMonthFromTime(order_df("o_date")))
-                .withColumn("o_day", getDayFromTime(order_df("o_date")))
+        val user_order_df = order_df.withColumn("o_year", year(order_df("o_date")))
+                .withColumn("o_month", month(order_df("o_date")))
+                .withColumn("o_day", dayofmonth(order_df("o_date")))
 
         val user_comment_df = comment_df
-                .withColumn("c_year", getYearFromTime(comment_df("comment_create_tm")))
-                .withColumn("c_month", getMonthFromTime(comment_df("comment_create_tm")))
-                .withColumn("c_day", getDayFromTime(comment_df("comment_create_tm")))
+                .withColumn("c_year", year(comment_df("comment_create_tm")))
+                .withColumn("c_month", month(comment_df("comment_create_tm")))
+                .withColumn("c_day", dayofmonth(comment_df("comment_create_tm")))
                 .withColumnRenamed("comment_create_tm", "c_date")
 
         //    * 把user_order,user_comment,sku,user_info连在一起组成order_comment表
-        val order = user_order_df.join(sku_df, Seq("sku_id"), "left")
-                .join(user_df, Seq("user_id"), "left")
-                .join(user_comment_df, Seq("user_id", "o_id"), "left")
+        val order = user_order_df.join(broadcast(sku_df), Seq("sku_id"), "left")
+                .join(broadcast(user_df), Seq("user_id"), "left")
+                .join(broadcast(user_comment_df), Seq("user_id", "o_id"), "left")
 
         //把user_action,user_info,sku_info连接一起组成user_action表
-        val action = user_action_df.join(sku_df, Seq("sku_id"), "left")
-                .join(user_df, Seq("user_id"), "left")
+        val action = user_action_df.join(broadcast(sku_df), Seq("sku_id"), "left")
+                .join(broadcast(user_df), Seq("user_id"), "left")
         (order, action)
     }
 
