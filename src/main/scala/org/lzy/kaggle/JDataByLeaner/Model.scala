@@ -3,7 +3,7 @@ package org.lzy.kaggle.JDataByLeaner
 import ml.dmlc.xgboost4j.scala.spark.{XGBoost, XGBoostEstimator, XGBoostModel}
 import org.apache.spark.ml
 import org.apache.spark.ml.{PipelineModel, Transformer}
-import org.apache.spark.ml.evaluation.RegressionEvaluator
+import org.apache.spark.ml.evaluation.{MulticlassClassificationEvaluator, RegressionEvaluator}
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.mllib.util.MLUtils
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -48,7 +48,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
 
     val xgboostParam=Map(
       "booster"->"gbtree",
-      "objection"->objection,
+      "objective"->objection,
       "eval_metric"-> evalMetric,
       "max_depth"->5,
       "eta"->0.05,
@@ -91,10 +91,10 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
   def fitPredictByLogistic(train_df:DataFrame,labelCol:String,predictCol:String,round:Int)={
     val xgboostParam=Map(
       "booster"->"gbtree",
-      "objection"->"reg:logistic",
-      "eval_metric"->"rmse",
+      "objective"->"reg:linear",
+      "eval_metric"->"auc",
       "max_depth"->5,
-//      "eta"->0.05,
+      "eta"->0.05,
       "colsample_bytree"->0.9,
       "subsample"->0.8,
       "verbose_eval"->0
@@ -104,16 +104,17 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
 
     val xgbEstimator = new XGBoostEstimator(xgboostParam)
     //            .setPredictionCol(predictCol)
+
     val paramGrid = new ParamGridBuilder()
       .addGrid(xgbEstimator.round, Array(round))
-                  .addGrid(xgbEstimator.eta, Array(0.01,0.05))
+//                  .addGrid(xgbEstimator.eta, Array(0.1,0.05))
       .addGrid(xgbEstimator.nWorkers,Array(15))
       //        .addGrid(xgbEstimator.subSample,Array(0.5))
       .build()
     val tv=new TrainValidationSplit()
       .setEstimator(xgbEstimator)
         .setEvaluator(evaluator)
-//      .setEvaluator(new RegressionEvaluator())
+//      .setEvaluator(new MulticlassClassificationEvaluator())
       .setEstimatorParamMaps(paramGrid)
       .setTrainRatio(0.8)
 

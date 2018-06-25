@@ -1,14 +1,10 @@
 package org.lzy.kaggle.JDataByLeaner
 
 
-import ml.dmlc.xgboost4j.scala.spark.{XGBoostEstimator, XGBoostModel}
-import ml.dmlc.xgboost4j.scala.spark.XGBoostRegressionModel
-import org.apache.spark.ml
-import org.apache.spark.ml.param.DoubleParam
-import org.apache.spark.ml.{PipelineModel, Transformer}
-import org.apache.spark.ml.tuning.{TrainValidationSplit, TrainValidationSplitModel}
+import ml.dmlc.xgboost4j.scala.spark.{XGBoostClassificationModel, XGBoostEstimator, XGBoostModel, XGBoostRegressionModel}
+import org.apache.spark.ml.{Estimator, PipelineModel}
+import org.apache.spark.ml.tuning.TrainValidationSplitModel
 import org.apache.spark.sql.SparkSession
-import org.lzy.kaggle.JDataByLeaner.TrainModels.basePath
 
 /**
   * Created by Administrator on 2018/6/8.
@@ -20,11 +16,11 @@ object ShowModels {
             .master("local[*]")
       .appName("model").getOrCreate()
     spark.sparkContext.setLogLevel("WARN")
-import spark.implicits._
+      showModels()
 //    val model=TrainValidationSplitModel.read.load(basePath+s"model/s1_train_Model")
 //    println(model.bestModel.explainParams())
-val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
-    data03_df.show(false)
+//val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
+//    data03_df.show(false)
 //    data03_df.sort("user_id").show(false)
 
 //println(model.bestModel.extractParamMap())
@@ -54,6 +50,21 @@ val data03_df = spark.read.parquet(basePath + "cache/trainMonth/03")
         val datas=data.filter($"label_1" >0)
         println(s"第$month 月label_1>0:"+datas.count())
         println(s"第$month 月label_2>0:"+data.filter($"label_2" >0).count())
+
+    }
+
+    def showModels(): Unit ={
+
+
+
+            val model=TrainValidationSplitModel.read.load(basePath+s"model/s1_vali_Model")
+        val xgModel=model.bestModel.asInstanceOf[XGBoostModel]
+        val xgbEstimator:Estimator[_]=model.getEstimator.asInstanceOf[XGBoostEstimator]
+//        val xgModel=bestModel.stages(1).asInstanceOf[XGBoostModel]
+        println("-----------------------")
+        println(xgbEstimator.extractParamMap())
+        println("-----------------------")
+println(xgbEstimator.explainParam(xgbEstimator.getParam("eta")))
 
     }
 }

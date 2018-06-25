@@ -42,9 +42,9 @@ object Run {
     训练测试模型
      */
 
-//            trainValiModel(spark,100,200)
+            trainValiModel(spark,100,200)
     //        //验证训练模型
-//            varifyValiModel(spark)
+            varifyValiModel(spark)
 
     /*    Range(100,300,20).map(num=>{
             println("特征数量："+num)
@@ -57,8 +57,8 @@ object Run {
      */
 //            trainTestModel(spark,1000,200)
 
-    trainTestModelByBagging(spark,1000)
-    bagging(spark)
+//    trainTestModelByBagging(spark,1000)
+//    bagging(spark)
 
 
 //    val trainModel = new TrainModels(spark, basePath)
@@ -206,6 +206,7 @@ object Run {
     * Return: void
     */
   def trainValiModel(spark: SparkSession, round: Int = 100, topNumFeatures: Int) = {
+    import spark.implicits._
     val trainModel = new TrainModels(spark, basePath)
 //    val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
 //    val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
@@ -223,7 +224,10 @@ val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
     val data02_df = spark.read.parquet(basePath + "cache/trainMonth/02")
     val data01_df = spark.read.parquet(basePath + "cache/trainMonth/01")
     //验证模型
-    val valiTrain_df = data01_df.union(data02_df).union(data03_df).union(data04_df).union(data05_df).union(data06_df).repartition(200).cache()
+    val valiTrain_df = data01_df.union(data02_df).union(data03_df).union(data04_df).union(data05_df).union(data06_df)
+//            .withColumn("label_1",when($"label_1" >=1,1).otherwise(0))
+            .repartition(200).cache()
+
     trainModel.trainAndSaveModel("vali", valiTrain_df, round, topNumFeatures)
     //        trainModel.trainValiModel("vali", valiTrain_df, round)
   }
@@ -237,8 +241,11 @@ val data04_df = spark.read.parquet(basePath + "cache/trainMonth/04")
     * Return: void
     */
   def varifyValiModel(spark: SparkSession) = {
+    import spark.implicits._
     val trainModel = new TrainModels(spark, basePath)
-    val data07_df = spark.read.parquet(basePath + "cache/trainMonth/07").cache()
+    val data07_df = spark.read.parquet(basePath + "cache/trainMonth/07")
+//            .withColumn("label_1",when($"label_1" >=1,1).otherwise(0))
+            .cache()
     val valiTest_df = data07_df
     trainModel.varifyModel("vali", valiTest_df)
     //        trainModel.varifyValiModel("vali", valiTest_df)
