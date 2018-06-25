@@ -61,7 +61,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
 //val evaluator=new UDRegressionEvaluator()
     val paramGrid = new ParamGridBuilder()
             .addGrid(xgbEstimator.round, Array(round))
-//            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
+            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
         .addGrid(xgbEstimator.nWorkers,Array(15))
 //        .addGrid(xgbEstimator.subSample,Array(0.5))
             .build()
@@ -92,7 +92,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
     val xgboostParam=Map(
       "booster"->"gbtree",
       "objective"->"reg:linear",
-      "eval_metric"->"auc",
+      "eval_metric"->"rmse",
       "max_depth"->5,
       "eta"->0.05,
       "colsample_bytree"->0.9,
@@ -107,7 +107,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
 
     val paramGrid = new ParamGridBuilder()
       .addGrid(xgbEstimator.round, Array(round))
-//                  .addGrid(xgbEstimator.eta, Array(0.1,0.05))
+//                  .addGrid(xgbEstimator.eta, Array(0.1,0.05,0.2))
       .addGrid(xgbEstimator.nWorkers,Array(15))
       //        .addGrid(xgbEstimator.subSample,Array(0.5))
       .build()

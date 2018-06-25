@@ -57,7 +57,7 @@ object ShowModels {
 
 
 
-            val model=TrainValidationSplitModel.read.load(basePath+s"model/s1_vali_Model")
+            val model=TrainValidationSplitModel.read.load(basePath+s"model/s2_vali_Model")
         val xgModel=model.bestModel.asInstanceOf[XGBoostModel]
         val xgbEstimator:Estimator[_]=model.getEstimator.asInstanceOf[XGBoostEstimator]
 //        val xgModel=bestModel.stages(1).asInstanceOf[XGBoostModel]
