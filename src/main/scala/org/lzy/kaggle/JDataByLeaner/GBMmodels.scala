@@ -17,7 +17,7 @@ object GBMmodels {
     gbmr.setBoostType("gbtree")                   // "dart" -> DART, "gbtree" -> gradient boosting
       .setObjectiveFunc("square")             // "square" -> MSE, "huber" -> Pseudo-Huber loss
       .setEvaluateFunc(Array("rmse"))  // "rmse", "mse", "mae"
-      .setMaxIter(10)                         // maximum number of iterations
+//      .setMaxIter(10)                         // maximum number of iterations
       .setMaxDepth(7)                         // maximum depth
       .setMaxBins(32)                         // maximum number of bins
       .setNumericalBinType("width")           // "width" -> by interval-equal bins, "depth" -> by quantiles
@@ -28,7 +28,7 @@ object GBMmodels {
       .setDropRate(0.1)                       // dropout rate
       .setDropSkip(0.5)                       // probability of skipping drop
 //      .setInitialModelPath(path)              // path of initial model
-      .setEarlyStopIters(10)                  // early stopping
+      .setEarlyStopIters(50)                  // early stopping
 .setEnableOneHot(true)
     //            .setPredictionCol(predictCol)
     //val evaluator=new UDRegressionEvaluator()

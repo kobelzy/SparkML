@@ -50,7 +50,7 @@ val data:DataFrame =MLUtils.loadLibSVMFile(spark.sparkContext,basePath+"linear_r
       "booster"->"gbtree",
       "objective"->objection,
       "eval_metric"-> evalMetric,
-      "max_depth"->5,
+      "max_depth"->6,
       "eta"->0.05,
       "colsample_bytree"->0.9,
       "subsample"->0.8,

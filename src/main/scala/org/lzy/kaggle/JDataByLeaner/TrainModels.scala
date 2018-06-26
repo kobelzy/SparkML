@@ -268,7 +268,6 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
 
         val train_selector1_df = s1_pipModel.transform(train)
         val train_selector2_df = s2_pipModel.transform(train)
-
         //为resul通过label_1来计算 添加o_num列，
 //        val s1_Model: TrainValidationSplitModel = Model.fitPredict(train_selector1_df, labelCol, predictCol, round,"reg:logistic")
         val s1_Model: TrainValidationSplitModel = Model.fitPredictByLogistic(train_selector1_df, labelCol, predictCol,round)
@@ -279,8 +278,8 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
 
 
         //为result通过label_2来计算添加pred_date
-//        val s2_Model = Model.fitPredict(train_selector2_df, labelCol2, predictCol2, round)
-        val s2_Model = GBMmodels.getS2Prediction(train_selector2_df, labelCol2, predictCol2, round)
+        val s2_Model = Model.fitPredict(train_selector2_df, labelCol2, predictCol2, round)
+//        val s2_Model = GBMmodels.getS2Prediction(train_selector2_df, labelCol2, predictCol2, round)
 
         s2_Model.write.overwrite().save(basePath + s"model/s2_${dataType}_Model")
 
