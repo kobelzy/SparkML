@@ -145,7 +145,7 @@ val s1_df = s1_Model.transform(test_select_df1.withColumnRenamed(labelCol, "labe
 
         val result = s1_df.join(s2_df, "user_id")
 
-        val udf_predDateToDate = udf { (pred_date: Double) => s"2017-05-${math.round(pred_date)}" }
+        val udf_predDateToDate = udf { (pred_date: Double) => s"2017-09-${math.round(pred_date)}" }
 
         println(result.filter($"pred_date" > 0).count)
         println(result.filter($"pred_date" < 0).count)

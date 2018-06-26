@@ -42,9 +42,9 @@ object Run {
     训练测试模型
      */
 
-            trainValiModel(spark,100,200)
+//            trainValiModel(spark,100,200)
     //        //验证训练模型
-            varifyValiModel(spark)
+//            varifyValiModel(spark)
 
     /*    Range(100,300,20).map(num=>{
             println("特征数量："+num)
@@ -57,8 +57,8 @@ object Run {
      */
 //            trainTestModel(spark,1000,200)
 
-//    trainTestModelByBagging(spark,1000)
-//    bagging(spark)
+    trainTestModelByBagging(spark,1000)
+    bagging(spark)
 
 
 //    val trainModel = new TrainModels(spark, basePath)
@@ -176,7 +176,7 @@ object Run {
     val all_df=df_200.join(broadcast(df_250),"user_id").join(broadcast(df_300),"user_id")
     val result=all_df.withColumn("o_num",($"o_num_200"+$"o_num_250"+$"o_num_300")/3.0)
       .withColumn("pred_date",($"pred_date_200"+$"pred_date_250"+$"pred_date_300")/3.0)
-    val udf_predDateToDate = udf { (pred_date: Double) => s"2017-05-${math.round(pred_date)}" }
+    val udf_predDateToDate = udf { (pred_date: Double) => s"2017-09-${math.round(pred_date)}" }
     val submission: DataFrame = result
       //      .filter($"pred_date"> -30.5 && $"pred_date" <0)
       .sort($"o_num".desc).limit(50000)
