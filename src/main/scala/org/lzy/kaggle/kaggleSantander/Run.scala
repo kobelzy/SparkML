@@ -3,7 +3,7 @@ package org.lzy.kaggle.kaggleSantander
 import common.{FeatureUtils, Utils}
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.sql.SparkSession
-
+import org.apache.spark.sql.functions._
 /**
   * Created by Administrator on 2018/7/3.
 
@@ -17,6 +17,7 @@ object Run{
     val spark = SparkSession.builder().appName("names")
 //            .master("local[*]")
       .getOrCreate()
+    import spark.implicits._
     spark.sparkContext.setLogLevel("WARN")
     val conf = spark.conf
     val sc = spark.sparkContext
@@ -40,8 +41,12 @@ object Run{
     val test_willFit_df=pipeline.fit(test_df).transform(test_df).select("id","features")
 
     val lr_model=models.LR_TranAndSave(train_willFit_df,"target")
-    val result_df=lr_model.transform(test_willFit_df).select("id","prediction")
-    utils.writeToCSV(result_df,Constant.basePath+s"submission/lr_${System.currentTimeMillis()}.csv")
+    val format_udf=udf{prediction:Double=>
+      "%08.9f".format(if(prediction<0) 0d else prediction)
+    }
+    val result_df=lr_model.transform(test_willFit_df).withColumn("target",format_udf($"prediction"))
+      .select("id","target")
+    utils.writeToCSV(result_df,Constant.basePath+s"submission/lr_${System.currentTimeMillis()}")
   }
   def run(): Unit ={
 

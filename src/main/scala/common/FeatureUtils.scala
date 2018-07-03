@@ -1,7 +1,7 @@
 package common
 
 import org.apache.spark.ml.PipelineStage
-import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer}
+import org.apache.spark.ml.feature.{OneHotEncoder, StringIndexer, VectorAssembler}
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -66,6 +66,13 @@ object FeatureUtils {
         columns.map(column=>{
             stages = stages :+ onehot(column)
         })
+        stages
+    }
+
+    def vectorAssemble(columns:Array[String],outColumn:String="Features"):Array[PipelineStage]={
+        var stages = Array[PipelineStage]()
+        val vectorAssembler=new VectorAssembler().setInputCols(columns).setOutputCol(outColumn)
+            stages = stages :+ vectorAssembler
         stages
     }
 }

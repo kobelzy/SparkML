@@ -35,11 +35,12 @@ class Utils(spark: SparkSession) {
  * Return: void
  */
     def writeToCSV(df:DataFrame,path:String)={
-        df.write.option("header", "true")
+        df.coalesce(1).write.mode(SaveMode.Overwrite).option("header", "true")
                 .mode(SaveMode.Overwrite)
                 .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
                 //          .option("nullValue", "NA")
                 .csv(path)
+
     }
 }
 object Utils{
