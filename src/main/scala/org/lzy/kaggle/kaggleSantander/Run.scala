@@ -1,7 +1,7 @@
 package org.lzy.kaggle.kaggleSantander
 
 import common.{FeatureUtils, Utils}
-import org.apache.spark.ml.Pipeline
+import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions._
 /**
@@ -9,7 +9,7 @@ import org.apache.spark.sql.functions._
 
 * Created by Administrator on 2018/6/3
  spark-submit --master yarn-client --queue lzy --driver-memory 6g --conf spark.driver.maxResultSize=5g  \
- --num-executors 12 --executor-cores 4 --executor-memory 7g --jars \
+ --num-executors 12 --executor-cores 4 --executor-memory 7g  \
  --class org.lzy.kaggle.kaggleSantander.Run SparkML.jar
   * */
 object Run{
@@ -34,17 +34,17 @@ object Run{
 
     val featureFilterColumns_arr=Array("id","target")
     val featureColumns_arr=train_df.columns.filterNot(column=>featureFilterColumns_arr.contains(column.toLowerCase))
-    val stages=FeatureUtils.vectorAssemble(featureColumns_arr)
-
+    var stages:Array[PipelineStage]=FeatureUtils.vectorAssemble(featureColumns_arr,"assmbleFeatures")
+     stages=stages:+  FeatureUtils.chiSqSelector("target","assmbleFeatures","features",1000)
     val pipeline=new Pipeline().setStages(stages)
-    val train_willFit_df=pipeline.fit(train_df).transform(train_df).select("ID","target","features").withColumn("target",log1p($"target"))
+    val train_willFit_df=pipeline.fit(train_df).transform(train_df).select("ID","target","features").withColumn("target",$"target"/10000d)
     val test_willFit_df=pipeline.fit(test_df).transform(test_df).select("id","features")
 
     val lr_model=models.LR_TranAndSave(train_willFit_df,"target")
     val format_udf=udf{prediction:Double=>
       "%08.9f".format(prediction)
     }
-    val result_df=lr_model.transform(test_willFit_df).withColumn("target",format_udf(abs(exp($"prediction"))))
+    val result_df=lr_model.transform(test_willFit_df).withColumn("target",format_udf(abs($"prediction"*10000d)))
       .select("id","target")
     utils.writeToCSV(result_df,Constant.basePath+s"submission/lr_${System.currentTimeMillis()}")
   }
