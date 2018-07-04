@@ -10,7 +10,7 @@ class Models(spark:SparkSession) {
 import spark.implicits._
   def LR_TranAndSave(data:DataFrame,label:String="label",features:String="features")={
     val lr=new LinearRegression()
-      .setMaxIter(100)
+      .setMaxIter(1000)
       .setLabelCol(label)
       .setFeaturesCol(features)
 
