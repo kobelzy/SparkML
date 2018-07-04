@@ -1,11 +1,13 @@
 package org.lzy.kaggle.JDataByLeaner
 
 import ml.dmlc.xgboost4j.scala.spark.XGBoostEstimator
+import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.sql.SparkSession
 import org.lzy.kaggle.JDataByLeaner.Run.basePath
+import scala.collection.mutable.ArrayBuffer
 
 /**
   * Auther: lzy
@@ -36,10 +38,11 @@ object TestModel {
                         .toDF("labels","feature")
         trains.show()
         val xgbEstimator = new XGBoostEstimator(xgboostParam)
-                    .setFeaturesCol("feature")
+        xgbEstimator .setFeaturesCol("feature")
                 .setLabelCol("labels")
                 .setPredictionCol("prediction")
-
+        val xgbModel=xgbEstimator.fit(trains)
+        xgbModel.transform(trains).show()
         println("字段名:"+xgbEstimator.getLabelCol)
 //val evaluator=new UDRegressionEvaluator()
 val paramGrid = new ParamGridBuilder()
@@ -48,14 +51,18 @@ val paramGrid = new ParamGridBuilder()
         .addGrid(xgbEstimator.nWorkers, Array(15))
 //        .addGrid(xgbEstimator.subSample,Array(0.5))
         .build()
+val stages=new ArrayBuffer[PipelineStage]()
+        stages += xgbEstimator
+        val pipeline = new Pipeline().setStages(stages.toArray)
         val tv = new TrainValidationSplit()
-                .setEstimator(xgbEstimator)
+                .setEstimator(pipeline)
 //            .setEvaluator(evaluator)
                 .setEvaluator(new RegressionEvaluator())
                 .setEstimatorParamMaps(paramGrid)
                 .setTrainRatio(0.8)
 
         val tvModel = tv.fit(trains)
+
         val predictions=tvModel.transform(trains)
         println(tvModel.getEvaluator.isLargerBetter)
         //输出评估值
