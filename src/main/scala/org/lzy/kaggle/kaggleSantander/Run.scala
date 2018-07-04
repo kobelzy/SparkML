@@ -37,14 +37,14 @@ object Run{
     val stages=FeatureUtils.vectorAssemble(featureColumns_arr)
 
     val pipeline=new Pipeline().setStages(stages)
-    val train_willFit_df=pipeline.fit(train_df).transform(train_df).select("ID","target","features")
+    val train_willFit_df=pipeline.fit(train_df).transform(train_df).select("ID","target","features").withColumn("target",log1p($"target"))
     val test_willFit_df=pipeline.fit(test_df).transform(test_df).select("id","features")
 
     val lr_model=models.LR_TranAndSave(train_willFit_df,"target")
     val format_udf=udf{prediction:Double=>
-      "%08.9f".format(if(prediction<0) 0d else prediction)
+      "%08.9f".format(prediction)
     }
-    val result_df=lr_model.transform(test_willFit_df).withColumn("target",format_udf($"prediction"))
+    val result_df=lr_model.transform(test_willFit_df).withColumn("target",format_udf(abs(exp($"prediction"))))
       .select("id","target")
     utils.writeToCSV(result_df,Constant.basePath+s"submission/lr_${System.currentTimeMillis()}")
   }
