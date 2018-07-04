@@ -37,8 +37,10 @@ object Run{
     var stages:Array[PipelineStage]=FeatureUtils.vectorAssemble(featureColumns_arr,"assmbleFeatures")
      stages=stages:+  FeatureUtils.chiSqSelector("target","assmbleFeatures","features",1000)
     val pipeline=new Pipeline().setStages(stages)
-    val train_willFit_df=pipeline.fit(train_df).transform(train_df).select("ID","target","features").withColumn("target",$"target"/10000d)
-    val test_willFit_df=pipeline.fit(test_df).transform(test_df).select("id","features")
+
+    val pipelin_model=pipeline.fit(train_df)
+    val train_willFit_df=pipelin_model.transform(train_df).select("ID","target","features").withColumn("target",$"target"/10000d)
+    val test_willFit_df=pipelin_model.transform(test_df).select("id","features")
 
     val lr_model=models.LR_TranAndSave(train_willFit_df,"target")
     val format_udf=udf{prediction:Double=>
