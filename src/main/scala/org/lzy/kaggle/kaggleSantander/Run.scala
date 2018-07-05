@@ -30,12 +30,41 @@ object Run{
     val utils=new Utils(spark)
     val models=new Models(spark)
     val train_df=utils.readToCSV(Constant.basePath+"AData/train.csv").repartition(100).cache()
+
+   val trainModel=new TrainModel(spark)
+    Array(0.01,0.02,0.05,0.1).foreach(fdr=>{
+      trainModel.testChiSq(train_df,fdr)
+    })
+  }
+  def run(): Unit ={
+
+  }
+}
+class Run {
+
+  def run1={
+    val spark = SparkSession.builder().appName("names")
+      //            .master("local[*]")
+      .getOrCreate()
+    import spark.implicits._
+    spark.sparkContext.setLogLevel("WARN")
+    val conf = spark.conf
+    val sc = spark.sparkContext
+    val config = sc.getConf
+    //    config.set("spark.driver.maxResultSize","0")
+    config.set("spark.debug.maxToStringFields", "100")
+    config.set("spark.shuffle.io.maxRetries", "60")
+    config.set("spark.default.parallelism", "54")
+    config.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
+    val utils=new Utils(spark)
+    val models=new Models(spark)
+    val train_df=utils.readToCSV(Constant.basePath+"AData/train.csv").repartition(100).cache()
     val test_df=utils.readToCSV(Constant.basePath+"AData/test.csv").repartition(100).cache()
 
     val featureFilterColumns_arr=Array("id","target")
     val featureColumns_arr=train_df.columns.filterNot(column=>featureFilterColumns_arr.contains(column.toLowerCase))
     var stages:Array[PipelineStage]=FeatureUtils.vectorAssemble(featureColumns_arr,"assmbleFeatures")
-     stages=stages:+  FeatureUtils.chiSqSelector("target","assmbleFeatures","features",1000)
+    stages=stages:+  FeatureUtils.chiSqSelector("target","assmbleFeatures","features",1000)
     val pipeline=new Pipeline().setStages(stages)
 
     val pipelin_model=pipeline.fit(train_df)
@@ -50,10 +79,4 @@ object Run{
       .select("id","target")
     utils.writeToCSV(result_df,Constant.basePath+s"submission/lr_${System.currentTimeMillis()}")
   }
-  def run(): Unit ={
-
-  }
-}
-class Run {
-
 }

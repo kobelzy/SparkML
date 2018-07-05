@@ -1,6 +1,7 @@
 package org.lzy.kaggle.kaggleSantander
 
 import org.apache.spark.ml.regression.{GBTRegressor, LinearRegression, RandomForestRegressor}
+import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
@@ -8,6 +9,10 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
   */
 class Models(spark:SparkSession) {
 import spark.implicits._
+
+
+
+
   def LR_TranAndSave(data:DataFrame,label:String="label",features:String="features")={
     val lr=new LinearRegression()
       .setMaxIter(1000)
@@ -39,4 +44,32 @@ import spark.implicits._
     gbdt_model
   }
 
+  def trainSplit_TrainAndSave(data:DataFrame,label:String="label",features:String="features")={
+    val gbdt=new GBTRegressor()
+      .setLabelCol(label).setFeaturesCol(features)
+    val paramGrid=new ParamGridBuilder()
+        .addGrid(gbdt.maxIter,Array(100))
+      .build()
+    val evaluator=new ScoreEvaluator()
+    val tv=new TrainValidationSplit()
+      .setEstimator(gbdt)
+.setEvaluator(evaluator)
+      .setEstimatorParamMaps(paramGrid)
+          .setTrainRatio(0.8)
+  }
+
+  def evaluateGDBT(data:DataFrame,label:String="label",features:String="features")={
+    val Array(train,test)=data.randomSplit(Array(0.8,0.2))
+    val gbdt=new GBTRegressor()
+      .setLabelCol(label).setFeaturesCol(features)
+      .setMaxIter(100)
+    val gbdt_model=gbdt.fit(train)
+    val prediction=gbdt_model.transform(test)
+
+    val evaluator=new ScoreEvaluator()
+      evaluator.setLabelCol(label)
+    val score=evaluator.evaluate(prediction)
+
+      score
+  }
 }

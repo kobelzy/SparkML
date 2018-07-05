@@ -72,12 +72,21 @@ object FeatureUtils {
     def vectorAssemble(columns:Array[String],outColumn:String="features"):Array[PipelineStage]={
         var stages = Array[PipelineStage]()
         val vectorAssembler=new VectorAssembler().setInputCols(columns).setOutputCol(outColumn)
+
         stages = stages :+ vectorAssembler
         stages
     }
 
     def chiSqSelector(labelColumn:String,features:String,outputCol:String="features",selectNum:Int):PipelineStage={
         val selector=new ChiSqSelector().setLabelCol(labelColumn).setFeaturesCol(features).setOutputCol(outputCol)
-         selector
+          .setNumTopFeatures(selectNum)
+        selector
+    }
+    def chiSqSelectorByfdr(labelColumn:String,features:String,outputCol:String="features",fdr:Double=0.05):PipelineStage={
+        val selector=new ChiSqSelector().setLabelCol(labelColumn).setFeaturesCol(features).setOutputCol(outputCol)
+          .setSelectorType("fdr")
+          .setFdr(fdr)
+
+        selector
     }
 }
