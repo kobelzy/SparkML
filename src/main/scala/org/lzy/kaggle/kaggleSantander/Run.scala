@@ -42,7 +42,7 @@ object Run{
     val train_willFit_df=pipelin_model.transform(train_df).select("ID","target","features").withColumn("target",$"target"/10000d)
     val test_willFit_df=pipelin_model.transform(test_df).select("id","features")
 
-    val lr_model=models.LR_TranAndSave(train_willFit_df,"target")
+    val lr_model=models.GBDT_TrainAndSave(train_willFit_df,"target")
     val format_udf=udf{prediction:Double=>
       "%08.9f".format(prediction)
     }
