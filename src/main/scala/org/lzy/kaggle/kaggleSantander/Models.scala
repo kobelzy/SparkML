@@ -1,6 +1,6 @@
 package org.lzy.kaggle.kaggleSantander
 
-import org.apache.spark.ml.regression.LinearRegression
+import org.apache.spark.ml.regression.{GBTRegressor, LinearRegression, RandomForestRegressor}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
@@ -19,5 +19,24 @@ import spark.implicits._
     lr_model
   }
 
+  def RF_TrainAndSave(data:DataFrame,label:String="label",features:String="features")={
+    val rf=new RandomForestRegressor()
+            .setLabelCol(label).setFeaturesCol(features)
+
+    val rf_model=rf.fit(data)
+
+    rf_model.write.overwrite().save(Constant.basePath+"model/rf_model")
+    rf_model
+  }
+
+  def GBDT_TrainAndSave(data:DataFrame,label:String="label",features:String="features")={
+    val gbdt=new GBTRegressor()
+            .setLabelCol(label).setFeaturesCol(features)
+            .setMaxIter(100)
+    val gbdt_model=gbdt.fit(data)
+
+    gbdt_model.write.overwrite().save(Constant.basePath+"model/gbdt_model")
+    gbdt_model
+  }
 
 }
