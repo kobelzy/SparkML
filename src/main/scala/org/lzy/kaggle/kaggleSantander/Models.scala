@@ -1,5 +1,6 @@
 package org.lzy.kaggle.kaggleSantander
 
+import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.regression.{GBTRegressor, LinearRegression, RandomForestRegressor}
 import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -66,9 +67,10 @@ import spark.implicits._
     val gbdt_model=gbdt.fit(train)
     val prediction=gbdt_model.transform(test)
 
-    val evaluator=new ScoreEvaluator()
-      evaluator.setLabelCol(label)
-    val score=evaluator.evaluate(prediction)
+//    val evaluator=new ScoreEvaluator()
+//      evaluator.setLabelCol(label)
+    val lr_evaluator=new RegressionEvaluator().setLabelCol(label).setMetricName("rmse")
+    val score=lr_evaluator.evaluate(prediction)
 
       score
   }

@@ -6,4 +6,6 @@ package org.lzy.kaggle.kaggleSantander
 object Constant {
   //  val basePath = "E:\\dataset\\Kaggle_Santander\\"
   val basePath = "hdfs://10.95.3.172:9000/user/lzy/Kaggle_Santander/"
+  val featureFilterColumns_arr=Array("id","target")
+
 }

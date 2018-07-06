@@ -54,9 +54,8 @@ class ScoreEvaluator(override val uid: String)
 
   def score(result_df: Dataset[_], labelCol: String, predictionCol: String) = {
     val n = result_df.count()
-    val udf_getWeight = udf { (label: Double, prediction: Double) => math.pow(math.log1p(label) - math.log1p(prediction), 2) }
-    result_df.withColumn("score", udf_getWeight(col(labelCol), col(predictionCol)))
-    val score=math.sqrt(result_df.select(udf_getWeight(col(labelCol), col(predictionCol))).collect().map(_.getDouble(0)).sum)
+    val udf_getWeight = udf { (label: Double, prediction: Double) => math.pow(math.log1p(label) - math.log1p(math.abs(prediction)), 2) }
+    val score=math.sqrt(result_df.select(udf_getWeight(col(labelCol), col(predictionCol))).collect().map(_.getDouble(0)).sum/n)
     score
     //  0.4 * s1 + 0.6 * s2
   }
