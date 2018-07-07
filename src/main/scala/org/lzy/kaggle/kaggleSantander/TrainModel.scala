@@ -51,12 +51,13 @@ def testChiSqByFdr(train_df:DataFrame,fdr:Double)={
   }
 
 
-  def fitByGBDT(train_df_source:DataFrame,test_df:DataFrame,fdr:Double)={
+  def fitByGBDT(train_df_source:DataFrame,test_df:DataFrame,fdr:Double,num:Int=1000)={
     val train_df=train_df_source.withColumn("target", log1p($"target"))
 
     val featureColumns_arr=train_df.columns.filterNot(column=>Constant.featureFilterColumns_arr.contains(column.toLowerCase))
     var stages:Array[PipelineStage]=FeatureUtils.vectorAssemble(featureColumns_arr,"assmbleFeatures")
-    stages=stages:+  FeatureUtils.chiSqSelectorByfdr("target","assmbleFeatures","features",fdr)
+//    stages=stages:+  FeatureUtils.chiSqSelectorByfdr("target","assmbleFeatures","features",fdr)
+    stages=stages:+  FeatureUtils.chiSqSelector("target","assmbleFeatures","features",num)
     val pipeline=new Pipeline().setStages(stages)
 
     val pipelin_model = pipeline.fit(train_df)

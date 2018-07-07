@@ -9,9 +9,9 @@ import org.apache.spark.sql.functions._
   * Created by Administrator on 2018/7/3.
   *
   * Created by Administrator on 2018/6/3
-  * spark-submit --master yarn-client --queue lzy --driver-memory 6g --conf spark.driver.maxResultSize=5g  \
-  * --num-executors 12 --executor-cores 4 --executor-memory 7g  \
-  * --class org.lzy.kaggle.kaggleSantander.Run SparkML.jar
+   spark-submit --master yarn-client --queue all --driver-memory 6g --conf spark.driver.maxResultSize=5g  \
+   --num-executors 14 --executor-cores 4 --executor-memory 6g  \
+   --class org.lzy.kaggle.kaggleSantander.Run SparkML.jar
   **/
 object Run {
     def main(args: Array[String]): Unit = {
@@ -38,12 +38,12 @@ object Run {
         /*
         验证GBDT在不同参数情况下的分数
          */
-        run.evaluatorGBDT(train_df)
+//        run.evaluatorGBDT(train_df)
 //        trainModel.testChiSqByFdr(train_df.withColumn("target", log1p($"target")), 0.01)
         /*
         训练GBDT并将数据导出
          */
-//        trainModel.fitByGBDT(train_df,test_df,0.01)
+        trainModel.fitByGBDT(train_df,test_df,0.01,1000)
     }
 }
 
