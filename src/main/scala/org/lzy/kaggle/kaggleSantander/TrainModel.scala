@@ -122,14 +122,14 @@ class TrainModel(spark: SparkSession) {
         val pipelin_model = pipeline.fit(train_df)
 //        val train_willFit_df = pipelin_model.transform(train_df).select("ID", "target", "features")
         //增加pca100
-        val train_willFitToPCA_df = pipelin_model.transform(train_df).select("ID","assmbleFeatures","target").withColumn("type",lit("train"))
-        val test_willFitToPCA_df = pipelin_model.transform(test_df).select("ID","assmbleFeatures").withColumn(Constant.lableCol,lit(0d)).withColumn("type",lit("test"))
+        val train_willFitToPCA_df = pipelin_model.transform(train_df).select("ID","assmbleFeatures","target").withColumn("type",lit(0))
+        val test_willFitToPCA_df = pipelin_model.transform(test_df).select("ID","assmbleFeatures").withColumn(Constant.lableCol,lit(0d)).withColumn("type",lit(1))
 
         val tmp_df=train_willFitToPCA_df.union(test_willFitToPCA_df)
 
-        val tmp_pca_df =featureExact.joinWithPCA(tmp_df,100,"assmbleFeatures","features").select("ID",  "features")
-        val train_willFit_df=tmp_pca_df.filter($"type" === "train").select("ID", "target", "features")
-        val test_willFit_df=tmp_pca_df.filter($"type" === "test").select("ID",  "features")
+        val tmp_pca_df =featureExact.joinWithPCA(tmp_df,100,"assmbleFeatures","features")
+        val train_willFit_df=tmp_pca_df.filter($"type" === 0).select("ID", "target", "features")
+        val test_willFit_df=tmp_pca_df.filter($"type" === 1).select("ID",  "features")
 
         val models = new Models(spark)
         val lr_model = models.GBDT_TrainAndSave(train_willFit_df, "target")
