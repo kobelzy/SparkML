@@ -4,14 +4,16 @@ import common.{FeatureUtils, Utils}
 import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
-
+/*
+   spark-submit --master yarn-cluster --queue all --driver-memory 6g --conf spark.driver.maxResultSize=5g  \
+   --num-executors 14 --executor-cores 4 --executor-memory 6g  \
+   --class org.lzy.kaggle.kaggleSantander.Run SparkML.jar
+ */
 /**
   * Created by Administrator on 2018/7/3.
   *
   * Created by Administrator on 2018/6/3
-   spark-submit --master yarn-client --queue all --driver-memory 6g --conf spark.driver.maxResultSize=5g  \
-   --num-executors 14 --executor-cores 4 --executor-memory 6g  \
-   --class org.lzy.kaggle.kaggleSantander.Run SparkML.jar
+
   **/
 object Run {
     def main(args: Array[String]): Unit = {
@@ -30,9 +32,9 @@ object Run {
         config.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         val utils = new Utils(spark)
         val models = new Models(spark)
-        val featureExact=new FeatureExact(spark)
+        val featureExact = new FeatureExact(spark)
         val run = new Run(spark)
-        val trainModel=new TrainModel(spark)
+        val trainModel = new TrainModel(spark)
         val train_df = utils.readToCSV(Constant.basePath + "AData/train.csv").repartition(100).cache()
         val test_df = utils.readToCSV(Constant.basePath + "AData/test.csv").repartition(100).cache()
         /*
@@ -45,7 +47,7 @@ object Run {
         /*
         训练GBDT并将数据导出
          */
-        trainModel.fitByGBDT(train_df,test_df,0.01,400)
+        trainModel.fitByGBDT(train_df, test_df, 0.01, 400)
 
         /*
         通过随机森林训练查看特征重要性。
@@ -59,14 +61,22 @@ class Run(spark: SparkSession) {
 
     import spark.implicits._
 
+    /** *
+      * 功能实现:
+      * 通过多个变量值来检测使用GBDT得到的分数
+      * Author: Lzy
+      * Date: 2018/7/9 9:19
+      * Param: [train_df]
+      * Return: void
+      */
     def evaluatorGBDT(train_df: DataFrame) = {
 
         val trainModel = new TrainModel(spark)
 //        Array(0.01, 0.001, 0.003, 0.005).foreach(fdr => {
 //            trainModel.testChiSqByFdr(train_df, fdr)
 //        })
-        Array(500,1000,2000,3000).foreach(num => {
-            trainModel.testChiSqByTopNum(train_df, num)
+        Array(500, 1000, 2000, 3000).foreach(num => {
+            trainModel.testSelectorChiSq(train_df, type_num = 0, num)
         })
     }
 
