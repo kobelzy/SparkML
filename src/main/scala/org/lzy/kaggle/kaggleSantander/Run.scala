@@ -9,9 +9,9 @@ import org.apache.spark.sql.functions._
   * Created by Administrator on 2018/7/3.
   *
   * Created by Administrator on 2018/6/3
-  * spark-submit --master yarn-client --queue lzy --driver-memory 6g --conf spark.driver.maxResultSize=5g  \
-  * --num-executors 12 --executor-cores 4 --executor-memory 7g  \
-  * --class org.lzy.kaggle.kaggleSantander.Run SparkML.jar
+   spark-submit --master yarn-client --queue all --driver-memory 6g --conf spark.driver.maxResultSize=5g  \
+   --num-executors 14 --executor-cores 4 --executor-memory 6g  \
+   --class org.lzy.kaggle.kaggleSantander.Run SparkML.jar
   **/
 object Run {
     def main(args: Array[String]): Unit = {
@@ -30,20 +30,28 @@ object Run {
         config.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         val utils = new Utils(spark)
         val models = new Models(spark)
+        val featureExact=new FeatureExact(spark)
         val run = new Run(spark)
         val trainModel=new TrainModel(spark)
         val train_df = utils.readToCSV(Constant.basePath + "AData/train.csv").repartition(100).cache()
         val test_df = utils.readToCSV(Constant.basePath + "AData/test.csv").repartition(100).cache()
-
         /*
         验证GBDT在不同参数情况下的分数
          */
-        run.evaluatorGBDT(train_df)
-//        trainModel.testChiSqByFdr(train_df.withColumn("target", log1p($"target")), 0.01)
+//        run.evaluatorGBDT(train_df)
+//        trainModel.testChiSqByFdr(train_df, 0.01)
+//        trainModel.testChiSqByRFSelect(train_df,372)
+//        trainModel.testChiSqByTopNum(train_df,372)
         /*
         训练GBDT并将数据导出
          */
-//        trainModel.fitByGBDT(train_df,test_df,0.01)
+        trainModel.fitByGBDT(train_df,test_df,0.01,400)
+
+        /*
+        通过随机森林训练查看特征重要性。
+         */
+//        featureExact.selectFeaturesByRF(train_df)
+
     }
 }
 
@@ -51,10 +59,7 @@ class Run(spark: SparkSession) {
 
     import spark.implicits._
 
-    def evaluatorGBDT(df: DataFrame) = {
-        val train_df = df
-                .withColumn("target", log1p($"target"))
-//                .repartition(100).cache()
+    def evaluatorGBDT(train_df: DataFrame) = {
 
         val trainModel = new TrainModel(spark)
 //        Array(0.01, 0.001, 0.003, 0.005).foreach(fdr => {

@@ -60,7 +60,7 @@ import spark.implicits._
   }
 
   def evaluateGDBT(data:DataFrame,label:String="label",features:String="features")={
-    val Array(train,test)=data.randomSplit(Array(0.8,0.2))
+    val Array(train,test)=data.randomSplit(Array(0.8,0.2),seed=10)
     val gbdt=new GBTRegressor()
       .setLabelCol(label).setFeaturesCol(features)
       .setMaxIter(100)

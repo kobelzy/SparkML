@@ -20,7 +20,9 @@ object TrainModel{
 class TrainModel(spark:SparkSession) {
   import spark.implicits._
   val utils=new Utils(spark)
-def testChiSqByFdr(train_df:DataFrame,fdr:Double)={
+def testChiSqByFdr(train_df_source:DataFrame,fdr:Double)={
+  val train_df=train_df_source.withColumn("target", log1p($"target"))
+
   val models=new Models(spark)
   val featureColumns_arr=train_df.columns.filterNot(column=>Constant.featureFilterColumns_arr.contains(column.toLowerCase))
   var stages:Array[PipelineStage]=FeatureUtils.vectorAssemble(featureColumns_arr,"assmbleFeatures")
@@ -35,7 +37,9 @@ def testChiSqByFdr(train_df:DataFrame,fdr:Double)={
   println(s"当前错误率上限：${fdr},已选择特征数量：$ChiSqSelectNums,score：${score}")
 }
 
-  def testChiSqByTopNum(train_df:DataFrame,num:Int)={
+  def testChiSqByTopNum(train_df_source:DataFrame,num:Int)={
+    val train_df=train_df_source.withColumn("target", log1p($"target"))
+
     val models=new Models(spark)
     val featureColumns_arr=train_df.columns.filterNot(column=>Constant.featureFilterColumns_arr.contains(column.toLowerCase))
     var stages:Array[PipelineStage]=FeatureUtils.vectorAssemble(featureColumns_arr,"assmbleFeatures")
@@ -50,13 +54,32 @@ def testChiSqByFdr(train_df:DataFrame,fdr:Double)={
     println(s"当前特征数量：${num},已选择特征数量：$ChiSqSelectNums,score：${score}")
   }
 
-
-  def fitByGBDT(train_df_source:DataFrame,test_df:DataFrame,fdr:Double)={
+  def testChiSqByRFSelect(train_df_source:DataFrame,num:Int)={
     val train_df=train_df_source.withColumn("target", log1p($"target"))
 
-    val featureColumns_arr=train_df.columns.filterNot(column=>Constant.featureFilterColumns_arr.contains(column.toLowerCase))
+    val models=new Models(spark)
+    val featureExact=new FeatureExact(spark)
+    val featureColumns_arr=featureExact.selectFeaturesByRF(train_df,num)
+    var stages:Array[PipelineStage]=FeatureUtils.vectorAssemble(featureColumns_arr,"features")
+    val pipeline=new Pipeline().setStages(stages)
+
+    val pipelin_model=pipeline.fit(train_df)
+    val train_willFit_df=pipelin_model.transform(train_df).select("ID","target","features")
+    //          .withColumn("target",$"target"/10000d)
+    val ChiSqSelectNums=train_willFit_df.select("features").take(1)(0).getAs[linalg.Vector](0).size
+    val score=models.evaluateGDBT(train_willFit_df,"target")
+    println(s"当前特征数量：${num},已选择特征数量：$ChiSqSelectNums,score：${score}")
+  }
+
+
+  def fitByGBDT(train_df_source:DataFrame,test_df:DataFrame,fdr:Double,num:Int=1000)={
+    val train_df=train_df_source.withColumn("target", log1p($"target"))
+    val featureExact=new FeatureExact(spark)
+
+    val featureColumns_arr=featureExact.selectFeaturesByRF(train_df,num)
     var stages:Array[PipelineStage]=FeatureUtils.vectorAssemble(featureColumns_arr,"assmbleFeatures")
-    stages=stages:+  FeatureUtils.chiSqSelectorByfdr("target","assmbleFeatures","features",fdr)
+//    stages=stages:+  FeatureUtils.chiSqSelectorByfdr("target","assmbleFeatures","features",fdr)
+    stages=stages:+  FeatureUtils.chiSqSelector("target","assmbleFeatures","features",num)
     val pipeline=new Pipeline().setStages(stages)
 
     val pipelin_model = pipeline.fit(train_df)
