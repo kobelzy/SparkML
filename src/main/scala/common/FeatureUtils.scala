@@ -1,7 +1,7 @@
 package common
 
 import org.apache.spark.ml.PipelineStage
-import org.apache.spark.ml.feature.{ChiSqSelector, OneHotEncoder, StringIndexer, VectorAssembler}
+import org.apache.spark.ml.feature._
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -77,6 +77,10 @@ object FeatureUtils {
         stages
     }
 
+    def vectorAssembl(columns:Array[String],outColumn:String="features")={
+        val vectorAssembler=new VectorAssembler().setInputCols(columns).setOutputCol(outColumn)
+        vectorAssembler
+    }
     def chiSqSelector(labelColumn:String,features:String,outputCol:String="features",selectNum:Int):PipelineStage={
         val selector=new ChiSqSelector().setLabelCol(labelColumn).setFeaturesCol(features).setOutputCol(outputCol)
           .setNumTopFeatures(selectNum)
@@ -88,5 +92,11 @@ object FeatureUtils {
           .setFdr(fdr)
 
         selector
+    }
+
+    def pca(k:Int,inputCol:String,outputCol:String)={
+        val pca=new PCA()
+                .setInputCol(inputCol).setOutputCol(outputCol).setK(k)
+        pca
     }
 }
