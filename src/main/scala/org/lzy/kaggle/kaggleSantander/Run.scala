@@ -47,7 +47,7 @@ object Run {
         /*
         训练GBDT并将数据导出
          */
-        trainModel.fitByGBDT(train_df, test_df, 0.01, 400)
+        trainModel.fitByGBDT(train_df, test_df, 0.01, 1000)
 
         /*
         通过随机森林训练查看特征重要性。
