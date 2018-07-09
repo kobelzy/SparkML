@@ -41,3 +41,10 @@ print(df)
 
 df_unique=np.unique(df,axis=1,return_index=True)
 print(df_unique)
+
+
+weight = ((df != 0).sum()/len(df))
+print(weight)
+print(type(weight))
+print(type(weight.values))
+# print((df!=0).sum())
