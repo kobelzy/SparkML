@@ -34,6 +34,10 @@ object JointTest {
 //              .show(false)
     order.show(false)
 //    order.withColumn("o_sku_num",when($"o_sku_num" >1,0 ).otherwise($"o_sku_num")).show(false)
-    order.withColumn("new",month($"o_date")).show(false)
+//    order.withColumn("new",month($"o_date")).show(false)
+      order.selectExpr("month(o_date)").show(false)
+//      order.select($"month(o_date)").show(false)
+      order.createOrReplaceTempView("order")
+      spark.sql("select month(o_date) from order").show(false)
   }
 }
