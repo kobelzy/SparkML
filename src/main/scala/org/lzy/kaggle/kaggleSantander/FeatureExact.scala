@@ -162,10 +162,10 @@ val feaImp_arr = rf_model.featureImportances.toArray
         val assambleColumns=columns.map(_+"_bucket")
         var stages= Array[PipelineStage]()
 
-        columns.map(column=>{
+        columns.foreach(column=>{
             stages=stages:+bucketizer(column)
         })
-        stages=stages++FeatureUtils.vectorAssemble(assambleColumns,outputCol)
+        stages=stages++(FeatureUtils vectorAssemble(assambleColumns, outputCol))
         val pipline=new Pipeline().setStages(stages)
 
         pipline.fit(df).transform(df)

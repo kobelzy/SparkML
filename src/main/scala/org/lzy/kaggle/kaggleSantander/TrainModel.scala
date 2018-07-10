@@ -4,7 +4,7 @@ import common.{FeatureUtils, Utils}
 import org.apache.spark.ml.classification.GBTClassificationModel
 import org.apache.spark.ml.feature.ChiSqSelectorModel
 import org.apache.spark.ml.{Pipeline, PipelineStage}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.ml.linalg
 import org.apache.spark.ml.regression.{GBTRegressionModel, LinearRegressionModel}
@@ -26,9 +26,6 @@ class TrainModel(spark: SparkSession) {
 
     import spark.implicits._
 
-    val utils = new Utils(spark)
-    val models = new Models(spark)
-    val featureExact = new FeatureExact(spark)
 
     /** *
       * 功能实现:使用卡方检验进行特征选择
@@ -39,7 +36,8 @@ class TrainModel(spark: SparkSession) {
       * Return: void
       */
     def testSelectorChiSq(train_df_source: DataFrame, type_num: Int = 0, arg: Double) = {
-        //    0、最大数量，0错误率上限
+        //    1、最大数量，0错误率上限
+        val models = new Models(spark)
 
         val train_df = train_df_source.withColumn("target", log1p($"target"))
 
@@ -69,6 +67,9 @@ class TrainModel(spark: SparkSession) {
       * Return: void
       */
     def testSelectorRF(train_df_source: DataFrame, num: Int) = {
+        val models = new Models(spark)
+        val featureExact = new FeatureExact(spark)
+
         val train_df = train_df_source.withColumn("target", log1p($"target"))
 
         val featureColumns_arr = featureExact.selectFeaturesByRF(train_df, num)
@@ -84,6 +85,9 @@ class TrainModel(spark: SparkSession) {
     }
 
     def testSelectorGBDT(train_df_source: DataFrame, num: Int) = {
+        val models = new Models(spark)
+        val featureExact = new FeatureExact(spark)
+
         val train_df = train_df_source.withColumn("target", log1p($"target"))
 
         val featureColumns_arr = featureExact.selectFeaturesByGBDT(train_df, num)
@@ -107,6 +111,10 @@ class TrainModel(spark: SparkSession) {
       * Return: void
       */
     def fitByGBDT(train_df_source: DataFrame, test_df: DataFrame, fdr: Double, num: Int = 1000) = {
+        val models = new Models(spark)
+        val featureExact = new FeatureExact(spark)
+        val utils = new Utils(spark)
+
         val train_df = train_df_source.withColumn("target", log1p($"target"))
 
         val featureColumns_arr = featureExact.selectFeaturesByRF(train_df, num)
@@ -150,14 +158,23 @@ class TrainModel(spark: SparkSession) {
       * Param: [train_df_source, ColumnNum]
       * Return: org.apache.spark.ml.classification.GBTClassificationModel
       */
-    def fitByGBDTAndBucket(train_df_source: DataFrame, ColumnNum: Int = 1000) = {
-        val train_df = train_df_source.withColumn("target", round(log1p($"target")))
+    def fitByGBDTAndBucket(all_df_source: DataFrame, ColumnNum: Int = 1000): Unit = {
+        val models = new Models(spark)
+        val featureExact = new FeatureExact(spark)
 
-        val featureColumns_arr = train_df.columns.filterNot(column => Constant.featureFilterColumns_arr.contains(column.toLowerCase))
+        val all_df = all_df_source.withColumn("target", round(log1p($"target")))
 
-        val train = featureExact.featureBucketzer(train_df, featureColumns_arr, "features").select("id", "target", "features")
+        val featureColumns_arr = all_df.columns.filterNot(column => Constant.featureFilterColumns_arr.contains(column.toLowerCase))
+
+        val all_feaPro_df = featureExact.featureBucketzer(all_df, featureColumns_arr, "features")
+        all_feaPro_df.write.mode(SaveMode.Overwrite).parquet(Constant.basePath+"cache/all_bucket_df")
+        val (train_df,test_df)=FeatureUtils.splitTrainAndTest(all_feaPro_df)
+        val train=train_df.select("id", "target", "features")
+        val test=test_df.select("id",  "features")
         val gbdt_model = models.GBDTClassic_TrianAndSave(train, Constant.lableCol, "features")
-        gbdt_model
+//        gbdt_model
+        val result_df=gbdt_model.transform(test)
+        writeSub(result_df)
     }
 
     def transformAndExplot_GBDTBucket(test_df: DataFrame, modelPath: String) = {
@@ -205,6 +222,7 @@ class TrainModel(spark: SparkSession) {
       * Return: void
       */
     def writeSub(df: DataFrame) = {
+        val utils=new Utils(spark)
         val format_udf = udf { prediction: Double =>
             "%08.9f".format(prediction)
         }
@@ -213,5 +231,6 @@ class TrainModel(spark: SparkSession) {
         val subName = s"sub_${System.currentTimeMillis()}"
         println(s"当前结果文件：${subName}")
         utils.writeToCSV(result_df, Constant.basePath + s"submission/$subName")
+        println("action:?"+result_df.count())
     }
 }

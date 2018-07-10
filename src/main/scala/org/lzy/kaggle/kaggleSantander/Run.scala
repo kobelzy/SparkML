@@ -21,7 +21,7 @@ object Run {
 //            .master("local[*]")
                 .getOrCreate()
         import spark.implicits._
-        spark.sparkContext.setLogLevel("WARN")
+//        spark.sparkContext.setLogLevel("WARN")
         val conf = spark.conf
         val sc = spark.sparkContext
         val config = sc.getConf
@@ -38,10 +38,15 @@ object Run {
         val train_df = utils.readToCSV(Constant.basePath + "AData/train.csv").repartition(100).cache()
         val test_df = utils.readToCSV(Constant.basePath + "AData/test.csv").repartition(100).cache()
         /*
+通过分桶+分类的方式来驯良并导出模型
+ */
+        run.trainGBDTClassic(train_df,test_df)
+        println("test:"+test_df.count())
+        /*
         验证GBDT在不同参数情况下的分数
          */
 //        run.evaluatorGBDT(train_df)
-//        trainModel.testChiSqByFdr(train_df, 0.01)
+//        trainModel.testSelectorChiSq(train_df, 0,0.01)
 //        trainModel.testChiSqByRFSelect(train_df,372)
 //        trainModel.testChiSqByTopNum(train_df,372)
         /*
@@ -54,15 +59,11 @@ object Run {
          */
 //        featureExact.selectFeaturesByRF(train_df)
 
-        /*
-        通过分桶+分类的方式来驯良并导出模型
-         */
-        run.trainGBDTClassic(train_df,test_df)
+spark.stop()
     }
 }
 
 class Run(spark: SparkSession) {
-    val trainModel = new TrainModel(spark)
 
     import spark.implicits._
 
@@ -75,6 +76,7 @@ class Run(spark: SparkSession) {
       * Return: void
       */
     def evaluatorGBDT(train_df: DataFrame) = {
+        val trainModel = new TrainModel(spark)
 
 //        Array(0.01, 0.001, 0.003, 0.005).foreach(fdr => {
 //            trainModel.testChiSqByFdr(train_df, fdr)
@@ -91,9 +93,13 @@ class Run(spark: SparkSession) {
  * Param: [train_df, test_df]
  * Return: void
  */
-    def trainGBDTClassic(train_df:DataFrame,test_df:DataFrame)={
-        trainModel.fitByGBDTAndBucket(train_df,1000)
-        trainModel.transformAndExplot_GBDTBucket(test_df,Constant.basePath + "model/gbdt_classic_model")
+    def trainGBDTClassic(train_df:DataFrame,test_df:DataFrame): Unit ={
+        val trainModel = new TrainModel(spark)
+
+        val all_df=FeatureUtils.concatTrainAndTest(train_df,test_df,Constant.lableCol)
+        println(all_df.count())
+        trainModel.fitByGBDTAndBucket(all_df,1000)
+//        trainModel.transformAndExplot_GBDTBucket(test_df,Constant.basePath + "model/gbdt_classic_model")
     }
 
 
