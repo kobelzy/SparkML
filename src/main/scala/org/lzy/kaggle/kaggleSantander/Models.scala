@@ -1,5 +1,6 @@
 package org.lzy.kaggle.kaggleSantander
 
+import org.apache.spark.ml.classification.GBTClassifier
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.regression.{GBTRegressor, LinearRegression, RandomForestRegressor}
 import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
@@ -68,6 +69,16 @@ class Models(spark: SparkSession) {
         gbdt_model
     }
 
+    def GBDTClassic_TrianAndSave(data: DataFrame, label: String = "label", features: String = "features") = {
+        val gbdt = new GBTClassifier()
+                .setLabelCol(label).setFeaturesCol(features)
+                .setMaxIter(100)
+        val gbdt_model = gbdt.fit(data)
+
+        gbdt_model.write.overwrite().save(Constant.basePath + "model/gbdt_classic_model")
+        gbdt_model
+    }
+
     def trainSplit_TrainAndSave(data: DataFrame, label: String = "label", features: String = "features") = {
         val gbdt = new GBTRegressor()
                 .setLabelCol(label).setFeaturesCol(features)
@@ -101,7 +112,7 @@ class Models(spark: SparkSession) {
 //      evaluator.setLabelCol(label)
 val lr_evaluator = new RegressionEvaluator().setLabelCol(label).setMetricName("rmse")
         val score = lr_evaluator.evaluate(prediction)
-
         score
     }
+
 }

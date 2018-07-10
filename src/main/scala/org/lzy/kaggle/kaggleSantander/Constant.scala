@@ -11,4 +11,9 @@ object Constant {
   val lableCol="target"
   val predictionCol=""
   val featuresCol="features"
+
+  /*
+  对于不同模型的存储位置，路径应该放在这里。
+
+   */
 }

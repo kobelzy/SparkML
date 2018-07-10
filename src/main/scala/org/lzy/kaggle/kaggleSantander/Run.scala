@@ -47,17 +47,22 @@ object Run {
         /*
         训练GBDT并将数据导出
          */
-        trainModel.fitByGBDT(train_df, test_df, 0.01, 1000)
+//        trainModel.fitByGBDT(train_df, test_df, 0.01, 1000)
 
         /*
         通过随机森林训练查看特征重要性。
          */
 //        featureExact.selectFeaturesByRF(train_df)
 
+        /*
+        通过分桶+分类的方式来驯良并导出模型
+         */
+        run.trainGBDTClassic(train_df,test_df)
     }
 }
 
 class Run(spark: SparkSession) {
+    val trainModel = new TrainModel(spark)
 
     import spark.implicits._
 
@@ -71,7 +76,6 @@ class Run(spark: SparkSession) {
       */
     def evaluatorGBDT(train_df: DataFrame) = {
 
-        val trainModel = new TrainModel(spark)
 //        Array(0.01, 0.001, 0.003, 0.005).foreach(fdr => {
 //            trainModel.testChiSqByFdr(train_df, fdr)
 //        })
@@ -79,42 +83,18 @@ class Run(spark: SparkSession) {
             trainModel.testSelectorChiSq(train_df, type_num = 0, num)
         })
     }
-
-    def run1 = {
-        val spark = SparkSession.builder().appName("names")
-                //            .master("local[*]")
-                .getOrCreate()
-        import spark.implicits._
-        spark.sparkContext.setLogLevel("WARN")
-        val conf = spark.conf
-        val sc = spark.sparkContext
-        val config = sc.getConf
-        //    config.set("spark.driver.maxResultSize","0")
-        config.set("spark.debug.maxToStringFields", "100")
-        config.set("spark.shuffle.io.maxRetries", "60")
-        config.set("spark.default.parallelism", "54")
-        config.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-        val utils = new Utils(spark)
-        val models = new Models(spark)
-        val train_df = utils.readToCSV(Constant.basePath + "AData/train.csv").repartition(100).cache()
-        val test_df = utils.readToCSV(Constant.basePath + "AData/test.csv").repartition(100).cache()
-
-        val featureFilterColumns_arr = Array("id", "target")
-        val featureColumns_arr = train_df.columns.filterNot(column => featureFilterColumns_arr.contains(column.toLowerCase))
-        var stages: Array[PipelineStage] = FeatureUtils.vectorAssemble(featureColumns_arr, "assmbleFeatures")
-        stages = stages :+ FeatureUtils.chiSqSelector("target", "assmbleFeatures", "features", 1000)
-        val pipeline = new Pipeline().setStages(stages)
-
-        val pipelin_model = pipeline.fit(train_df)
-        val train_willFit_df = pipelin_model.transform(train_df).select("ID", "target", "features").withColumn("target", $"target" / 10000d)
-        val test_willFit_df = pipelin_model.transform(test_df).select("id", "features")
-
-        val lr_model = models.GBDT_TrainAndSave(train_willFit_df, "target")
-        val format_udf = udf { prediction: Double =>
-            "%08.9f".format(prediction)
-        }
-        val result_df = lr_model.transform(test_willFit_df).withColumn("target", format_udf(abs($"prediction" * 10000d)))
-                .select("id", "target")
-        utils.writeToCSV(result_df, Constant.basePath + s"submission/lr_${System.currentTimeMillis()}")
+/***
+ * 功能实现:
+ *使用分桶+分类来训练和保存模型，并导出
+ * Author: Lzy
+ * Date: 2018/7/10 19:25
+ * Param: [train_df, test_df]
+ * Return: void
+ */
+    def trainGBDTClassic(train_df:DataFrame,test_df:DataFrame)={
+        trainModel.fitByGBDTAndBucket(train_df,1000)
+        trainModel.transformAndExplot_GBDTBucket(test_df,Constant.basePath + "model/gbdt_classic_model")
     }
+
+
 }

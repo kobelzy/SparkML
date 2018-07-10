@@ -1,6 +1,7 @@
 package org.lzy.kaggle.kaggleSantander
 
 import common.{FeatureUtils, Utils}
+import org.apache.spark.ml.classification.GBTClassificationModel
 import org.apache.spark.ml.feature.ChiSqSelectorModel
 import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -26,6 +27,8 @@ class TrainModel(spark: SparkSession) {
     import spark.implicits._
 
     val utils = new Utils(spark)
+    val models = new Models(spark)
+    val featureExact = new FeatureExact(spark)
 
     /** *
       * 功能实现:使用卡方检验进行特征选择
@@ -40,7 +43,6 @@ class TrainModel(spark: SparkSession) {
 
         val train_df = train_df_source.withColumn("target", log1p($"target"))
 
-        val models = new Models(spark)
         val featureColumns_arr = train_df.columns.filterNot(column => Constant.featureFilterColumns_arr.contains(column.toLowerCase))
         var stages: Array[PipelineStage] = FeatureUtils.vectorAssemble(featureColumns_arr, "assmbleFeatures")
         val chiSqSelector_pipstage: PipelineStage = type_num match {
@@ -69,8 +71,6 @@ class TrainModel(spark: SparkSession) {
     def testSelectorRF(train_df_source: DataFrame, num: Int) = {
         val train_df = train_df_source.withColumn("target", log1p($"target"))
 
-        val models = new Models(spark)
-        val featureExact = new FeatureExact(spark)
         val featureColumns_arr = featureExact.selectFeaturesByRF(train_df, num)
         var stages: Array[PipelineStage] = FeatureUtils.vectorAssemble(featureColumns_arr, "features")
         val pipeline = new Pipeline().setStages(stages)
@@ -86,8 +86,6 @@ class TrainModel(spark: SparkSession) {
     def testSelectorGBDT(train_df_source: DataFrame, num: Int) = {
         val train_df = train_df_source.withColumn("target", log1p($"target"))
 
-        val models = new Models(spark)
-        val featureExact = new FeatureExact(spark)
         val featureColumns_arr = featureExact.selectFeaturesByGBDT(train_df, num)
         var stages: Array[PipelineStage] = FeatureUtils.vectorAssemble(featureColumns_arr, "features")
         val pipeline = new Pipeline().setStages(stages)
@@ -99,6 +97,7 @@ class TrainModel(spark: SparkSession) {
         val score = models.evaluateGDBT(train_willFit_df, "target")
         println(s"当前特征数量：${num},已选择特征数量：$ChiSqSelectNums,score：${score}")
     }
+
     /** *
       * 功能实现:使用GBDT进行训练模型，并导出结果数据
       *
@@ -109,29 +108,27 @@ class TrainModel(spark: SparkSession) {
       */
     def fitByGBDT(train_df_source: DataFrame, test_df: DataFrame, fdr: Double, num: Int = 1000) = {
         val train_df = train_df_source.withColumn("target", log1p($"target"))
-        val featureExact = new FeatureExact(spark)
 
         val featureColumns_arr = featureExact.selectFeaturesByRF(train_df, num)
-//        val featureColumns_arr = featureExact.selectFeaturesByGBDT(train_df, num)
+        //        val featureColumns_arr = featureExact.selectFeaturesByGBDT(train_df, num)
         var stages: Array[PipelineStage] = FeatureUtils.vectorAssemble(featureColumns_arr, "assmbleFeatures")
 
-//    stages=stages:+  FeatureUtils.chiSqSelectorByfdr("target","assmbleFeatures","features",fdr)
-//        stages = stages :+ FeatureUtils.chiSqSelector("target", "assmbleFeatures", "features", num)
+        //    stages=stages:+  FeatureUtils.chiSqSelectorByfdr("target","assmbleFeatures","features",fdr)
+        //        stages = stages :+ FeatureUtils.chiSqSelector("target", "assmbleFeatures", "features", num)
         val pipeline = new Pipeline().setStages(stages)
 
         val pipelin_model = pipeline.fit(train_df)
-//        val train_willFit_df = pipelin_model.transform(train_df).select("ID", "target", "features")
+        //        val train_willFit_df = pipelin_model.transform(train_df).select("ID", "target", "features")
         //增加pca100
-        val train_willFitToPCA_df = pipelin_model.transform(train_df).select("ID","assmbleFeatures","target").withColumn("type",lit(0))
-        val test_willFitToPCA_df = pipelin_model.transform(test_df).select("ID","assmbleFeatures").withColumn(Constant.lableCol,lit(0d)).withColumn("type",lit(1))
+        val train_willFitToPCA_df = pipelin_model.transform(train_df).select("ID", "assmbleFeatures", "target").withColumn("type", lit(0))
+        val test_willFitToPCA_df = pipelin_model.transform(test_df).select("ID", "assmbleFeatures").withColumn(Constant.lableCol, lit(0d)).withColumn("type", lit(1))
 
-        val tmp_df=train_willFitToPCA_df.union(test_willFitToPCA_df)
+        val tmp_df = train_willFitToPCA_df.union(test_willFitToPCA_df)
 
-        val tmp_pca_df =featureExact.joinWithPCA(tmp_df,100,"assmbleFeatures","features")
-        val train_willFit_df=tmp_pca_df.filter($"type" === 0).select("ID", "target", "features")
-        val test_willFit_df=tmp_pca_df.filter($"type" === 1).select("ID",  "features")
+        val tmp_pca_df = featureExact.joinWithPCA(tmp_df, 100, "assmbleFeatures", "features")
+        val train_willFit_df = tmp_pca_df.filter($"type" === 0).select("ID", "target", "features")
+        val test_willFit_df = tmp_pca_df.filter($"type" === 1).select("ID", "features")
 
-        val models = new Models(spark)
         val lr_model = models.GBDT_TrainAndSave(train_willFit_df, "target")
 
 
@@ -146,6 +143,30 @@ class TrainModel(spark: SparkSession) {
     }
 
     /** *
+      * 功能实现:
+      * 使用分桶来划分数据，并将结果按照log1p进行四舍五入，做分类。
+      * Author: Lzy
+      * Date: 2018/7/10 19:25
+      * Param: [train_df_source, ColumnNum]
+      * Return: org.apache.spark.ml.classification.GBTClassificationModel
+      */
+    def fitByGBDTAndBucket(train_df_source: DataFrame, ColumnNum: Int = 1000) = {
+        val train_df = train_df_source.withColumn("target", round(log1p($"target")))
+
+        val featureColumns_arr = train_df.columns.filterNot(column => Constant.featureFilterColumns_arr.contains(column.toLowerCase))
+
+        val train = featureExact.featureBucketzer(train_df, featureColumns_arr, "features").select("id", "target", "features")
+        val gbdt_model = models.GBDTClassic_TrianAndSave(train, Constant.lableCol, "features")
+        gbdt_model
+    }
+
+    def transformAndExplot_GBDTBucket(test_df: DataFrame, modelPath: String) = {
+        val result_df = GBTClassificationModel.load(modelPath).transform(test_df)
+        writeSub(result_df)
+
+    }
+
+    /** *
       * 功能实现:加载GBDT模型，并训练结果文件，
       *
       * Author: Lzy
@@ -155,16 +176,10 @@ class TrainModel(spark: SparkSession) {
       */
     def transformAndExplot_GBDT(test_df: DataFrame, modelPath: String) = {
         val model = GBTRegressionModel.load(modelPath)
-        val format_udf = udf { prediction: Double =>
-            "%08.9f".format(prediction)
-        }
         val result_df = model.transform(test_df)
-                .withColumn("target", format_udf(expm1(abs($"prediction"))))
-                .select("id", Constant.lableCol)
-        val subName = s"sub_${System.currentTimeMillis()}"
-        println(s"当前结果文件：${subName}")
-        utils.writeToCSV(result_df, Constant.basePath + s"submission/$subName")
+        writeSub(result_df)
     }
+
 
     /** *
       * 功能实现:加载GBDT模型，并训练结果文件，
@@ -176,15 +191,27 @@ class TrainModel(spark: SparkSession) {
       */
     def transformAndExplot_TV(test_df: DataFrame, modelPath: String) = {
         val model = TrainValidationSplitModel.load(modelPath)
+        val result_df = model.transform(test_df)
+        writeSub(result_df)
+
+    }
+
+    /** *
+      * 功能实现:将数据写出到结果文件
+      *
+      * Author: Lzy
+      * Date: 2018/7/10 19:24
+      * Param: [df]
+      * Return: void
+      */
+    def writeSub(df: DataFrame) = {
         val format_udf = udf { prediction: Double =>
             "%08.9f".format(prediction)
         }
-        val result_df = model.transform(test_df)
-                .withColumn("target", format_udf(expm1(abs($"prediction"))))
+        val result_df = df.withColumn("target", format_udf(expm1(abs($"prediction"))))
                 .select("id", Constant.lableCol)
         val subName = s"sub_${System.currentTimeMillis()}"
         println(s"当前结果文件：${subName}")
         utils.writeToCSV(result_df, Constant.basePath + s"submission/$subName")
     }
-
 }

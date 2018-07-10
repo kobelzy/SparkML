@@ -4,6 +4,7 @@ import common.{FeatureUtils, Utils}
 import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest
 import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.ml.evaluation.RegressionEvaluator
+import org.apache.spark.ml.feature.Bucketizer
 import org.apache.spark.ml.regression.{GBTRegressor, RandomForestRegressor}
 import org.apache.spark.ml.tuning.TrainValidationSplit
 import org.apache.spark.mllib.stat.Statistics
@@ -130,5 +131,43 @@ val feaImp_arr = rf_model.featureImportances.toArray
         val pip = new Pipeline().setStages(stages)
         pip.fit(df).transform(df)
 //                .select("id", Constant.lableCol,outputCol)
+    }
+/***
+ * 功能实现:将数据分桶
+ *zero:0.0   low:1.0   hight :2.0  top:3.0
+ * Author: Lzy
+ * Date: 2018/7/10 18:46
+ * Param: [df, inputCol, outputCol]
+ * Return: org.apache.spark.sql.Dataset<org.apache.spark.sql.Row>
+ */
+    def bucketizer(inputCol:String)={
+
+        val splits=Array(Double.NegativeInfinity,0.1,math.pow(10,5),math.pow(10,6),math.pow(10,7),Double.PositiveInfinity)
+        val bucketizer=new Bucketizer()
+                .setInputCol(inputCol)
+                .setOutputCol(inputCol+"_bucket")
+                .setSplits(splits)
+                .setHandleInvalid("skip")
+        bucketizer
+    }
+    /***
+     * 功能实现:将制定列进行分桶，并将分桶后的记过进行assmble为outputCol名称
+     *
+     * Author: Lzy
+     * Date: 2018/7/10 18:59
+     * Param: [df, columns]
+     * Return: org.apache.spark.sql.Dataset<org.apache.spark.sql.Row>
+     */
+    def featureBucketzer(df:DataFrame,columns:Array[String],outputCol:String)={
+        val assambleColumns=columns.map(_+"_bucket")
+        var stages= Array[PipelineStage]()
+
+        columns.map(column=>{
+            stages=stages:+bucketizer(column)
+        })
+        stages=stages++FeatureUtils.vectorAssemble(assambleColumns,outputCol)
+        val pipline=new Pipeline().setStages(stages)
+
+        pipline.fit(df).transform(df)
     }
 }
