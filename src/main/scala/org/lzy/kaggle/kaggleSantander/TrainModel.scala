@@ -115,7 +115,8 @@ class TrainModel(spark: SparkSession) {
         val featureExact = new FeatureExact(spark)
         val utils = new Utils(spark)
 
-        val train_df = train_df_source.withColumn("target", log1p($"target"))
+//        val train_df = train_df_source.withColumn("target",  log1p($"target"))
+        val train_df = train_df_source.withColumn("target", round( log1p($"target")))
 
         val featureColumns_arr = featureExact.selectFeaturesByRF(train_df, num)
         //        val featureColumns_arr = featureExact.selectFeaturesByGBDT(train_df, num)
@@ -137,8 +138,9 @@ class TrainModel(spark: SparkSession) {
         val train_willFit_df = tmp_pca_df.filter($"type" === 0).select("ID", "target", "features")
         val test_willFit_df = tmp_pca_df.filter($"type" === 1).select("ID", "features")
 
-        val lr_model = models.GBDT_TrainAndSave(train_willFit_df, "target")
-
+//        val lr_model = models.GBDT_TrainAndSave(train_willFit_df, "target")
+        val lr_model = models.RFClassic_TrainAndSave(train_willFit_df, "target")
+//        val lr_model=XGBoostModel.fitPredictByLogistic(train_willFit_df,"target","features",100)
 
         val format_udf = udf { prediction: Double =>
             "%08.9f".format(prediction)
@@ -171,10 +173,10 @@ class TrainModel(spark: SparkSession) {
         val (train_df,test_df)=FeatureUtils.splitTrainAndTest(all_feaPro_df)
         val train=train_df.select("id", "target", "features")
         val test=test_df.select("id",  "features")
-        val gbdt_model = models.GBDTClassic_TrianAndSave(train, Constant.lableCol, "features")
-//        gbdt_model
-        val result_df=gbdt_model.transform(test)
-        writeSub(result_df)
+//        val gbdt_model = models.RFClassic_TrainAndSave(train, Constant.lableCol, "features")
+//        val result_df=gbdt_model.transform(test)
+//        writeSub(result_df)
+        test.show(false)
     }
 
     def transformAndExplot_GBDTBucket(test_df: DataFrame, modelPath: String) = {

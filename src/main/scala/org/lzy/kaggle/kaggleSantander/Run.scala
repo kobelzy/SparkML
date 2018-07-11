@@ -40,8 +40,7 @@ object Run {
         /*
 通过分桶+分类的方式来驯良并导出模型
  */
-        run.trainGBDTClassic(train_df,test_df)
-        println("test:"+test_df.count())
+//        run.trainGBDTClassic(train_df,test_df)
         /*
         验证GBDT在不同参数情况下的分数
          */
@@ -52,7 +51,7 @@ object Run {
         /*
         训练GBDT并将数据导出
          */
-//        trainModel.fitByGBDT(train_df, test_df, 0.01, 1000)
+        trainModel.fitByGBDT(train_df, test_df, 0.01, 400)
 
         /*
         通过随机森林训练查看特征重要性。
@@ -97,7 +96,6 @@ class Run(spark: SparkSession) {
         val trainModel = new TrainModel(spark)
 
         val all_df=FeatureUtils.concatTrainAndTest(train_df,test_df,Constant.lableCol)
-        println(all_df.count())
         trainModel.fitByGBDTAndBucket(all_df,1000)
 //        trainModel.transformAndExplot_GBDTBucket(test_df,Constant.basePath + "model/gbdt_classic_model")
     }

@@ -1,9 +1,10 @@
 package org.lzy.kaggle.kaggleSantander
 
-import org.apache.spark.ml.classification.GBTClassifier
+import org.apache.spark.ml.classification.{GBTClassifier, RandomForestClassifier}
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.regression.{GBTRegressor, LinearRegression, RandomForestRegressor}
 import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
+import org.apache.spark.mllib.classification.SVMWithSGD
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
@@ -72,10 +73,23 @@ class Models(spark: SparkSession) {
     def GBDTClassic_TrianAndSave(data: DataFrame, label: String = "label", features: String = "features") = {
         val gbdt = new GBTClassifier()
                 .setLabelCol(label).setFeaturesCol(features)
+
                 .setMaxIter(100)
         val gbdt_model = gbdt.fit(data)
 
         gbdt_model.write.overwrite().save(Constant.basePath + "model/gbdt_classic_model")
+        gbdt_model
+    }
+
+    def RFClassic_TrainAndSave(data: DataFrame, label: String = "label", features: String = "features") = {
+        val gbdt = new RandomForestClassifier()
+                .setLabelCol(label).setFeaturesCol(features)
+                .setSeed(10)
+                .setNumTrees(500)
+
+        val gbdt_model = gbdt.fit(data)
+
+        gbdt_model.write.overwrite().save(Constant.basePath + "model/rf_classic_model")
         gbdt_model
     }
 

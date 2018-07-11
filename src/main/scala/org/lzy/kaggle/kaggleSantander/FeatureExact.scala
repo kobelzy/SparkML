@@ -140,7 +140,7 @@ val feaImp_arr = rf_model.featureImportances.toArray
  * Param: [df, inputCol, outputCol]
  * Return: org.apache.spark.sql.Dataset<org.apache.spark.sql.Row>
  */
-    def bucketizer(inputCol:String)={
+    def bucketFeatures(inputCol:String)={
 
         val splits=Array(Double.NegativeInfinity,0.1,math.pow(10,5),math.pow(10,6),math.pow(10,7),Double.PositiveInfinity)
         val bucketizer=new Bucketizer()
@@ -149,6 +149,13 @@ val feaImp_arr = rf_model.featureImportances.toArray
                 .setSplits(splits)
                 .setHandleInvalid("skip")
         bucketizer
+    }
+    val bucketizer_udf=udf{column:Double=>
+        if(column <=0) 0d
+        else if(column >0 && column <=math.pow(10,5)) 1d
+        else if(column >math.pow(10,5) && column <=math.pow(10,6)) 2d
+        else if(column >math.pow(10,6) && column <=math.pow(10,7)) 3d
+        else 4d
     }
     /***
      * 功能实现:将制定列进行分桶，并将分桶后的记过进行assmble为outputCol名称
@@ -159,11 +166,13 @@ val feaImp_arr = rf_model.featureImportances.toArray
      * Return: org.apache.spark.sql.Dataset<org.apache.spark.sql.Row>
      */
     def featureBucketzer(df:DataFrame,columns:Array[String],outputCol:String)={
-        val assambleColumns=columns.map(_+"_bucket")
+        val assambleColumns=columns.take(2)
+                .map(_+"_bucket")
         var stages= Array[PipelineStage]()
-
-        columns.foreach(column=>{
-            stages=stages:+bucketizer(column)
+//var buckt_df=df
+        columns.take(2).foreach(column=>{
+            stages=stages:+bucketFeatures(column)
+//            buckt_df=buckt_df.withColumn(column,bucketizer_udf(col(column)))
         })
         stages=stages++(FeatureUtils vectorAssemble(assambleColumns, outputCol))
         val pipline=new Pipeline().setStages(stages)

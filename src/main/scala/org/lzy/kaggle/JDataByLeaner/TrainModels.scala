@@ -9,8 +9,8 @@ import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 /**
   * Created by Administrator on 2018/6/3
   * spark-submit --master yarn-client --queue lzy --driver-memory 2g --conf spark.driver.maxResultSize=2g  \
-  * --num-executors 12 --executor-cores 4 --executor-memory 7g --jars \
-  * /root/lzy/xgboost/jvm-packages/xgboost4j-spark/target/xgboost4j-spark-0.8-SNAPSHOT-jar-with-dependencies.jar \
+  * --num-executors 12 --executor-cores 4 --executor-memory 7g
+  --jars  /root/lzy/xgboost/jvm-packages/xgboost4j-spark/target/xgboost4j-spark-0.8-SNAPSHOT-jar-with-dependencies.jar \
   * --class org.lzy.kaggle.JDataByLeaner.TrainModels SparkML.jar
   */
 object TrainModels {
