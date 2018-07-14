@@ -118,9 +118,10 @@ class TrainModel(spark: SparkSession) {
 //        val train_df = train_df_source.withColumn("target",  log1p($"target"))
         val train_df = train_df_source.withColumn("target", round( log1p($"target")))
 
-        val featureColumns_arr = featureExact.selectFeaturesByRF(train_df, num)
+//        val featureColumns_arr = featureExact.selectFeaturesByRF(train_df, num)
+        val featureColumns_arr = Constant.specialColumns_arr
         //        val featureColumns_arr = featureExact.selectFeaturesByGBDT(train_df, num)
-        var stages: Array[PipelineStage] = FeatureUtils.vectorAssemble(featureColumns_arr, "assmbleFeatures")
+        var stages: Array[PipelineStage] = FeatureUtils.vectorAssemble(featureColumns_arr, "features")
 
         //    stages=stages:+  FeatureUtils.chiSqSelectorByfdr("target","assmbleFeatures","features",fdr)
         //        stages = stages :+ FeatureUtils.chiSqSelector("target", "assmbleFeatures", "features", num)
@@ -129,17 +130,17 @@ class TrainModel(spark: SparkSession) {
         val pipelin_model = pipeline.fit(train_df)
         //        val train_willFit_df = pipelin_model.transform(train_df).select("ID", "target", "features")
         //增加pca100
-        val train_willFitToPCA_df = pipelin_model.transform(train_df).select("ID", "assmbleFeatures", "target").withColumn("type", lit(0))
-        val test_willFitToPCA_df = pipelin_model.transform(test_df).select("ID", "assmbleFeatures").withColumn(Constant.lableCol, lit(0d)).withColumn("type", lit(1))
+        val train_willFitToPCA_df = pipelin_model.transform(train_df).select("ID", "features", "target").withColumn("type", lit(0))
+        val test_willFitToPCA_df = pipelin_model.transform(test_df).select("ID", "features").withColumn(Constant.lableCol, lit(0d)).withColumn("type", lit(1))
 
         val tmp_df = train_willFitToPCA_df.union(test_willFitToPCA_df)
 
-        val tmp_pca_df = featureExact.joinWithPCA(tmp_df, 100, "assmbleFeatures", "features")
-        val train_willFit_df = tmp_pca_df.filter($"type" === 0).select("ID", "target", "features")
-        val test_willFit_df = tmp_pca_df.filter($"type" === 1).select("ID", "features")
+//        val tmp_pca_df = featureExact.joinWithPCA(tmp_df, 100, "assmbleFeatures", "features")
+        val train_willFit_df = tmp_df.filter($"type" === 0).select("ID", "target", "features")
+        val test_willFit_df = tmp_df.filter($"type" === 1).select("ID", "features")
 
-//        val lr_model = models.GBDT_TrainAndSave(train_willFit_df, "target")
-        val lr_model = models.RFClassic_TrainAndSave(train_willFit_df, "target")
+        val lr_model = models.GBDT_TrainAndSave(train_willFit_df, "target")
+//        val lr_model = models.RFClassic_TrainAndSave(train_willFit_df, "target")
 //        val lr_model=XGBoostModel.fitPredictByLogistic(train_willFit_df,"target","features",100)
 
         val format_udf = udf { prediction: Double =>

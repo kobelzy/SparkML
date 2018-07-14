@@ -21,7 +21,7 @@ object Run {
 //            .master("local[*]")
                 .getOrCreate()
         import spark.implicits._
-//        spark.sparkContext.setLogLevel("WARN")
+        spark.sparkContext.setLogLevel("WARN")
         val conf = spark.conf
         val sc = spark.sparkContext
         val config = sc.getConf
