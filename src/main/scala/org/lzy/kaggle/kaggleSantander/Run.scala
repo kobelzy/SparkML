@@ -51,12 +51,14 @@ object Run {
         /*
         训练GBDT并将数据导出
          */
-        trainModel.fitByGBDT(train_df, test_df, 0.01, 400)
+//        trainModel.fitByGBDT(train_df, test_df, 0.01, 400)
 
         /*
         通过随机森林训练查看特征重要性。
          */
 //        featureExact.selectFeaturesByRF(train_df)
+
+        trainModel.generateFromColumns(test_df)
 
 spark.stop()
     }

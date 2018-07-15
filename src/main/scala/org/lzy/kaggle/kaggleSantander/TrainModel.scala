@@ -236,4 +236,16 @@ class TrainModel(spark: SparkSession) {
         utils.writeToCSV(result_df, Constant.basePath + s"submission/$subName")
         println("action:?"+result_df.count())
     }
+
+
+    def generateFromColumns(test:DataFrame)={
+//        Array("f190486d6","58e2e02e6","eeb9cd3aa","9fd594eec","6eef030c1","58e056e12")
+        val columns=Constant.specialColumns_arr
+        val result=test.select(($"f190486d6"+$"58e2e02e6"+$"eeb9cd3aa"+$"9fd594eec"+$"6eef030c1"+$"58e056e12") .alias("result")).select(($"result"/6).alias("prediction"))
+          writeSub(result)
+
+
+
+
+    }
 }

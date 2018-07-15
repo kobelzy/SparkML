@@ -30,6 +30,6 @@ object ShowFeatures {
 //    val test_df = utils.readToCSV(Constant.basePath + "AData/test.csv").repartition(100).cache()
     val features_df=train_df.select("target","f190486d6")
     features_df.show(1000,false)
-
+    train_df.filter( $"58e2e02e6"=!= 0d).count
   }
 }
