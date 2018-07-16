@@ -58,8 +58,8 @@ object Run {
          */
 //        featureExact.selectFeaturesByRF(train_df)
 
-        trainModel.generateFromColumns(test_df)
-
+//        trainModel.generateFromColumns(test_df)
+        trainModel.fitWithStatistic(train_df,test_df)
 spark.stop()
     }
 }

@@ -243,9 +243,29 @@ class TrainModel(spark: SparkSession) {
         val columns=Constant.specialColumns_arr
         val result=test.select($"id",($"f190486d6"+$"58e2e02e6"+$"eeb9cd3aa"+$"9fd594eec"+$"6eef030c1"+$"58e056e12") .alias("result")).select($"id",($"result"/6).alias("prediction"))
           writeSub(result)
+    }
 
+    def fitWithStatistic(train:DataFrame,test:DataFrame)={
+        val featureExact = new FeatureExact(spark)
 
+        val featureColumns_arr=Constant.specialColumns_arr++Array("sum","mean","std","nans","median")
+        val all_df=FeatureUtils.concatTrainAndTest(train,test,Constant.lableCol)
+      println(all_df.dtypes.map(_._2).filterNot(_.equalsIgnoreCase("DoubleType")).mkString(","))
+        val statistic_df=featureExact.addStatitic(all_df)
+//        spark.read.parquet(Constant.basePath+"cache/statistic_df")
+        val all_statistic_df=all_df.join(statistic_df,"id")
+        all_statistic_df.show(false)
+        val stages:Array[PipelineStage] = FeatureUtils.vectorAssemble(featureColumns_arr, "features")
+        val pipeline = new Pipeline().setStages(stages)
 
+        val pipelin_model = pipeline.fit(all_statistic_df)
+        val all_transfer_df=pipelin_model.transform(all_statistic_df)
+        val (train_df,test_df)=FeatureUtils.splitTrainAndTest(all_transfer_df)
+
+        val model=new Models(spark)
+        val gbdtModel:GBTRegressionModel=model.GBDT_TrainAndSave(train_df,Constant.lableCol)
+        val result_df=gbdtModel.transform(test_df)
+        writeSub(result_df)
 
     }
 }

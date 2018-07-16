@@ -8,7 +8,7 @@ import org.apache.spark.ml.feature.Bucketizer
 import org.apache.spark.ml.regression.{GBTRegressor, RandomForestRegressor}
 import org.apache.spark.ml.tuning.TrainValidationSplit
 import org.apache.spark.mllib.stat.Statistics
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 
 /**
@@ -179,4 +179,34 @@ val feaImp_arr = rf_model.featureImportances.toArray
 
         pipline.fit(df).transform(df)
     }
+
+    def addStatitic(df:DataFrame)={
+        val columns=df.columns.filterNot(column=>Constant.featureFilterColumns_arr.contains(column.toLowerCase()))
+        val column_count=columns.length
+        val median_index=(column_count/2.0).toInt
+        val df_rdd=df.select("id",columns:_*).rdd
+          .map(row=>{
+              var arr=Array[Double]()
+              for(i <- columns.indices){
+                  arr=arr:+row.getDouble(i+2)
+              }
+              val id=row.getString(0)
+              (id,arr)
+          })
+        val statistic_df=df_rdd.map { case (id, arr) => {
+            val sum = arr.sum
+            val mean=sum/column_count
+            val std=arr.map(x=>math.sqrt(math.pow(x-mean,2)))
+            val nans=arr.count(x => x == 0 || x == 0d)
+            val sort_arr= arr.sorted
+            val median=sort_arr(median_index)
+            (id,sum,mean,std,nans,median)
+        }
+        }.toDF("id","sum","mean","std","nans","median")
+        statistic_df.write.mode(SaveMode.Overwrite).parquet(Constant.basePath+"cache/statistic_df")
+        statistic_df.show()
+        statistic_df
+        }
+
+
 }
