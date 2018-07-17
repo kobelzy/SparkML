@@ -181,14 +181,14 @@ val feaImp_arr = rf_model.featureImportances.toArray
     }
 
     def addStatitic(df:DataFrame)={
-        val columns=df.columns.filterNot(column=>Constant.featureFilterColumns_arr.contains(column.toLowerCase()))
+        val columns=df.columns.filterNot(column=>(Constant.featureFilterColumns_arr:+"df_type").contains(column.toLowerCase()))
         val column_count=columns.length
         val median_index=(column_count/2.0).toInt
         val df_rdd=df.select("id",columns:_*).rdd
           .map(row=>{
               var arr=Array[Double]()
               for(i <- columns.indices){
-                  arr=arr:+row.getDouble(i+2)
+                  arr=arr:+row.getDouble(i+1)
               }
               val id=row.getString(0)
               (id,arr)

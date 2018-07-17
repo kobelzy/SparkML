@@ -5,7 +5,7 @@ import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
 /*
-   spark-submit --master yarn-cluster --queue all --driver-memory 6g --conf spark.driver.maxResultSize=5g  \
+   spark-submit --master yarn-client --queue all --driver-memory 6g --conf spark.driver.maxResultSize=5g  \
    --num-executors 14 --executor-cores 4 --executor-memory 6g  \
    --class org.lzy.kaggle.kaggleSantander.Run SparkML.jar
  */
