@@ -196,14 +196,14 @@ val feaImp_arr = rf_model.featureImportances.toArray
         val statistic_df=df_rdd.map { case (id, arr) => {
             val sum = arr.sum
             val mean=sum/column_count
-            val std=arr.map(x=>math.sqrt(math.pow(x-mean,2)))
+            val std=math.sqrt(arr.map(x=>math.pow(x-mean,2)).sum)
             val nans=arr.count(x => x == 0 || x == 0d)
             val sort_arr= arr.sorted
             val median=sort_arr(median_index)
             (id,sum,mean,std,nans,median)
         }
         }.toDF("id","sum","mean","std","nans","median")
-        statistic_df.write.mode(SaveMode.Overwrite).parquet(Constant.basePath+"cache/statistic_df")
+        statistic_df.coalesce(10).write.mode(SaveMode.Overwrite).parquet(Constant.basePath+"cache/statistic_df")
         statistic_df.show()
         statistic_df
         }

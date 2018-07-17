@@ -42,5 +42,8 @@ object ArrayTest {
 
     val arr=Array(("1",1),("2",2)).reverse
     println(arr.sortBy(_._2).mkString(","))
+    println(math.log1p(100000))
+    println(math.exp(math.log1p(100000)-1))
+    println(math.exp(math.log1p(100000)+1))
   }
 }
