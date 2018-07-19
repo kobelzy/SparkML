@@ -244,7 +244,7 @@ class TrainModel(spark: SparkSession) {
 
   def fitWithStatistic(train_df_source: DataFrame, test: DataFrame): Unit = {
     val train = train_df_source.withColumn("target", round(log1p($"target")))
-//    val featureExact = new FeatureExact(spark)
+    val featureExact = new FeatureExact(spark)
     val model = new Models(spark)
 
     val featureColumns_arr = Constant.specialColumns_arr ++ Array("sum", "mean", "std", "nans", "median")
@@ -252,7 +252,8 @@ class TrainModel(spark: SparkSession) {
     val statistic_df =
 //      featureExact.addStatitic(all_df)
             spark.read.parquet(Constant.basePath+"cache/statistic_df")
-    val all_statistic_df = all_df.join(broadcast(statistic_df), "id")
+      val all_epecial_df:Array[String]=Constant.specialColumns_arr:+"target":+"df_type"
+    val all_statistic_df = all_df.select("id",all_epecial_df:_*) .join(broadcast(statistic_df), "id")
     statistic_df.show()
 
 
@@ -273,27 +274,28 @@ class TrainModel(spark: SparkSession) {
   def evaluateWithStatistic(train_df_source: DataFrame, statistic_columns: Array[String] = Array("sum", "mean", "std", "nans", "median")) = {
     val featureExact = new FeatureExact(spark)
     val models = new Models(spark)
-    val df = train_df_source.withColumn("target", round(log1p($"target")))
+    val all_df = train_df_source.withColumn("target", round(log1p($"target")))
 
-    val Array(train, test) = df.randomSplit(Array(0.8, 0.2), 10L)
 
-    val all_df = FeatureUtils.concatTrainAndTest(train, test, Constant.lableCol)
 
     val featureColumns_arr = Constant.specialColumns_arr ++ statistic_columns
-    val statistic_df = featureExact.addStatitic(all_df)
-    //        spark.read.parquet(Constant.basePath+"cache/statistic_df")
-    val all_statistic_df = all_df.join(statistic_df, "id")
-    all_statistic_df.show()
+    val statistic_df =
+// featureExact.addStatitic(all_df)
+            spark.read.parquet(Constant.basePath+"cache/evaluate_statistic_df")
+
+    val all_epecial_df:Array[String]=Constant.specialColumns_arr:+"target"
+
+    val all_statistic_df = all_df.select("id",all_epecial_df:_*) .join(broadcast(statistic_df), "id").cache()
+    all_statistic_df.checkpoint()
     val stages: Array[PipelineStage] = FeatureUtils.vectorAssemble(featureColumns_arr, "features")
     val pipeline = new Pipeline().setStages(stages)
 
     val pipelin_model = pipeline.fit(all_statistic_df)
     val all_transfer_df = pipelin_model.transform(all_statistic_df)
-    val (train_df, test_df) = FeatureUtils.splitTrainAndTest(all_transfer_df)
 
     val model = new Models(spark)
-    val gbdtModel: GBTRegressionModel = model.GBDT_TrainAndSave(train_df, Constant.lableCol)
-    val train_willFit_df = gbdtModel.transform(train_df).select("ID", "target", "features")
+    val gbdtModel: GBTRegressionModel = model.GBDT_TrainAndSave(all_transfer_df, Constant.lableCol)
+    val train_willFit_df = gbdtModel.transform(all_transfer_df).select("ID", "target", "features")
     //          .withColumn("target",$"target"/10000d)
     val score = models.evaluateGDBT(train_willFit_df, "target")
     println(s"当前统计特征：${statistic_columns.mkString(",")}....score：${score}")

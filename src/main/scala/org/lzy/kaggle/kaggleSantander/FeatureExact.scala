@@ -10,6 +10,7 @@ import org.apache.spark.ml.tuning.TrainValidationSplit
 import org.apache.spark.mllib.stat.Statistics
 import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.types.DoubleType
 
 /**
   * Created by Administrator on 2018/7/3.
@@ -184,7 +185,9 @@ val feaImp_arr = rf_model.featureImportances.toArray
         val columns=df.columns.filterNot(column=>(Constant.featureFilterColumns_arr:+"df_type").contains(column.toLowerCase()))
         val column_count=columns.length
         val median_index=(column_count/2.0).toInt
-        val df_rdd=df.select("id",columns:_*).rdd
+
+        val df_rdd=df.select((col("id")+:(columns.map(column=>col(column).cast(DoubleType)))):_*).rdd
+
           .map(row=>{
               var arr=Array[Double]()
               for(i <- columns.indices){
@@ -203,7 +206,8 @@ val feaImp_arr = rf_model.featureImportances.toArray
             (id,sum,mean,std,nans,median)
         }
         }.toDF("id","sum","mean","std","nans","median")
-        statistic_df.coalesce(10).write.mode(SaveMode.Overwrite).parquet(Constant.basePath+"cache/statistic_df")
+//        statistic_df.coalesce(10).write.mode(SaveMode.Overwrite).parquet(Constant.basePath+"cache/statistic_df")
+        statistic_df.coalesce(10).write.mode(SaveMode.Overwrite).parquet(Constant.basePath+"cache/evaluate_statistic_df")
         statistic_df.show()
         statistic_df
         }

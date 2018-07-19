@@ -66,7 +66,7 @@ class Models(spark: SparkSession) {
                 .setMaxIter(100)
         val gbdt_model = gbdt.fit(data)
 
-        gbdt_model.write.overwrite().save(Constant.basePath + "model/gbdt_model")
+//        gbdt_model.write.overwrite().save(Constant.basePath + "model/gbdt_model")
         gbdt_model
     }
 

@@ -24,6 +24,7 @@ object Run {
         spark.sparkContext.setLogLevel("WARN")
         val conf = spark.conf
         val sc = spark.sparkContext
+        sc.setCheckpointDir(Constant.basePath+"checkpoint")
         val config = sc.getConf
         //    config.set("spark.driver.maxResultSize","0")
         config.set("spark.debug.maxToStringFields", "100")
@@ -59,8 +60,12 @@ object Run {
 //        featureExact.selectFeaturesByRF(train_df)
 
 //        trainModel.generateFromColumns(test_df)
-//        trainModel.fitWithStatistic(train_df,test_df)
-        trainModel.evaluateWithStatistic(train_df,Array("sum", "mean", "std", "nans", "median"))
+        trainModel.fitWithStatistic(train_df,test_df)
+//        trainModel.evaluateWithStatistic(train_df,Array("sum", "mean", "std", "nans"))
+//        Array("sum", "mean", "std", "nans", "median").foreach(column=>{
+//            trainModel.evaluateWithStatistic(train_df,Array(column))
+//        })
+
 spark.stop()
     }
 }
