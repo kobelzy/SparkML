@@ -41,7 +41,7 @@ class FeatureExact(spark: SparkSession) {
       * Param: [df, numOfFeatures]
       * Return: java.lang.String[]  经过排序的特征名，前numOfFeatures个
       */
-    def selectFeaturesByRF(df: DataFrame, numOfFeatures: Int = 100): Array[String] = {
+    def selectFeaturesByRF_evaluate(df: DataFrame, numOfFeatures: Int = 100): Array[String] = {
         val featureColumns_arr = df.columns.filterNot(column => Constant.featureFilterColumns_arr.contains(column.toLowerCase))
         val train = processFeatureBY_assemble_log1p(df)
         val Array(train_df, test_df) = train.randomSplit(Array(0.8, 0.2), seed = 10)
@@ -61,7 +61,25 @@ val feaImp_arr = rf_model.featureImportances.toArray
         for ((imp, col) <- feaImp2Col_arr) {
             println(s"特征：${col},分数：$imp")
         }
+        feaImp2Col_arr.map(_._2)
+    }
 
+    /** *
+      * 功能实现:通过随机森林计算选择特征
+      *
+      * Author: Lzy
+      * Date: 2018/7/9 9:13
+      * Param: [df, numOfFeatures]
+      * Return: java.lang.String[]  经过排序的特征名，前numOfFeatures个
+      */
+    def selectFeaturesByRF(df: DataFrame, numOfFeatures: Int = 100): Array[String] = {
+        val featureColumns_arr = df.columns.filterNot(column => Constant.featureFilterColumns_arr.contains(column.toLowerCase))
+        val train = processFeatureBY_assemble_log1p(df)
+        val rf = new RandomForestRegressor().setSeed(10)
+                .setLabelCol(Constant.lableCol)
+        val rf_model = rf.fit(train)
+    val feaImp_arr = rf_model.featureImportances.toArray
+        val feaImp2Col_arr = feaImp_arr.zip(featureColumns_arr).sortBy(_._1).reverse.take(numOfFeatures)
         feaImp2Col_arr.map(_._2)
     }
 
@@ -211,6 +229,24 @@ val feaImp_arr = rf_model.featureImportances.toArray
         statistic_df.show()
         statistic_df
         }
+
+    def a(train:DataFrame,test:DataFrame)={
+        val all_df=FeatureUtils.concatTrainAndTest(train,test,Constant.lableCol)
+        val columns=train.columns.filterNot(column=>(Constant.featureFilterColumns_arr:+"df_type" ++Constant.cols_with_onlyone_val).contains(column.toLowerCase()))
+        val train_df=train.select("id",columns:+"target":_*)
+        val rfFeatures_arr=selectFeaturesByRF(train_df,1000)
+        val rfFeatures_columns=rfFeatures_arr.map(column=>col(column).cast(DoubleType))
+        val train_count=train.count()
+        val test_count=test.count()
+        train_df.select(rfFeatures_columns:_*).rdd.map(row=>{
+            //计算每一行的每个值是否为0，不为0则统计一个值
+            for(index<-rfFeatures_columns.indices){
+                row.getDouble(index)==0d
+            }
+        })
+
+    }
+
 
 
 }
