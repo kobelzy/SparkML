@@ -33,7 +33,7 @@ object Run {
         config.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
         val utils = new Utils(spark)
 //        val models = new Models(spark)
-//        val featureExact = new FeatureExact(spark)
+        val featureExact = new FeatureExact(spark)
 //        val run = new Run(spark)
         val trainModel = new TrainModel(spark)
         val train_df = utils.readToCSV(Constant.basePath + "AData/train.csv").repartition(100).cache()
@@ -60,12 +60,13 @@ object Run {
 //        featureExact.selectFeaturesByRF(train_df)
 
 //        trainModel.generateFromColumns(test_df)
-        trainModel.fitWithStatistic(train_df,test_df)
+//        trainModel.fitWithStatistic(train_df,test_df)
 //        trainModel.evaluateWithStatistic(train_df,Array("sum", "mean", "std", "nans"))
 //        Array("sum", "mean", "std", "nans", "median").foreach(column=>{
 //            trainModel.evaluateWithStatistic(train_df,Array(column))
 //        })
 
+        featureExact.compiledLeadResult(train_df)
 spark.stop()
     }
 }

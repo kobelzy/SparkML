@@ -7,8 +7,8 @@ def combine_data(x):
 # print(train.iloc[:,2:].apply(lambda x: combine_data(x),axis=0))
 #
 # print(train.shape)
-
-print(train)
+arr=[1,2,3,4,5]
+print(arr[:1])
 
 cols_with_onlyone_val = train.columns[train.nunique() == 1]
 for ele in cols_with_onlyone_val:

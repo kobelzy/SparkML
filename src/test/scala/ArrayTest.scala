@@ -40,10 +40,17 @@ object ArrayTest {
 //    println("dest:"+dest.toArray.mkString(","))
 //    dest
 
-    val arr=Array(("1",1),("2",2)).reverse
-    println(arr.sortBy(_._2).mkString(","))
-    println(math.log1p(100000))
-    println(math.exp(math.log1p(100000)-1))
-    println(math.exp(math.log1p(100000)+1))
+//    val arr=Array(("1",1),("2",2)).reverse
+//    println(arr.sortBy(_._2).mkString(","))
+//    println(math.log1p(100000))
+//    println(math.exp(math.log1p(100000)-1))
+//    println(math.exp(math.log1p(100000)+1))
+
+
+    val arr=Array(0,1,2,3,4,5,6,7,8,9)
+    println(arr.slice(0,3).mkString(","))
+    println(arr.slice(5,arr.length).mkString(","))
+
+
   }
 }
