@@ -289,7 +289,8 @@ class FeatureExact(spark: SparkSession) {
     val assmbel_d2=FeatureUtils.vectorAssembl(columns.slice(lag + 2, columns.length),"key").transform(d2)
     //需要按照key值进行一下去重
     val d3 = assmbel_d2.dropDuplicates("key")
-    assmbel_d1.join(d3, Seq("key"), "left").select("id",predName).na.fill(0)
+    val result=assmbel_d1.join(d3, Seq("key"), "left").select("id",predName).na.fill(0)
+    result
   }
 
   def compiledLeadResult(train: DataFrame) = {
@@ -310,21 +311,32 @@ class FeatureExact(spark: SparkSession) {
     id2nonZero_mean.show()
     var trainLeak_df = train.select((Array("id", "target") ++ cols).map(col): _*)
       .withColumn("compiled_leak", lit(0d))
-    trainLeak_df.show(false)
     //不生效，会熔断
 //    trainLeak_df.join(broadcast(id2nonZero_mean), "id").show()
 
     var leaky_cols=Array[String]()
+    var leaky_value_counts=Array[Long]()
+    var leaky_value_corrects=Array[Double]()
     for (i <- 0 until max_nlags) {
       val c = "leaked_target_" + i
       println("processing lag:" + i)
       trainLeak_df=trainLeak_df.join(fastGetLeak(trainLeak_df,cols,i,c),"id")
-      trainLeak_df.show()
-
       leaky_cols=leaky_cols:+c
-
+      trainLeak_df=train.join(trainLeak_df.select("id", leaky_cols :+ "compiled_leak":_*),Seq("id"),"left")
+      println(2,"train_leak")
+//      trainLeak_df.withColumn("compiled_leak",when($"compiled_leak" ===0d,col(c) ))
+      trainLeak_df=trainLeak_df.withColumn("compiled_leak",col(c))
+      trainLeak_df.select("id","compiled_leak").filter($"id"==="35fbfd3fd").show()
+      leaky_value_counts=leaky_value_counts:+trainLeak_df.filter($"compiled_leak" > 0).count()
+      println("leak_value_counts:"+leaky_value_counts.length)
+      val _correct_counts=trainLeak_df.filter($"compiled_leak"===$"target").count()
+      leaky_value_corrects=leaky_value_corrects:+ _correct_counts/leaky_value_counts(leaky_value_counts.length-1).toDouble
+      println("在训练集中发现泄露数据：", leaky_value_counts(leaky_value_counts.length-1))
+      println("训练集中的泄露数据为：", leaky_value_corrects(leaky_value_corrects.length-1))
+      println(leaky_value_counts.mkString(","))
+      println(leaky_value_corrects.mkString(","))
+//      trainLeak_df.show()
     }
-
-
+    (trainLeak_df,leaky_value_counts,leaky_value_corrects)
   }
 }
