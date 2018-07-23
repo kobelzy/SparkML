@@ -48,9 +48,52 @@ object ArrayTest {
 
 
     val arr=Array(0,1,2,3,4,5,6,7,8,9)
+    val list=Array(0,1,2,3,4,5,6,7,8,9)
     println(arr.slice(0,3).mkString(","))
     println(arr.slice(5,arr.length).mkString(","))
 
+    arr.update(2,10)
+    println(arr.take(3).mkString(","))
+    println(arr.mkString(","))
 
+    println(arr.zipWithIndex.mkString("|"))
+//    arr.formatted()
+    arr.tails.foreach(s=> println(s.mkString(",")))
+    println(arr.splitAt(3)._1.mkString(","))
+    println(arr.splitAt(3)._2.mkString(","))
+    println(arr.partition(_ / 2 == 0)._1.mkString(","))
+    println(arr.partition(_ / 2 == 0)._2.mkString(","))
+
+    println(arr.nonEmpty)
+    println(Nil.isEmpty)
+//    arr.update(5,10)
+//    for (elem <- arr.sliding(3,4)) {print(elem.mkString("(",",",")"))}
+
+    println(arr.drop(5).mkString(","))
+    println(arr.dropRight(5).mkString(","))
+    println(arr.dropWhile(_ / 2 != 0).mkString(","))
+    println(arr.indexOfSlice(Array(3,4)))
+    println(arr.indexWhere(_ / 2 == 3,8))
+    println(arr.toIndexedSeq.mkString(","))
+//    arr.inits.foreach(s=> println(s.mkString(",")))
+
+
+//      arr.combinations(3).foreach(x=>println(x.mkString("_")))
+//    println(arr.hasDefiniteSize)
+//    println(arr.isDefinedAt(3))
+//    println(arr.isDefinedAt(10))
+    println(arr.lengthCompare(10))
+    println(arr.lengthCompare(5))
+    println(arr.lengthCompare(20))
+    println(arr.maxBy(_>0))
+
+    println(arr.partition(_ % 2.0 == 0)._1.mkString(","))
+    println(arr.partition(_ % 2.0 == 0)._2.mkString(","))
+    val lag=4
+    println(arr.drop(lag+2).mkString(","))
+    println(arr.dropRight(lag+2).mkString(","))
+
+    println(arr.slice(0, arr.length - lag - 2).mkString(","))
+    println(arr.slice(lag + 2, arr.length).mkString(","))
   }
 }
