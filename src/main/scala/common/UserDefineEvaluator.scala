@@ -4,7 +4,7 @@ import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.util.{DefaultParamsReadable, DefaultParamsWritable, Identifiable}
 import org.apache.spark.sql.functions.{col, _}
 import org.apache.spark.sql.{Dataset, Row}
-import org.lzy.kaggle.JDataByLeaner.UDLogisticEvaluator
+import org.lzy.JData.JDataByLeaner.UDLogisticEvaluator
 /**
   * Created by Administrator on 2018/7/1.
   */

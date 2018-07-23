@@ -3,7 +3,7 @@ package org.lzy.kaggle.kaggleSantander
 import ml.dmlc.xgboost4j.scala.spark.XGBoostEstimator
 import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
-import org.lzy.kaggle.JDataByLeaner.UDLogisticEvaluator
+import org.lzy.JData.JDataByLeaner.UDLogisticEvaluator
 
 /**
   * Auther: lzy

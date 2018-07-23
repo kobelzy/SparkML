@@ -1,4 +1,4 @@
-package org.lzy.kaggle.JDataByLeaner
+package org.lzy.JData.JDataByLeaner
 
 import org.apache.spark.ml.{Pipeline, PipelineModel, PipelineStage}
 import org.apache.spark.ml.feature.{ChiSqSelector, ChiSqSelectorModel, VectorAssembler}

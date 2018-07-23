@@ -1,4 +1,4 @@
-package org.lzy.kaggle.JDataByLeaner
+package org.lzy.JData.JDataByLeaner
 
 import java.sql.Timestamp
 

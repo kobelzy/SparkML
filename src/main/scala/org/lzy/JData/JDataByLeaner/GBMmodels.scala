@@ -1,4 +1,5 @@
-package org.lzy.kaggle.JDataByLeaner
+package org.lzy.JData.JDataByLeaner
+
 import breeze.numerics.round
 import ml.dmlc.xgboost4j.scala.spark.XGBoostEstimator
 import org.apache.spark.ml.evaluation.RegressionEvaluator

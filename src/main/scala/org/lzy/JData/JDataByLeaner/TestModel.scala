@@ -1,4 +1,4 @@
-package org.lzy.kaggle.JDataByLeaner
+package org.lzy.JData.JDataByLeaner
 
 import ml.dmlc.xgboost4j.scala.spark.XGBoostEstimator
 import org.apache.spark.ml.{Pipeline, PipelineStage}
@@ -6,7 +6,7 @@ import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.sql.SparkSession
-import org.lzy.kaggle.JDataByLeaner.Run.basePath
+import Run.basePath
 import scala.collection.mutable.ArrayBuffer
 
 /**

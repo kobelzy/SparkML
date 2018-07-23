@@ -1,15 +1,11 @@
-package org.lzy.kaggle.JData
+package org.lzy.JData.JDataByTimeSeries
 
-import com.ml.kaggle.JData.TimeFuture.basePath
-import com.sun.org.apache.xml.internal.utils.StringToStringTableVector
 import java.sql.Timestamp
-
 import org.apache.spark.ml.clustering.KMeans
 import org.apache.spark.ml.feature.{OneHotEncoder, StandardScaler, StringIndexer, VectorAssembler}
 import org.apache.spark.ml.param.ParamMap
 import org.apache.spark.ml.{Pipeline, PipelineStage}
-import org.apache.spark.sql.{DataFrame, Row, SaveMode, SparkSession}
-import spire.std.map
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
 /**
   * Auther: lzy

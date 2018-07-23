@@ -1,17 +1,15 @@
-package com.ml.kaggle.JData
+package org.lzy.JData.JDataByTimeSeries
 
+import com.cloudera.sparkts._
+import com.cloudera.sparkts.models.{ARIMA, ARIMAModel, GARCH, HoltWinters}
 import java.sql.Timestamp
 import java.time.{ZoneId, ZonedDateTime}
-
-import com.cloudera.sparkts.models.{ARIMA, ARIMAModel, GARCH, HoltWinters}
-import com.cloudera.sparkts._
 import org.apache.spark.ml.feature.VectorAssembler
 import org.apache.spark.ml.linalg
-import org.apache.spark.mllib.linalg.{DenseVector, Vector, Vectors}
+import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.functions.udf
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-
 import scala.collection.mutable
 
 /**

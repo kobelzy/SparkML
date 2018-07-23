@@ -1,4 +1,4 @@
-package org.lzy.kaggle.JDataByLeaner
+package org.lzy.JData.JDataByLeaner
 
 import ml.dmlc.xgboost4j.scala.spark.{XGBoost, XGBoostEstimator, XGBoostModel}
 import org.apache.spark.ml

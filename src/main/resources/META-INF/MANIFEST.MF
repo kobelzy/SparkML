@@ -1,3 +1,3 @@
 Manifest-Version: 1.0
-Main-Class: org.lzy.kaggle.JData.OrderAndActionCluster
+Main-Class: org.lzy.JData.JDataByTimeSeries.OrderAndActionCluster
 

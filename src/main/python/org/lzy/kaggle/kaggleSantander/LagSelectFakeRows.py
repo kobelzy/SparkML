@@ -155,13 +155,13 @@ best_score = np.min(result['score'])
 best_lag = np.argmin(result['score'])
 print('best_score', best_score, '\nbest_lag', best_lag)
 
-
+# 重写compiled？将泄漏值改为最小分数所在的列。   如此反复，将会把compiled_leak列逐渐填充完整，若结果依旧为0，说明没有泄漏值
 def rewrite_compiled_leak(leak_df, lag):
     leak_df["compiled_leak"] = 0
-    for i in range(lag):
+    for i in range(lag): #从0到lag-1开始循环
         c = "leaked_target_"+str(i)
-        zeroleak = leak_df["compiled_leak"]==0
-        leak_df.loc[zeroleak, "compiled_leak"] = leak_df.loc[zeroleak, c]
+        zeroleak = leak_df["compiled_leak"]==0  #寻找compiled——leak为0的行
+        leak_df.loc[zeroleak, "compiled_leak"] = leak_df.loc[zeroleak, c]   #将该行的compiled_leak转化为当前对应c的值。
     return leak_df
 
 leaky_cols = [c for c in train_leak.columns if 'leaked_target_' in c]
@@ -169,7 +169,7 @@ train_leak = rewrite_compiled_leak(train_leak, best_lag)
 train_leak[['ID']+leaky_cols+['compiled_leak']].head()
 
 
-train_res = train_leak[leaky_cols+['compiled_leak']].replace(0.0, np.nan)
+train_res = train_leak[leaky_cols+['compiled_leak']].replace(0.0, np.nan) #使用nana代替没有泄漏的值。
 train_res.to_csv('train_leak.csv', index=False)
 
 

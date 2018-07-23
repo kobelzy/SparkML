@@ -1,4 +1,4 @@
-package org.lzy.kaggle.JDataByLeaner
+package org.lzy.JData.JDataByLeaner
 
 import scala.collection.mutable
 import scala.collection.mutable.ListBuffer

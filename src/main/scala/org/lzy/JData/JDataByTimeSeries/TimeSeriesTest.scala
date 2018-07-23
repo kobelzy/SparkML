@@ -1,14 +1,12 @@
-package org.lzy.kaggle.JData
-
-import java.sql.Timestamp
-import java.time.{ZoneId, ZonedDateTime}
+package org.lzy.JData.JDataByTimeSeries
 
 import com.cloudera.sparkts.models.{ARIMA, ARIMAModel, GARCH}
 import com.cloudera.sparkts.{DateTimeIndex, DayFrequency, TimeSeriesRDD, UniformDateTimeIndex}
+import java.sql.Timestamp
+import java.time.{ZoneId, ZonedDateTime}
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-
 import scala.collection.mutable
 
 /**

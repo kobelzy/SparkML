@@ -1,11 +1,10 @@
 import java.sql.Timestamp
-
 import org.apache.spark.ml.feature.{OneHotEncoder, StandardScaler}
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.execution.streaming.FileStreamSource.Timestamp
-import org.lzy.kaggle.JDataByLeaner.FeaExact.basePath
-import org.lzy.kaggle.JDataByLeaner.Util
+import org.lzy.JData.JDataByLeaner.FeaExact.basePath
 import org.apache.spark.sql.functions._
+import org.lzy.JData.JDataByLeaner.Util
 /**
   * Created by Administrator on 2018/6/2.
   */

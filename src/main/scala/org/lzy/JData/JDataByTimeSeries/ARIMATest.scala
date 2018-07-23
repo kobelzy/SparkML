@@ -1,4 +1,5 @@
-package org.lzy.kaggle.JData
+package org.lzy.JData.JDataByTimeSeries
+
 import com.cloudera.sparkts.models.ARIMA
 import org.apache.spark.mllib.linalg.Vectors
 /**

@@ -1,4 +1,4 @@
-package org.lzy.kaggle.JData
+package org.lzy.JData.JDataByTimeSeries
 
 import com.cloudera.sparkts.models.{ARIMA, ARIMAModel}
 import com.cloudera.sparkts.{DateTimeIndex, DayFrequency, TimeSeriesRDD, UniformDateTimeIndex}
