@@ -329,12 +329,14 @@ class FeatureExact(spark: SparkSession) {
         var leaky_cols = Array[String]()
         var leaky_value_counts = Array[Long]()
         var leaky_value_corrects = Array[Double]()
+        var scores = Array[Double]()
+        def getRMSE=udf{(y:Double,tmp:Double)=>math.pow(y-tmp,2)}
         for (i <- 0 until max_nlags) {
             val c = "leaked_target_" + i
             println("processing lag:" + i)
             trainLeak_df = trainLeak_df.join(fastGetLeak(trainLeak_df, cols, i, c), "id")
             leaky_cols = leaky_cols :+ c
-            trainLeak_df = train.join(trainLeak_df.select("id", leaky_cols :+ "compiled_leak": _*), Seq("id"), "left")
+            trainLeak_df = train.join(trainLeak_df.select("id", leaky_cols :+ "compiled_leak":+"nonzero_mean": _*), Seq("id"), "left")
             println(2, "train_leak")
 //      trainLeak_df.withColumn("compiled_leak",when($"compiled_leak" ===0d,col(c) ))
             trainLeak_df = trainLeak_df.withColumn("compiled_leak", col(c))
@@ -343,12 +345,18 @@ class FeatureExact(spark: SparkSession) {
             println("leak_value_counts:" + leaky_value_counts.length)
             val _correct_counts = trainLeak_df.filter($"compiled_leak" === $"target").count()
             leaky_value_corrects = leaky_value_corrects :+ _correct_counts / leaky_value_counts(leaky_value_counts.length - 1).toDouble
-            println("在训练集中发现泄露数据：", leaky_value_counts(leaky_value_counts.length - 1))
-            println("训练集中的泄露数据为：", leaky_value_corrects(leaky_value_corrects.length - 1))
+            println("在训练集中发现泄露数据：", leaky_value_counts.tail)
+            println("训练集中的泄露数据为：", leaky_value_corrects.tail)
             println(leaky_value_counts.mkString(","))
             println(leaky_value_corrects.mkString(","))
-//      trainLeak_df.show()
+
+            trainLeak_df = trainLeak_df.withColumn("compiled_leak", log1p($"nonzero_mean")).na.fill(14.49,Seq("nonzero_mean"))
+            val score_rdd=trainLeak_df.withColumn("y",log1p("target"))
+              .withColumn("score",getRMSE($"y",$"compiled_leak")).select("score").rdd.map(_.getDouble(0))
+            scores:+math.sqrt(score_rdd.mean())
+            println("当前分数，填充万非0值之后的为："+scores.tail)
+            //      trainLeak_df.show()
         }
-        (trainLeak_df, leaky_value_counts, leaky_value_corrects)
+        (trainLeak_df, leaky_value_counts, leaky_value_corrects,scores)
     }
 }
