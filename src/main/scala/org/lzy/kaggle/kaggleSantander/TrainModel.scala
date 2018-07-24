@@ -300,4 +300,16 @@ class TrainModel(spark: SparkSession) {
     val score = models.evaluateGDBT(train_willFit_df, "target")
     println(s"当前统计特征：${statistic_columns.mkString(",")}....score：${score}")
   }
+
+
+  def lagSelectFakeRows(train:DataFrame)={
+    val featureExact=new FeatureExact(spark)
+    val (trainLeak_df, leaky_value_counts, leaky_value_corrects,scores)=featureExact.compiledLeadResult(train)
+    val bestScore=scores.min
+    val best_lag=scores.indexOf(bestScore)
+    println("最高分值："+bestScore+",下标："+best_lag)
+
+
+
+  }
 }

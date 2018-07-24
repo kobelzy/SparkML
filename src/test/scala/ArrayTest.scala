@@ -95,5 +95,13 @@ object ArrayTest {
 
     println(arr.slice(0, arr.length - lag - 2).mkString(","))
     println(arr.slice(lag + 2, arr.length).mkString(","))
+    println(arr.updated(2,2).mkString(","))
+    println(arr.mkString(","))
+    val chars = Array(Array("a","b"),Array("c","d"),Array("e","f"))
+    chars.foreach(arr=> println(arr.mkString(",")))
+    chars.transpose.foreach(arr=> println(arr.mkString(",")))
+
+    println(arr.dropWhile(_ % 2 == 0).mkString(","))
+
   }
 }

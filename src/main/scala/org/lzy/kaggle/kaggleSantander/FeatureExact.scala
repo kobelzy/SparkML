@@ -249,7 +249,7 @@ class FeatureExact(spark: SparkSession) {
     }
 
 
-    def getBueautifulTest(test: DataFrame) = {
+    def getBueautifulTest(train:DataFrame,test: DataFrame) = {
         val columns = test.columns.filterNot(column => Constant.featureFilterColumns_arr.contains(column.toLowerCase()))
         val round_columns = col("id").cast("String") +: columns.map(column => round(col(column), 2))
         val test_round_df = test.select(round_columns: _*)
@@ -277,7 +277,9 @@ class FeatureExact(spark: SparkSession) {
         val non_ugly_indexes = id2isugly_rdd.filter(_._2 == true).map(_._1).collect()
 
         val isNonUgly_udf = udf { (id: String) => non_ugly_indexes.contains(id) }
+        val targetMean=train.select($"target").map(_.getDouble(0)).rdd.mean()
         val nonUgly_test_df = test.filter(isNonUgly_udf($"id"))
+                        .withColumn("target",lit(targetMean))
         println("真行数:" + nonUgly_test_df.count())
         (nonUgly_test_df, non_ugly_indexes, ugly_indexes)
     }
@@ -323,40 +325,80 @@ class FeatureExact(spark: SparkSession) {
         id2nonZero_mean_df.show()
         var trainLeak_df = train.select((Array("id", "target") ++ cols).map(col): _*)
                 //不生效，会熔断,放了前边就没有事？？？？？
-                .join(broadcast(id2nonZero_mean_df), "id")
                 .withColumn("compiled_leak", lit(0d))
+                .join(broadcast(id2nonZero_mean_df), "id")
         trainLeak_df.show(false)
         var leaky_cols = Array[String]()
         var leaky_value_counts = Array[Long]()
         var leaky_value_corrects = Array[Double]()
         var scores = Array[Double]()
-        def getRMSE=udf{(y:Double,tmp:Double)=>math.pow(y-tmp,2)}
+
+        def getRMSE = udf { (y: Double, tmp: Double) => math.pow(y - tmp, 2) }
+
         for (i <- 0 until max_nlags) {
             val c = "leaked_target_" + i
             println("processing lag:" + i)
             trainLeak_df = trainLeak_df.join(fastGetLeak(trainLeak_df, cols, i, c), "id")
             leaky_cols = leaky_cols :+ c
-            trainLeak_df = train.join(trainLeak_df.select("id", leaky_cols :+ "compiled_leak":+"nonzero_mean": _*), Seq("id"), "left")
+            trainLeak_df = train.join(trainLeak_df.select("id", leaky_cols :+ "compiled_leak" :+ "nonzero_mean": _*), Seq("id"), "left")
             println(2, "train_leak")
 //      trainLeak_df.withColumn("compiled_leak",when($"compiled_leak" ===0d,col(c) ))
             trainLeak_df = trainLeak_df.withColumn("compiled_leak", col(c))
-            trainLeak_df.select("id", "compiled_leak").filter($"id" === "35fbfd3fd").show()
             leaky_value_counts = leaky_value_counts :+ trainLeak_df.filter($"compiled_leak" > 0).count()
-            println("leak_value_counts:" + leaky_value_counts.length)
             val _correct_counts = trainLeak_df.filter($"compiled_leak" === $"target").count()
             leaky_value_corrects = leaky_value_corrects :+ _correct_counts / leaky_value_counts(leaky_value_counts.length - 1).toDouble
-            println("在训练集中发现泄露数据：", leaky_value_counts.tail)
-            println("训练集中的泄露数据为：", leaky_value_corrects.tail)
+            println("在训练集中发现泄露数据：", leaky_value_counts.last)
+            println("训练集中的泄露数据为：", leaky_value_corrects.last)
             println(leaky_value_counts.mkString(","))
             println(leaky_value_corrects.mkString(","))
 
-            trainLeak_df = trainLeak_df.withColumn("compiled_leak", log1p($"nonzero_mean")).na.fill(14.49,Seq("nonzero_mean"))
-            val score_rdd=trainLeak_df.withColumn("y",log1p("target"))
-              .withColumn("score",getRMSE($"y",$"compiled_leak")).select("score").rdd.map(_.getDouble(0))
-            scores:+math.sqrt(score_rdd.mean())
-            println("当前分数，填充万非0值之后的为："+scores.tail)
+            trainLeak_df = trainLeak_df.withColumn("compiled_leak", log1p($"nonzero_mean")).na.fill(14.49, Seq("nonzero_mean"))
+            val score_rdd = trainLeak_df.withColumn("y", log1p("target"))
+                    .withColumn("score", getRMSE($"y", $"compiled_leak")).select("score").rdd.map(_.getDouble(0))
+            scores = scores :+ math.sqrt(score_rdd.mean())
+            println("当前分数，填充非0值之后的为：" + scores.last)
             //      trainLeak_df.show()
         }
-        (trainLeak_df, leaky_value_counts, leaky_value_corrects,scores)
+        (trainLeak_df, leaky_value_counts, leaky_value_corrects, scores)
     }
+
+    /** *
+      * 功能实现:使用泄漏值填充到compiled_leak中
+      *
+      * Author: Lzy
+      * Date: 2018/7/24 10:27
+      * Param: [leak_df, lag]
+      * Return: java.lang.Object
+      */
+    def reWriteCompiledLeak(leak_df: DataFrame, lag: Int) = {
+        var newLeak_df = leak_df
+        newLeak_df = newLeak_df.withColumn("compiled_leak", lit(0d))
+        (0 until lag).foreach(i => {
+            val c = "leaked_target_" + i
+            newLeak_df = newLeak_df.withColumn("compiled_leak", when($"compiled_leak" === 0d, col(c)).otherwise($"compiled_leak"))
+        })
+        newLeak_df
+    }
+
+    def compiledLeakResult_test(test: DataFrame, max_nlags: Int) = {
+        val transact_cols = test.columns.filterNot(column => Constant.featureFilterColumns_arr.contains(column.toLowerCase))
+        //获取每一行的log的平均值
+        val id2nonZero_mean_df: DataFrame = test.select(col("id") +: transact_cols.map(col(_).cast(DoubleType)): _*)
+                .map(row => {
+                    val id = row.getString(0)
+                    val means: Double = transact_cols.indices.map(i => {
+                        val x = row.getDouble(i + 1)
+                        if (x == 0) 0 else math.log1p(x)
+                    })
+                            .sum / transact_cols.length
+                    (id, math.expm1(means))
+                }).toDF("id", "nonzero_mean").cache()
+
+        val test_leak = test.select("id", Array("target") ++ Constant.specialColumns_arr: _*)
+                .withColumn("compiled_leak", lit(0d))
+                .join(broadcast(id2nonZero_mean_df))
+
+
+    }
+
 }
