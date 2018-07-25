@@ -198,6 +198,7 @@ def compiled_leak_result_test(max_nlags):
         )[["ID", "target"] + cols + leaky_cols+["compiled_leak", "nonzero_mean"]]
         zeroleak = test_leak["compiled_leak"]==0
         test_leak.loc[zeroleak, "compiled_leak"] = test_leak.loc[zeroleak, c]
+
         leaky_value_counts.append(sum(test_leak["compiled_leak"] > 0))
         #_correct_counts = sum(train_leak["compiled_leak"]==train_leak["target"])
         #leaky_value_corrects.append(_correct_counts/leaky_value_counts[-1])
@@ -234,6 +235,7 @@ test_leak = rewrite_compiled_leak(test_leak, best_lag)
 test_leak[['ID']+leaky_cols+["compiled_leak", "nonzero_mean"]].head()
 
 
+# //替换为nan？
 test_res = test_leak[leaky_cols+['compiled_leak']].replace(0.0, np.nan)
 test_res.to_csv('test_leak.csv', index=False)
 

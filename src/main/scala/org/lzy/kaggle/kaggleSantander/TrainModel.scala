@@ -302,14 +302,23 @@ class TrainModel(spark: SparkSession) {
   }
 
 
-  def lagSelectFakeRows(train:DataFrame)={
+  def lagSelectFakeRows(train:DataFrame,test:DataFrame)={
     val featureExact=new FeatureExact(spark)
-    val (trainLeak_df, leaky_value_counts, leaky_value_corrects,scores)=featureExact.compiledLeadResult(train)
+    val (trainLeak_df, leaky_train_counts, leaky_value_corrects,scores)=featureExact.compiledLeadResult(train)
     val bestScore=scores.min
     val best_lag=scores.indexOf(bestScore)
     println("最高分值："+bestScore+",下标："+best_lag)
 
+    val (test_leak,leaky_test_counts)=featureExact.compiledLeakResult_test(test,38)
 
+    val test_leak_df=featureExact.reWriteCompiledLeak(test_leak,best_lag)
+    test_leak_df.select("id",Constant.specialColumns_arr++Array("compiled_leak","nonzero_mean"):_*).show()
 
+//    val test_res=test_leak.select("compiled_leak",Constant.specialColumns_arr:_*)、、
+
+    test_leak_df.filter($"compiled_leak"===0)
+    val fill_test_leak_df=test_leak_df.withColumn("compiled_leak",when($"compiled_leak"===0,$"nonzero_mean"))
+
+    test.withColumn("target",lit(0d))
   }
 }
