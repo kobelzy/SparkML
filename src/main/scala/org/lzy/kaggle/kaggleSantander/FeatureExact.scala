@@ -249,7 +249,7 @@ class FeatureExact(spark: SparkSession) {
     }
 
 
-    def getBueautifulTest(train:DataFrame,test: DataFrame) = {
+    def getBueautifulTest(train: DataFrame, test: DataFrame) = {
         val columns = test.columns.filterNot(column => Constant.featureFilterColumns_arr.contains(column.toLowerCase()))
         val round_columns = col("id").cast("String") +: columns.map(column => round(col(column), 2))
         val test_round_df = test.select(round_columns: _*)
@@ -277,11 +277,11 @@ class FeatureExact(spark: SparkSession) {
         val non_ugly_indexes = id2isugly_rdd.filter(_._2 == true).map(_._1).collect()
 
         val isNonUgly_udf = udf { (id: String) => non_ugly_indexes.contains(id) }
-        val targetMean=train.select($"target").map(_.getDouble(0)).rdd.mean()
+        val targetMean = train.select($"target").map(_.getDouble(0)).rdd.mean()
         val nonUgly_test_df = test.filter(isNonUgly_udf($"id"))
-                        .withColumn("target",lit(targetMean))
+                .withColumn("target", lit(targetMean))
         println("真行数:" + nonUgly_test_df.count())
-        nonUgly_test_df.write.mode(SaveMode.Overwrite).parquet(Constant.basePath+"cache/nonUgly_test_df")
+        nonUgly_test_df.write.mode(SaveMode.Overwrite).parquet(Constant.basePath + "cache/nonUgly_test_df")
         (nonUgly_test_df, non_ugly_indexes, ugly_indexes)
     }
 
@@ -347,17 +347,19 @@ class FeatureExact(spark: SparkSession) {
             trainLeak_df = trainLeak_df.withColumn("compiled_leak", col(c))
             leaky_value_counts = leaky_value_counts :+ trainLeak_df.filter($"compiled_leak" > 0).count()
             val _correct_counts = trainLeak_df.filter($"compiled_leak" === $"target").count()
-            leaky_value_corrects = leaky_value_corrects :+ _correct_counts / leaky_value_counts(leaky_value_counts.length - 1).toDouble
-            println("在训练集中发现泄露数据：", leaky_value_counts.last)
-            println("训练集中的泄露数据为：", leaky_value_corrects.last)
+            leaky_value_corrects = leaky_value_corrects :+ _correct_counts / leaky_value_counts.last.toDouble
+            println("当前总泄漏数量为：", leaky_value_counts.last)
+            println("泄漏成功占比：", leaky_value_corrects.last)
             println(leaky_value_counts.mkString(","))
             println(leaky_value_corrects.mkString(","))
 
-            trainLeak_df = trainLeak_df.withColumn("compiled_leak", log1p($"nonzero_mean")).na.fill(14.49, Seq("nonzero_mean"))
-            val score_rdd = trainLeak_df.withColumn("y", log1p("target"))
+            val score_rdd = trainLeak_df
+                            .withColumn("compiled_leak",when($"compiled_leak" ===0,log1p($"nonzero_mean")).otherwise(log1p($"compiled_leak")))
+                    .na.fill(14.49, Seq("compiled_leak"))
+                    .withColumn("y", log1p("target"))
                     .withColumn("score", getRMSE($"y", $"compiled_leak")).select("score").rdd.map(_.getDouble(0))
             scores = scores :+ math.sqrt(score_rdd.mean())
-            println("当前分数，填充非0值之后的为：" + scores.last)
+            println("当前的均方误差根为：" + scores.last)
             //      trainLeak_df.show()
         }
         (trainLeak_df, leaky_value_counts, leaky_value_corrects, scores)
@@ -395,10 +397,10 @@ class FeatureExact(spark: SparkSession) {
                             .sum / transact_cols.length
                     (id, math.expm1(means))
                 }).toDF("id", "nonzero_mean").cache()
-//        val test_df=test.withColumn("target",)
+        //        val test_df=test.withColumn("target",)
         var test_leak = test.select("id", Array("target") ++ Constant.specialColumns_arr: _*)
                 .withColumn("compiled_leak", lit(0d))
-                .join(broadcast(id2nonZero_mean_df),"id")
+                .join(broadcast(id2nonZero_mean_df), "id")
         test_leak.show(false)
 
         var leaky_cols = Array[String]()
@@ -409,7 +411,7 @@ class FeatureExact(spark: SparkSession) {
 
         for (i <- 0 until max_nlags) {
             val c = "leaked_target_" + i
-            println("processing lag:" + i+",当前字段："+c)
+            println("processing lag:" + i + ",当前字段：" + c)
 
             test_leak = test_leak.join(fastGetLeak(test_leak, cols, i, c), "id")
             leaky_cols = leaky_cols :+ c
@@ -429,7 +431,7 @@ class FeatureExact(spark: SparkSession) {
 //            scores = scores :+ math.sqrt(score_rdd.mean())
 //            println("当前分数，填充非0值之后的为：" + scores.last)
         }
-            (test_leak,leaky_value_counts)
+        (test_leak, leaky_value_counts)
     }
 
 }

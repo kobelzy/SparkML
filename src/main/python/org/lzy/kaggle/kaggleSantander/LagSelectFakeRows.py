@@ -74,7 +74,7 @@ def _get_leak(df, cols, lag=0, verbose=False):
        2. For all rows we shift the row by two steps and again make a string
        3. Just find rows where string from 2 matches string from 1
        4. Get 1st time step of row in 3 (Currently, there is additional condition to only fetch value if we got exactly one match in step 3)"""
-    series_str = df[cols[lag+2:]].apply(lambda x: "_".join(x.round(2).astype(str)), axis=1)
+    series_str = df[cols[lag+2:]].apply(lambda x: "_".join(x.round(2).astype(str)), axis=1)  #把lag下一个开始的值的所有值使用—进行连接
     series_shifted_str = df[cols].shift(lag+2, axis=1)[cols[lag+2:]].apply(lambda x: "_".join(x.round(2).astype(str)), axis=1)
     if verbose:
         target_rows = series_shifted_str.progress_apply(lambda x: np.where(x == series_str)[0])
@@ -85,18 +85,19 @@ def _get_leak(df, cols, lag=0, verbose=False):
 
 # from: https://www.kaggle.com/dfrumkin/a-simple-way-to-use-giba-s-features-v2
 def fast_get_leak(df, cols, lag=0):
-    d1 = df[cols[:-lag-2]].apply(tuple, axis=1).to_frame().rename(columns={0: 'key'})
-    d2 = df[cols[lag+2:]].apply(tuple, axis=1).to_frame().rename(columns={0: 'key'})
-    d2['pred'] = df[cols[lag]]
+    d1 = df[cols[:-lag-2]].apply(tuple, axis=1).to_frame().rename(columns={0: 'key'}) #把lag前一个值之前的所有值修改为tuple
+    d2 = df[cols[lag+2:]].apply(tuple, axis=1).to_frame().rename(columns={0: 'key'})#把lag后一个值开始的所有值修改为tuple
+    d2['pred'] = df[cols[lag]] #新增lag所在的列
     #d2 = d2[d2.pred != 0] ### to make output consistent with Hasan's function
-    d3 = d2[~d2.duplicated(['key'], keep=False)]
-    return d1.merge(d3, how='left', on='key').pred.fillna(0)
+    d3 = d2[~d2.duplicated(['key'], keep=False)]  #d2根据之前的tuple值进行去重
+    return d1.merge(d3, how='left', on='key').pred.fillna(0)  #根据相同的key进行join，空值补0.这时候对应的lag值就是泄漏的答案。
 
 def compiled_leak_result():
 
-    max_nlags = len(cols) - 2
+    max_nlags = len(cols) - 2 #最后一个泄漏字段
     train_leak = train[["ID", "target"] + cols]
     train_leak["compiled_leak"] = 0
+    #将所有字段的log1p的平均值进行反函数的到nonzero_mean。不存在空值
     train_leak["nonzero_mean"] = train[transact_cols].apply(
         lambda x: np.expm1(np.log1p(x[x!=0]).mean()), axis=1
     )
@@ -106,21 +107,27 @@ def compiled_leak_result():
     leaky_value_corrects = []
     leaky_cols = []
 
+#循环不包含最后一个值
     for i in range(max_nlags):
         c = "leaked_target_"+str(i)
 
         print('Processing lag', i)
-        train_leak[c] = fast_get_leak(train_leak, cols, i)
+        train_leak[c] = fast_get_leak(train_leak, cols, i)#获取泄漏字段，含0
 
         leaky_cols.append(c)
+        #将泄漏值添加的train中，并包含compiled_leak为0，nonzero_mean是每一行的平均值
         train_leak = train.join(
             train_leak.set_index("ID")[leaky_cols+["compiled_leak", "nonzero_mean"]],
             on="ID", how="left"
         )
+        #将compiled_leak为0的列使用当前得到的泄漏字段进行填充，填充完依旧有0.
         zeroleak = train_leak["compiled_leak"]==0
         train_leak.loc[zeroleak, "compiled_leak"] = train_leak.loc[zeroleak, c]
+        # 当前阶段泄漏值的总数
         leaky_value_counts.append(sum(train_leak["compiled_leak"] > 0))
+        #当前阶段泄漏值与结果值匹配的总数
         _correct_counts = sum(train_leak["compiled_leak"]==train_leak["target"])
+        #当前泄漏值是正确值的比例
         leaky_value_corrects.append(_correct_counts/leaky_value_counts[-1])
         print("Leak values found in train", leaky_value_counts[-1])
         print(
@@ -128,6 +135,7 @@ def compiled_leak_result():
             leaky_value_corrects[-1]
         )
         tmp = train_leak.copy()
+        #将当前为空的compiled_leak值使用平均值进行替代，计算均方根误差
         tmp.loc[zeroleak, "compiled_leak"] = tmp.loc[zeroleak, "nonzero_mean"]
         scores.append(np.sqrt(mean_squared_error(y, np.log1p(tmp["compiled_leak"]).fillna(14.49))))
         print(
