@@ -71,9 +71,10 @@ object Run {
           */
 //        featureExact.compiledLeadResult(train_df)
 //       val (nonUgly_test_df, non_ugly_indexes, ugly_indexes)= featureExact.getBueautifulTest(train_df,test_df)
-        val nonUgly_test_df=spark.read.parquet(Constant.basePath+"cache/nonUgly_test_df")
+//        val nonUgly_test_df=spark.read.parquet(Constant.basePath+"cache/nonUgly_test_df")
+//        val (test_leak,leaky_value_counts)=featureExact.compiledLeakResult_test(nonUgly_test_df,22)
 
-        val (test_leak,leaky_value_counts)=featureExact.compiledLeakResult_test(nonUgly_test_df,22)
+      trainModel.lagSelectFakeRows(train_df,test_df)
 spark.stop()
     }
 }

@@ -103,5 +103,6 @@ object ArrayTest {
 
     println(arr.dropWhile(_ % 2 == 0).mkString(","))
 
+    println(math.expm1(14.49))
   }
 }

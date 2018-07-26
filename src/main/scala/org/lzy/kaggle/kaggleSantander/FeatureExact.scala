@@ -344,14 +344,12 @@ class FeatureExact(spark: SparkSession) {
             trainLeak_df = train.join(trainLeak_df.select("id", leaky_cols :+ "compiled_leak" :+ "nonzero_mean": _*), Seq("id"), "left")
             println(2, "train_leak")
 //      trainLeak_df.withColumn("compiled_leak",when($"compiled_leak" ===0d,col(c) ))
-            trainLeak_df = trainLeak_df.withColumn("compiled_leak", col(c))
+            trainLeak_df = trainLeak_df.withColumn("compiled_leak",when($"compiled_leak" ===0d,col(c) ).otherwise($"compiled_leak"))
             leaky_value_counts = leaky_value_counts :+ trainLeak_df.filter($"compiled_leak" > 0).count()
             val _correct_counts = trainLeak_df.filter($"compiled_leak" === $"target").count()
             leaky_value_corrects = leaky_value_corrects :+ _correct_counts / leaky_value_counts.last.toDouble
             println("当前总泄漏数量为：", leaky_value_counts.last)
             println("泄漏成功占比：", leaky_value_corrects.last)
-            println(leaky_value_counts.mkString(","))
-            println(leaky_value_corrects.mkString(","))
 
             val score_rdd = trainLeak_df
                             .withColumn("compiled_leak",when($"compiled_leak" ===0,log1p($"nonzero_mean")).otherwise(log1p($"compiled_leak")))
@@ -360,6 +358,12 @@ class FeatureExact(spark: SparkSession) {
                     .withColumn("score", getRMSE($"y", $"compiled_leak")).select("score").rdd.map(_.getDouble(0))
             scores = scores :+ math.sqrt(score_rdd.mean())
             println("当前的均方误差根为：" + scores.last)
+            println("------------------------------")
+            println(leaky_value_counts.mkString(","))
+            println(leaky_value_corrects.mkString(","))
+            println(scores.mkString(","))
+            println("------------------------------")
+
             //      trainLeak_df.show()
         }
         (trainLeak_df, leaky_value_counts, leaky_value_corrects, scores)
@@ -418,7 +422,7 @@ class FeatureExact(spark: SparkSession) {
             test_leak = test.join(test_leak.select("id", leaky_cols :+ "compiled_leak" :+ "nonzero_mean": _*), Seq("id"), "left")
             println("test_leak")
 
-            test_leak = test_leak.withColumn("compiled_leak", col(c))
+            test_leak = test_leak.withColumn("compiled_leak",when($"compiled_leak" ===0d,col(c) ).otherwise($"compiled_leak"))
 
             leaky_value_counts = leaky_value_counts :+ test_leak.filter($"compiled_leak" > 0).count()
 //            val _correct_counts = test_leak.filter($"compiled_leak" === $"target").count()

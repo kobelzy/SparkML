@@ -304,43 +304,37 @@ class TrainModel(spark: SparkSession) {
 
   def lagSelectFakeRows(train:DataFrame,test:DataFrame)={
     val featureExact=new FeatureExact(spark)
-           val (nonUgly_test_df, non_ugly_indexes, ugly_indexes)= featureExact.getBueautifulTest(train,test)
-//    val nonUgly_test_df=spark.read.parquet(Constant.basePath+"cache/nonUgly_test_df")
+    val utils=new Utils(spark)
+//           val (nonUgly_test_df, non_ugly_indexes, ugly_indexes)= featureExact.getBueautifulTest(train,test)
+    val nonUgly_test_df=spark.read.parquet(Constant.basePath+"cache/nonUgly_test_df")
 
 
 
     val (trainLeak_df, leaky_train_counts, leaky_value_corrects,scores)=featureExact.compiledLeadResult(train)
+    trainLeak_df.write.parquet(Constant.basePath+"cache/trainLeak_df")
     val bestScore=scores.min
     val best_lag=scores.indexOf(bestScore)
     println("最高分值："+bestScore+",下标："+best_lag)
 
     val leaky_cols=trainLeak_df.columns.filter(_.startsWith("leaked_target"))
-    val train_leak=featureExact.reWriteCompiledLeak(trainLeak_df,best_lag)
-
-
-
-
-
-
-
-
-
-
-
-
+//    val train_leak=featureExact.reWriteCompiledLeak(trainLeak_df,best_lag)
 
 
 
     val (test_leak,leaky_test_counts)=featureExact.compiledLeakResult_test(nonUgly_test_df,38)
+    test_leak.write.parquet(Constant.basePath+"cache/test_leak")
 
     val test_leak_df=featureExact.reWriteCompiledLeak(test_leak,best_lag)
     test_leak_df.select("id",leaky_cols++Array("compiled_leak","nonzero_mean"):_*).show()
 
 //    val test_res=test_leak.select("compiled_leak",Constant.specialColumns_arr:_*)、、
 
-    test_leak_df.filter($"compiled_leak"===0)
     val fill_test_leak_df=test_leak_df.withColumn("compiled_leak",when($"compiled_leak"===0,$"nonzero_mean"))
-
-    test.select("id").join(test_leak_df,"id")
+          .select("id","compiled_leak").withColumnRenamed("compiled_leak","target")
+    val result=test.select("id").join(fill_test_leak_df,Seq("id"),"left")
+      .na.fill(0d)
+    val subName = s"sub_${System.currentTimeMillis()}"
+    println(s"当前结果文件：${subName}")
+    utils.writeToCSV(result, Constant.basePath + s"submission/$subName")
   }
 }
