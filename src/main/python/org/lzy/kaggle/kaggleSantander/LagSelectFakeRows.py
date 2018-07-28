@@ -157,7 +157,7 @@ result = pd.DataFrame.from_dict(result, orient='columns')
 result.T
 
 
-result.to_csv('train_leaky_stat.csv', index=False)
+result.to_csv('../cache/train_leaky_stat.csv', index=False)
 
 best_score = np.min(result['score'])
 best_lag = np.argmin(result['score'])
@@ -178,7 +178,7 @@ train_leak[['ID']+leaky_cols+['compiled_leak']].head()
 
 
 train_res = train_leak[leaky_cols+['compiled_leak']].replace(0.0, np.nan) #使用nana代替没有泄漏的值。
-train_res.to_csv('train_leak.csv', index=False)
+train_res.to_csv('../cache/train_leak.csv', index=False)
 
 
 def compiled_leak_result_test(max_nlags):
@@ -236,7 +236,7 @@ test_result = pd.DataFrame.from_dict(test_result, orient='columns')
 test_result.T
 
 
-test_result.to_csv('test_leaky_stat.csv', index=False)
+test_result.to_csv('../cache/test_leaky_stat.csv', index=False)
 
 
 test_leak = rewrite_compiled_leak(test_leak, best_lag)
@@ -245,7 +245,7 @@ test_leak[['ID']+leaky_cols+["compiled_leak", "nonzero_mean"]].head()
 
 # //替换为nan？
 test_res = test_leak[leaky_cols+['compiled_leak']].replace(0.0, np.nan)
-test_res.to_csv('test_leak.csv', index=False)
+test_res.to_csv('../cache/test_leak.csv', index=False)
 
 
 
@@ -257,5 +257,5 @@ test_leak.loc[test_leak["compiled_leak"]==0, "compiled_leak"] = test_leak.loc[te
 sub = pd.read_csv(DATA_DIR+"test.csv", usecols=["ID"])
 sub["target"] = 0
 sub.iloc[non_ugly_indexes, 1] = test_leak["compiled_leak"].values
-sub.to_csv("non_fake_sub_lag_"+best_lag+".csv", index=False)
-print("non_fake_sub_lag_"+best_lag+".csv saved")
+sub.to_csv("../cache/non_fake_sub_lag_"+str(best_lag)+".csv", index=False)
+print("non_fake_sub_lag_"+str(best_lag)+".csv saved")
