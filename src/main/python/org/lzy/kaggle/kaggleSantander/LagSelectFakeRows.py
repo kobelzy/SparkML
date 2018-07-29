@@ -173,7 +173,7 @@ def rewrite_compiled_leak(leak_df, lag):
     return leak_df
 
 leaky_cols = [c for c in train_leak.columns if 'leaked_target_' in c]
-train_leak = rewrite_compiled_leak(train_leak, best_lag)
+train_leak =  rewrite_compiled_leak(train_leak, best_lag)
 train_leak[['ID']+leaky_cols+['compiled_leak']].head()
 
 

@@ -6,7 +6,6 @@ import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.regression._
 import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.sql.DataFrame
-import org.dmg.pmml.True
 /**
   * Created by Administrator on 2018/6/25.
   */

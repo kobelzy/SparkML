@@ -9,6 +9,7 @@ import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.DoubleType
 import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.storage.StorageLevel
 
 /**
   * Created by Administrator on 2018/7/3.
@@ -327,7 +328,7 @@ class FeatureExact(spark: SparkSession) {
         var trainLeak_df = train.select((Array("id", "target") ++ cols).map(col): _*)
                 //不生效，会熔断,放了前边就没有事？？？？？
                 .withColumn("compiled_leak", lit(0d))
-                .join(broadcast(id2nonZero_mean_df), "id")
+                .join(broadcast(id2nonZero_mean_df), "id").persist(StorageLevel.MEMORY_AND_DISK)
         trainLeak_df.show(false)
         var leaky_cols = Array[String]()
         var leaky_value_counts = Array[Long]()
@@ -339,12 +340,14 @@ class FeatureExact(spark: SparkSession) {
         for (i <- 0 until max_nlags) {
             val c = "leaked_target_" + i
             println("processing lag:" + i)
-            trainLeak_df = trainLeak_df.join(fastGetLeak(trainLeak_df, cols, i, c), "id")
+            val fast_leak_df=fastGetLeak(trainLeak_df, cols, i, c)
+            trainLeak_df = trainLeak_df.join(broadcast(fast_leak_df), "id").cache()
             leaky_cols = leaky_cols :+ c
-            trainLeak_df = train.join(trainLeak_df.select("id", leaky_cols :+ "compiled_leak" :+ "nonzero_mean": _*), Seq("id"), "left")
+            trainLeak_df = train.join(trainLeak_df.select("id", leaky_cols :+ "compiled_leak" :+ "nonzero_mean": _*), Seq("id"), "left").cache()
             println(2, "train_leak")
 //      trainLeak_df.withColumn("compiled_leak",when($"compiled_leak" ===0d,col(c) ))
             trainLeak_df = trainLeak_df.withColumn("compiled_leak",when($"compiled_leak" ===0d,col(c) ).otherwise($"compiled_leak"))
+            trainLeak_df.cache()
             leaky_value_counts = leaky_value_counts :+ trainLeak_df.filter($"compiled_leak" > 0).count()
             val _correct_counts = trainLeak_df.filter($"compiled_leak" === $"target").count()
             leaky_value_corrects = leaky_value_corrects :+ _correct_counts / leaky_value_counts.last.toDouble
@@ -404,7 +407,7 @@ class FeatureExact(spark: SparkSession) {
         //        val test_df=test.withColumn("target",)
         var test_leak = test.select("id", Array("target") ++ Constant.specialColumns_arr: _*)
                 .withColumn("compiled_leak", lit(0d))
-                .join(broadcast(id2nonZero_mean_df), "id")
+                .join(broadcast(id2nonZero_mean_df), "id").persist(StorageLevel.MEMORY_AND_DISK)
         test_leak.show(false)
 
         var leaky_cols = Array[String]()
@@ -423,7 +426,7 @@ class FeatureExact(spark: SparkSession) {
             println("test_leak")
 
             test_leak = test_leak.withColumn("compiled_leak",when($"compiled_leak" ===0d,col(c) ).otherwise($"compiled_leak"))
-
+            test_leak.cache()
             leaky_value_counts = leaky_value_counts :+ test_leak.filter($"compiled_leak" > 0).count()
 //            val _correct_counts = test_leak.filter($"compiled_leak" === $"target").count()
             println("在训练集中发现泄露数据：", leaky_value_counts.last)
