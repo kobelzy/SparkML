@@ -51,7 +51,7 @@ report['nunique'] = nb_values
 report.sort_values(by='rmse', ascending=True, inplace=True)
 report.to_csv('../cache/feature_report.csv', index=True)
 
-# scelet some features (threshold is not optimized) 选择rmse分数地域0.7952的值
+# scelet some features (threshold is not optimized) 选择rmse分数地域0.7952的值 的特征集
 good_features = report.loc[report['rmse'] <= 0.7925].index
 rmses = report.loc[report['rmse'] <= 0.7925, 'rmse'].values
 good_features
@@ -71,7 +71,9 @@ folds = KFold(n_splits=5, shuffle=True, random_state=1)
 
 # Use all features for stats
 features = [f for f in data if f not in ['ID', 'leak', 'log_leak', 'target']]
+# 将训练集中的0使用nan进行代替
 data.replace(0, np.nan, inplace=True)
+# 添加一些统计特征，基于行
 data['log_of_mean'] = np.log1p(data[features].replace(0, np.nan).mean(axis=1))
 data['mean_of_log'] = np.log1p(data[features]).replace(0, np.nan).mean(axis=1)
 data['log_of_median'] = np.log1p(data[features].replace(0, np.nan).median(axis=1))
@@ -89,7 +91,7 @@ test['the_sum'] = np.log1p(test[features].sum(axis=1))
 test['the_std'] = test[features].std(axis=1)
 test['the_kur'] = test[features].kurtosis(axis=1)
 
-# Only use good features, log leak and stats for training
+# Only use good features, log leak and stats for training 将最好的特征+统计特征
 features = good_features.tolist()
 features = features + ['log_leak', 'log_of_mean', 'mean_of_log', 'log_of_median', 'nb_nans', 'the_sum', 'the_std', 'the_kur']
 dtrain = lgb.Dataset(data=data[features],
@@ -97,6 +99,7 @@ dtrain = lgb.Dataset(data=data[features],
 test['target'] = 0
 
 dtrain.construct()
+#创建空集合
 oof_preds = np.zeros(data.shape[0])
 
 for trn_idx, val_idx in folds.split(data):
@@ -126,12 +129,16 @@ for trn_idx, val_idx in folds.split(data):
         verbose_eval=0
     )
 
+    # 为每一个验证集的下标指定已经模型的输出值
     oof_preds[val_idx] = clf.predict(dtrain.data.iloc[val_idx])
+    # target取平均值
     test['target'] += clf.predict(test[features]) / folds.n_splits
+    # 打印分值
     print(mean_squared_error(target.iloc[val_idx],
                              oof_preds[val_idx]) ** .5)
-
+# 将训练集的predictions修改为已经推荐的结果。
 data['predictions'] = oof_preds
+# 将泄漏值不为null的值使用推荐值进行替代
 data.loc[data['leak'].notnull(), 'predictions'] = np.log1p(data.loc[data['leak'].notnull(), 'leak'])
 print('OOF SCORE : %9.6f'
       % (mean_squared_error(target, oof_preds) ** .5))
