@@ -25,7 +25,9 @@ folds = KFold(4, True, 134259)
 fold_idx = [(trn_, val_) for trn_, val_ in folds.split(data)]
 scores = []
 
+# 某一列不重复的值有多少，包括na
 nb_values = data.nunique(dropna=False)
+# 某一列为0的值得数量
 nb_zeros = (data == 0).astype(np.uint8).sum(axis=0)
 
 features = [f for f in data.columns if f not in ['log_leak', 'leak', 'target', 'ID']]
@@ -44,7 +46,7 @@ for _f in features:
 
 # create  dataframe 获取了每一个特征与泄露特征进行同时训练时候得到的分数
 report = pd.DataFrame(scores, columns=['feature', 'rmse']).set_index('feature')
-# 新增了nb_zeros表示该行为0的数量，nunique表示表示该行是否为重复行
+
 report['nb_zeros'] = nb_zeros
 report['nunique'] = nb_values
 # 根据分数进行正排
@@ -54,7 +56,7 @@ report.to_csv('../cache/feature_report.csv', index=True)
 # scelet some features (threshold is not optimized) 选择rmse分数地域0.7952的值
 good_features = report.loc[report['rmse'] <= 0.7925].index
 rmses = report.loc[report['rmse'] <= 0.7925, 'rmse'].values
-good_features
+print("good_features"+len(good_features))
 
 # add test and test leak
 test = pd.read_csv('../input/test.csv')
