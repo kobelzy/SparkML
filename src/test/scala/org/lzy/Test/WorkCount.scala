@@ -1,4 +1,7 @@
+package org.lzy.Test
+
 import java.io.PrintWriter
+
 import scala.io.{BufferedSource, Source}
 
 /**

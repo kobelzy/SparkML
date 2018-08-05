@@ -1,9 +1,7 @@
-import java.sql.Timestamp
-import org.apache.spark.ml.feature.{OneHotEncoder, StandardScaler}
+package org.lzy.Test
+
+import org.apache.spark.ml.feature.OneHotEncoder
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.execution.streaming.FileStreamSource.Timestamp
-import org.lzy.JData.JDataByLeaner.FeaExact.basePath
-import org.apache.spark.sql.functions._
 import org.lzy.JData.JDataByLeaner.Util
 /**
   * Created by Administrator on 2018/6/2.
@@ -19,7 +17,6 @@ object csvTest {
     val spark = SparkSession.builder().appName("names")
       .master("local[*]")
       .getOrCreate()
-    import spark.implicits._
     spark.sparkContext.setLogLevel("WARN")
     val util = new Util(spark)
 //    val order_cache = spark.read.parquet(basePath + "cache/order")

@@ -1,6 +1,9 @@
+package org.lzy.Test
+
 import java.sql.Timestamp
+
+import org.apache.spark.sql.SparkSession
 import org.apache.spark.sql.functions.monotonically_increasing_id
-import org.apache.spark.sql.{Row, SparkSession}
 
 /**
   * Created by Administrator on 2018/5/30.

@@ -1,6 +1,4 @@
-import org.apache.spark.ml.linalg.{Vector, Vectors}
-
-import scala.collection.mutable.ArrayBuffer
+package org.lzy.Test
 
 /**
   * Created by Administrator on 2018/5/21.
@@ -104,5 +102,7 @@ object ArrayTest {
     println(arr.dropWhile(_ % 2 == 0).mkString(","))
 
     println(math.expm1(14.49))
+
+
   }
 }
