@@ -1,6 +1,6 @@
 package common
 
-import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 /**
   * Auther: lzy
@@ -44,7 +44,10 @@ class Utils(spark: SparkSession) {
     }
 }
 object Utils{
-
+    case class people(name:String,age:Int)
+def ds_map(ds:Dataset[people])={
+ds.map(a=>a.name.split("_")(0))
+}
 
 
 }
