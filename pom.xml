@@ -35,11 +35,11 @@
             <artifactId>spark-mllib_${scala.tools.version}</artifactId>
             <version>${spark.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.cloudera.sparkts</groupId>
-            <artifactId>sparkts</artifactId>
-            <version>0.4.1</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.cloudera.sparkts</groupId>-->
+            <!--<artifactId>sparkts</artifactId>-->
+            <!--<version>0.4.1</version>-->
+        <!--</dependency>-->
 
         <!-- https://mvnrepository.com/artifact/com.github.hirofumi/xgboost4j-spark -->
         <!--<dependency>-->
@@ -60,6 +60,19 @@
             <version>0.7.2-p1</version>
         </dependency>
 
+        <!-- https://mvnrepository.com/artifact/salesforce/TransmogrifAI -->
+        <!--maven仓库添加地址-->
+        <!--<mirror>-->
+            <!--<id>alimaven</id>-->
+            <!--<name>aliyun maven</name>-->
+            <!--<url>https://dl.bintray.com/spark-packages/maven/</url>-->
+            <!--<mirrorOf>central</mirrorOf>-->
+        <!--</mirror>-->
+        <dependency>
+            <groupId>salesforce</groupId>
+            <artifactId>TransmogrifAI</artifactId>
+            <version>0.3.4</version>
+        </dependency>
 
 
 

@@ -45,9 +45,9 @@ class Utils(spark: SparkSession) {
 }
 object Utils{
     case class people(name:String,age:Int)
-def ds_map(ds:Dataset[people])={
-ds.map(a=>a.name.split("_")(0))
-}
+//def ds_map(ds:Dataset[people])={
+//ds.map(a=>a.name.split("_")(0))
+//}
 
 
 }
