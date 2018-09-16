@@ -2,6 +2,7 @@ package org.lzy.JData.JDataByTimeSeries
 
 import com.cloudera.sparkts.models.ARIMA
 import org.apache.spark.mllib.linalg.Vectors
+import org.spark_project.dmg.pmml.ARIMA
 /**
   * Created by Administrator on 2018/5/27.
   */
@@ -15,9 +16,9 @@ object ARIMATest {
     println(ts.toArray.mkString(","))
     println(ts2.toArray.mkString(","))
     println(ts2.size)
-    val arimaModel = ARIMA.fitModel(1, 0, 1, ts)
+//    val arimaModel = ARIMA.fitModel(1, 0, 1, ts)
 //    println("coefficients: " + arimaModel.coefficients.mkString(","))
-    val forecast = arimaModel.forecast(naVector, 1)
-    println("forecast of next 20 observations: " + forecast.toArray.mkString(","))
+//    val forecast = arimaModel.forecast(naVector, 1)
+//    println("forecast of next 20 observations: " + forecast.toArray.mkString(","))
   }
 }
