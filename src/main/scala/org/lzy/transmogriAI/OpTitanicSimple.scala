@@ -33,7 +33,7 @@ package org.lzy.transmogriAI
 
 import com.salesforce.op._
 import com.salesforce.op.evaluators.Evaluators
-import com.salesforce.op.features.FeatureBuilder
+import com.salesforce.op.features.{Feature, FeatureBuilder, FeatureLike}
 import com.salesforce.op.features.types._
 import com.salesforce.op.readers.DataReaders
 import com.salesforce.op.stages.impl.classification.BinaryClassificationModelSelector
@@ -72,9 +72,6 @@ case class Passenger
   embarked: Option[String]
 )
 
-/**
- * A simplified TransmogrifAI example classification app using the Titanic dataset
- */
 object OpTitanicSimple {
 
   /**
@@ -95,10 +92,12 @@ ClassLoader.getSystemResource("TitanicDataset/TitanicPassengersTrainData.csv").t
     // Set up a SparkSession as normal
     val conf = new SparkConf().setAppName(this.getClass.getSimpleName.stripSuffix("$"))
         .setMaster("local[*]")
-    implicit val spark = SparkSession.builder.config(conf).getOrCreate()
 
+    implicit val spark = SparkSession.builder.config(conf).getOrCreate()
+spark.sparkContext.setLogLevel("warn")
     ////////////////////////////////////////////////////////////////////////////////
     // RAW FEATURE DEFINITIONS
+    //      特征列定义
     /////////////////////////////////////////////////////////////////////////////////
 
       //基于数据类型使用op类型转换
@@ -117,28 +116,33 @@ ClassLoader.getSystemResource("TitanicDataset/TitanicPassengersTrainData.csv").t
 
     ////////////////////////////////////////////////////////////////////////////////
     // TRANSFORMED FEATURES
+      //特征修改
     /////////////////////////////////////////////////////////////////////////////////
 
     // Do some basic feature engineering using knowledge of the underlying dataset
-    val familySize = sibSp + parCh + 1
-    val estimatedCostOfTickets = familySize * fare
-    val pivotedSex = sex.pivot()
-    val normedAge = age.fillMissingWithMean().zNormalize()
-    val ageGroup = age.map[PickList](_.value.map(v => if (v > 18) "adult" else "child").toPickList)
+      //使用已有认知对目前特征做一些基本特征工程，大家好
+    val familySize = sibSp + parCh + 1  //家庭人数，+1是本人
+    val estimatedCostOfTickets = familySize * fare //总票价
+    val pivotedSex = sex.pivot() //行转列
+    val normedAge = age.fillMissingWithMean().zNormalize() //使用平均值进行填充年龄，并进行标准化
+    val ageGroup = age.map[PickList](_.value.map(v => if (v > 18) "adult" else "child").toPickList) //区分是孩子还是成人
 
     // Define a feature of type vector containing all the predictors you'd like to use
-    val passengerFeatures = Seq(
+      //创建特征向量
+    val passengerFeatures:FeatureLike[OPVector] = Seq(
       pClass, name, age, sibSp, parCh, ticket,
       cabin, embarked, familySize, estimatedCostOfTickets,
       pivotedSex, ageGroup
     ).transmogrify()
 
     // Optionally check the features with a sanity checker
+      //数据泄露检测
     val sanityCheck = true
     val finalFeatures = if (sanityCheck) survived.sanityCheck(passengerFeatures) else passengerFeatures
 
     // Define the model we want to use (here a simple logistic regression) and get the resulting output
-    val (prediction, rawPrediction, prob) =
+      //自定义希望使用的模型
+    val (prediction, rawPrediction, prob):(FeatureLike[RealNN], FeatureLike[OPVector], FeatureLike[OPVector]) =
       BinaryClassificationModelSelector.withTrainValidationSplit()
         .setModelsToTry(LogisticRegression)
         .setInput(survived, finalFeatures).getOutput()
@@ -155,14 +159,14 @@ ClassLoader.getSystemResource("TitanicDataset/TitanicPassengersTrainData.csv").t
 
     import spark.implicits._ // Needed for Encoders for the Passenger case class
     // Define a way to read data into our Passenger class from our CSV file
+    //自定义读取数据方式，按照id来
     val trainDataReader = DataReaders.Simple.csvCase[Passenger](
       path = Option(csvFilePath),
       key = _.id.toString
     )
 
     // Define a new workflow and attach our data reader
-    val workflow =
-      new OpWorkflow()
+    val workflow =      new OpWorkflow()
         .setResultFeatures(survived, rawPrediction, prob, prediction)
         .setReader(trainDataReader)
 
