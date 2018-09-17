@@ -1,33 +1,3 @@
-/*
- * Copyright (c) 2017, Salesforce.com, Inc.
- * All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions are met:
- *
- * 1. Redistributions of source code must retain the above copyright notice,
- * this list of conditions and the following disclaimer.
- *
- * 2. Redistributions in binary form must reproduce the above copyright notice,
- * this list of conditions and the following disclaimer in the documentation
- * and/or other materials provided with the distribution.
- *
- * 3. Neither the name of Salesforce.com nor the names of its contributors may
- * be used to endorse or promote products derived from this software without
- * specific prior written permission.
- *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
- * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
- * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
- * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
- * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
- * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
- * POSSIBILITY OF SUCH DAMAGE.
- */
 
 package org.lzy.transmogriAI
 
@@ -35,7 +5,7 @@ import com.salesforce.op._
 import com.salesforce.op.evaluators.Evaluators
 import com.salesforce.op.features.{Feature, FeatureBuilder, FeatureLike}
 import com.salesforce.op.features.types._
-import com.salesforce.op.readers.DataReaders
+import com.salesforce.op.readers.{CSVProductReader, DataReaders}
 import com.salesforce.op.stages.impl.classification.BinaryClassificationModelSelector
 import com.salesforce.op.stages.impl.classification.ClassificationModelsToTry._
 import org.apache.spark.SparkConf
@@ -120,7 +90,7 @@ spark.sparkContext.setLogLevel("warn")
     /////////////////////////////////////////////////////////////////////////////////
 
     // Do some basic feature engineering using knowledge of the underlying dataset
-      //使用已有认知对目前特征做一些基本特征工程，大家好
+      //使用已有认知对目前特征做一些基本特征工程，
     val familySize = sibSp + parCh + 1  //家庭人数，+1是本人
     val estimatedCostOfTickets = familySize * fare //总票价
     val pivotedSex = sex.pivot() //行转列
@@ -160,7 +130,7 @@ spark.sparkContext.setLogLevel("warn")
     import spark.implicits._ // Needed for Encoders for the Passenger case class
     // Define a way to read data into our Passenger class from our CSV file
     //自定义读取数据方式，按照id来
-    val trainDataReader = DataReaders.Simple.csvCase[Passenger](
+    val trainDataReader:CSVProductReader[Passenger] = DataReaders.Simple.csvCase[Passenger](
       path = Option(csvFilePath),
       key = _.id.toString
     )

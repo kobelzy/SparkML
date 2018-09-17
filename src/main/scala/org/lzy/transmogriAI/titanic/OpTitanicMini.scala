@@ -7,7 +7,7 @@ import com.salesforce.op.readers.DataReaders
 import com.salesforce.op.stages.impl.classification._
 import org.apache.log4j.{Level, LogManager}
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SparkSession}
 
 /**
  * A minimal Titanic Survival example with TransmogrifAI
@@ -32,16 +32,18 @@ object OpTitanicMini {
 
   def main(args: Array[String]): Unit = {
     LogManager.getLogger("com.salesforce.op").setLevel(Level.ERROR)
-    implicit val spark = SparkSession.builder.config(new SparkConf()).getOrCreate()
+    implicit val spark = SparkSession.builder.config(new SparkConf())
+        .master("local[*]")
+      .getOrCreate()
     import spark.implicits._
 
     // Read Titanic data as a DataFrame
 
 //    val pathToData = Option(args(0))
 //    D:\WorkSpace\ScalaWorkSpace\SparkML\src\main\resources\TitanicDataset\TitanicPassengersTrainData.csv
-    val pathToData=Some(System.getenv("TitanicDataset/TitanicPassengersTrainData.csv"))
-    println(pathToData)
-    val passengersData = DataReaders.Simple.csvCase[Passenger](pathToData, key = _.id.toString).readDataset().toDF()
+    val pathToData=Some(ClassLoader.getSystemResource("TitanicDataset/TitanicPassengersTrainData.csv").toString)
+    println(pathToData.get)
+    val passengersData:DataFrame = DataReaders.Simple.csvCase[Passenger](pathToData, key = _.id.toString).readDataset().toDF()
 
     // Automated feature engineering
     val (survived, features) = FeatureBuilder.fromDataFrame[RealNN](passengersData, response = "survived")
