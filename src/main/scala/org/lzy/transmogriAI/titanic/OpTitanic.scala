@@ -33,12 +33,12 @@ package org.lzy.transmogriAI.titanic
 
 import com.salesforce.op._
 import com.salesforce.op.evaluators.Evaluators
-import com.salesforce.op.readers.DataReaders
+import com.salesforce.op.readers.{CSVProductReader, DataReaders}
 import com.salesforce.op.stages.impl.classification.ClassificationModelsToTry._
 import com.salesforce.op.stages.impl.classification._
 import com.salesforce.op.stages.impl.tuning.DataSplitter
 import com.salesforce.op.utils.kryo.OpKryoRegistrator
-import org.lzy.transmogriAI.Passenger
+import org.lzy.transmogriAI.titanic.OpTitanicMini.Passenger
 
 /**
  * TransmogrifAI example classification app using the Titanic dataset
@@ -48,13 +48,14 @@ object OpTitanic extends OpAppWithRunner with TitanicFeatures {
   ////////////////////////////////////////////////////////////////////////////////
   // READER DEFINITION
   /////////////////////////////////////////////////////////////////////////////////
-
+  val csvFilePath=
+  //System.load().getenv("TitanicDataset/TitanicPassengersTrainData.csv")
+  ClassLoader.getSystemResource("TitanicDataset/TitanicPassengersTrainData.csv").toString
   val randomSeed = 112233
-//  val simpleReader = DataReaders.Simple.csvCase[Passenger](
-//    val path=Some(""),
-//    val schema = Passenger.toString(),""
-////  ,  key = _.getPassengerId.toString
-//  )
+  val simpleReader =  DataReaders.Simple.csvCase[Passenger](
+    path = Option(csvFilePath),
+    key = _.id.toString
+  )
 //val simpleReader = DataReaders.Simple.csv[Passenger](Some(""),Passenger.toString())
   ////////////////////////////////////////////////////////////////////////////////
   // WORKFLOW DEFINITION
