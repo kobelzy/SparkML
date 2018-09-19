@@ -73,6 +73,7 @@ object OpTitanic extends OpAppWithRunner with TitanicFeatures {
   val splitter = DataSplitter(seed = randomSeed, reserveTestFraction = 0.1)
   val (pred, raw, prob) = BinaryClassificationModelSelector
     .withCrossValidation(splitter = Option(splitter), seed = randomSeed)
+
     .setLogisticRegressionRegParam(0.05, 0.1)
     .setLogisticRegressionElasticNetParam(0.01)
     .setRandomForestMaxDepth(5, 10)
