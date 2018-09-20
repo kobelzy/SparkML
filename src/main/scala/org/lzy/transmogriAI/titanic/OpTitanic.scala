@@ -52,10 +52,10 @@ object OpTitanic extends OpAppWithRunner with TitanicFeatures {
   //System.load().getenv("TitanicDataset/TitanicPassengersTrainData.csv")
   ClassLoader.getSystemResource("TitanicDataset/TitanicPassengersTrainData.csv").toString
   val randomSeed = 112233
-  val simpleReader =  DataReaders.Simple.csvCase[Passenger](
-    path = Option(csvFilePath),
-    key = _.id.toString
-  )
+//  val simpleReader =  DataReaders.Simple.csvCase[Passenger](
+//    path = Option(csvFilePath),
+//    key = _.id.toString
+//  )
 //val simpleReader = DataReaders.Simple.csv[Passenger](Some(""),Passenger.toString())
   ////////////////////////////////////////////////////////////////////////////////
   // WORKFLOW DEFINITION

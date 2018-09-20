@@ -33,11 +33,12 @@ package org.lzy.transmogriAI.iris
 
 import com.esotericsoftware.kryo.Kryo
 import com.salesforce.op.utils.kryo.OpKryoRegistrator
+import org.lzy.transmogriAI.iris.OpIris.Iris
 
 class IrisKryoRegistrator extends OpKryoRegistrator {
 
   override def registerCustomClasses(kryo: Kryo): Unit = {
-    doAvroRegistration[Iris](kryo)
+//    doAvroRegistration[Iris](kryo)
   }
 
 }

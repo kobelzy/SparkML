@@ -45,6 +45,18 @@ import org.apache.spark.sql.{Dataset, SparkSession}
  */
 object OpIris extends OpAppWithRunner with IrisFeatures {
 
+
+  case class Iris
+  (
+    id: Long,
+    sepalLength: Double,
+    sepalWidth: Double,
+    petalLength: Double,
+    petalWidth: Double,
+    class$: String
+  )
+
+
   override def kryoRegistrator: Class[_ <: OpKryoRegistrator] = classOf[IrisKryoRegistrator]
 
   ////////////////////////////////////////////////////////////////////////////////
@@ -53,14 +65,18 @@ object OpIris extends OpAppWithRunner with IrisFeatures {
 
   val randomSeed = 42
 
-  val irisReader = new CustomReader[Iris](key = _.getID.toString){
+  val irisReader = new CustomReader[Iris](key = _.id.toString){
     def readFn(params: OpParams)(implicit spark: SparkSession): Either[RDD[Iris], Dataset[Iris]] = {
       val path = getFinalReadPath(params)
       val myFile = spark.sparkContext.textFile(path)
 
       Left(myFile.filter(_.nonEmpty).zipWithIndex.map { case (x, number) =>
         val words = x.split(",")
-        new Iris(number.toInt, words(0).toDouble, words(1).toDouble, words(2).toDouble, words(3).toDouble, words(4))
+        new Iris(number.toInt, words(0).toDouble,
+          words(1).toDouble,
+          words(2).toDouble,
+          words(3).toDouble,
+          words(4))
       })
     }
   }
