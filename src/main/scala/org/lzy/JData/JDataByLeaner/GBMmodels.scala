@@ -10,7 +10,7 @@ import org.apache.spark.sql.DataFrame
   * Created by Administrator on 2018/6/25.
   */
 object GBMmodels {
-
+/*
   def getS2Prediction(train:DataFrame,labelCol:String,predictCol:String,round:Int)={
     val gbmr:GBMRegressor = new GBMRegressor
 
@@ -51,5 +51,5 @@ object GBMmodels {
 
     tvModel
 
-  }
+  }*/
 }
