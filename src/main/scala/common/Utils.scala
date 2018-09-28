@@ -26,7 +26,15 @@ class Utils(spark: SparkSession) {
         data
     }
 
-
+    def readToCSV(path: String,sep:String=","): DataFrame = {
+        val data = spark.read.option("header", "true")
+          .option("nullValue", "NA")
+          .option("inferSchema", "true")
+          .option("sep",sep)
+          .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
+          .csv(path)
+        data
+    }
 /***
  * 功能实现:将df持久化为csv到指定路径中
  *
@@ -35,7 +43,7 @@ class Utils(spark: SparkSession) {
  * Param: [df,path]
  * Return: void
  */
-    def writeToCSV(df:DataFrame,path:String)={7777777654321
+    def writeToCSV(df:DataFrame,path:String)={
         df.coalesce(1).write.option("header", "true")
                 .mode(SaveMode.Overwrite)
                 .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
