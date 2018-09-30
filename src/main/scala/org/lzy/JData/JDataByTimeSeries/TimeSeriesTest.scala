@@ -1,12 +1,13 @@
 package org.lzy.JData.JDataByTimeSeries
 
-import com.cloudera.sparkts.models.{ARIMA, ARIMAModel, GARCH}
-import com.cloudera.sparkts.{DateTimeIndex, DayFrequency, TimeSeriesRDD, UniformDateTimeIndex}
 import java.sql.Timestamp
 import java.time.{ZoneId, ZonedDateTime}
+
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
+import org.spark_project.dmg.pmml.ARIMA
+
 import scala.collection.mutable
 
 /**
@@ -29,7 +30,7 @@ spark.sparkContext.setLogLevel("WARN")
 
 
 
-
+/*
 
 
     val df=spark.createDataFrame(arr).toDF("time","key","value")
@@ -94,5 +95,6 @@ spark.sparkContext.setLogLevel("WARN")
     /** *预测出后N个的值 *****/
     val forecast = arimaAndVectorRdd.map { case (arimaModel, denseVector) => arimaModel.forecast(denseVector, predictedN)    }
     forecast
+  */
   }
 }

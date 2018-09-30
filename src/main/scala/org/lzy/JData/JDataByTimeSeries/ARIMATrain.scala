@@ -1,12 +1,15 @@
+/*
 package org.lzy.JData.JDataByTimeSeries
 
-import com.cloudera.sparkts.models.{ARIMA, ARIMAModel}
+import com.cloudera.sparkts.models.ARIMAModel
 import com.cloudera.sparkts.{DateTimeIndex, DayFrequency, TimeSeriesRDD, UniformDateTimeIndex}
 import java.time.format.DateTimeFormatter
 import java.time.{ZoneId, ZonedDateTime}
+
 import org.apache.spark.mllib.linalg.{Vector, Vectors}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.spark_project.dmg.pmml.ARIMA
 
 /**
   * Auther: lzy
@@ -97,3 +100,4 @@ object ARIMATrain{
 class ARIMATrain {
 
 }
+*/
