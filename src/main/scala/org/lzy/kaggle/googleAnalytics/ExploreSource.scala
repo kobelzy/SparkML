@@ -2,7 +2,6 @@ package scala.org.lzy.kaggle.googleAnalytics
 
 import common.Utils
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.sql.functions._
 
 /**
   * Created by Administrator on 2018/10/1.
@@ -29,10 +28,12 @@ object ExploreSource {
     //      .select($"totals_transactionRevenue").distinct().count()
     //    println(train_df)
 
+    test.select("device_isMobile").distinct().show(false)
+    test.select("trafficSource_isTrueDirect").distinct().show(false)
 
-    test.columns.foreach(column => {
-      println(column + ":")
-      println(test.filter(col(column).isNull).count())
-    })
+    //    test.columns.foreach(column => {
+    //      println(column + ":")
+    //      println(test.filter(col(column).isNull).count())
+    //    })
   }
 }
