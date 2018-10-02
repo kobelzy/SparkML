@@ -7,11 +7,12 @@ object CaseClass {
                        channelGrouping: String,
                        //访问商店的时间，20171016
                        date: String,
-                       //用户的唯一标识符
+                       //用户的唯一标识符，最终用这个做预测的id
                        fullVisitorId: String,
                        //访问商店行为的唯一识别符，有大约1k条的重复，所以不是唯一
                        sessionId: String,
-                       visitId: Int,
+                       //会话的标志服，对用户而言是唯一的，全局唯一的应该使用fullVisitorId和visitId的组合
+                       visitId: String,
                        //会话的号码，如果是第一个会话，使用1，大部分为1，有极端值，最大395
                        visitNumber: Double,
                        //时间戳，毫秒值
@@ -70,7 +71,7 @@ object CaseClass {
 
                        //会话流量来源的相关信息，json字符串，
                        // {"campaign": "(not set)", "source": "google", "medium": "organic", "keyword": "(not provided)", "adwordsClickInfo": {"criteriaParameters": "not available in demo dataset"}, "isTrueDirect": true}
-                       //会话的标志服，对用户而言是唯一的，全局唯一的应该使用fullVisitorId和visitId的组合
+
                        //广告目录
                        trafficSource_adContent: Option[String],
                        //
