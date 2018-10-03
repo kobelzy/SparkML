@@ -2,13 +2,13 @@ package scala.org.lzy.kaggle.googleAnalytics
 
 import java.text.SimpleDateFormat
 
-import com.salesforce.op.{OpWorkflow, _}
 import com.salesforce.op.evaluators.Evaluators
 import com.salesforce.op.features.types._
 import com.salesforce.op.features.{FeatureBuilder, FeatureLike}
 import com.salesforce.op.readers.DataReaders
 import com.salesforce.op.stages.impl.regression.RegressionModelSelector
 import com.salesforce.op.stages.impl.regression.RegressionModelsToTry._
+import com.salesforce.op.{OpWorkflow, _}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.lzy.kaggle.googleAnalytics.CaseClass.Customer
@@ -17,7 +17,8 @@ import org.lzy.kaggle.googleAnalytics.CaseClass.Customer
   * Created by Administrator on 2018/10/1.
   */
 object GASimpleWithTransmogriAI {
-  val basePath = "E:/Dataset/GoogleAnalytics/"
+  //  val basePath = "E:/Dataset/GoogleAnalytics/"
+  val basePath = "hdfs://10.95.3.172:9000/user/lzy/GoogleAnalyse/"
   val sdf = new SimpleDateFormat("yyyyMMdd")
 
   def main(args: Array[String]): Unit = {
@@ -30,7 +31,7 @@ object GASimpleWithTransmogriAI {
     val testPath = basePath + "source/extracted_fields_test.csv"
     // Set up a SparkSession as normal
     val conf = new SparkConf().setAppName(this.getClass.getSimpleName.stripSuffix("$"))
-      .setMaster("local[*]")
+    //      .setMaster("local[*]")
 
     implicit val spark = SparkSession.builder.config(conf).getOrCreate()
     spark.sparkContext.setLogLevel("warn")
@@ -38,19 +39,19 @@ object GASimpleWithTransmogriAI {
     //基础特征
     /////////////////////////////////////////////////////////////////////////////////
     val channelGrouping = FeatureBuilder.PickList[Customer].extract(_.channelGrouping.toPickList).asPredictor
-    val date = FeatureBuilder.Date[Customer].extract(v => sdf.parse(v.date).getTime.toDate).asPredictor
+    val date = FeatureBuilder.Date[Customer].extract(v => v.date.map(sdf.parse(_).getTime).toDate).asPredictor
 
     val fullVisitorId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
     val sessionId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
     val visitId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
 
     val visitNumber = FeatureBuilder.RealNN[Customer].extract(_.visitNumber.getOrElse(0d).toRealNN).asPredictor
-    val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => (v.visitStartTime * 1000).toDateTime).asPredictor
+    val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => v.visitStartTime.map(_ * 1000).toDateTime).asPredictor
 
 
     val device_browser = FeatureBuilder.PickList[Customer].extract(_.device_browser.toPickList).asPredictor
     val device_deviceCategory = FeatureBuilder.PickList[Customer].extract(_.device_deviceCategory.toPickList).asPredictor
-    val device_isMobile = FeatureBuilder.Binary[Customer].extract(_.device_isMobile.toBinary).asPredictor
+    val device_isMobile = FeatureBuilder.Binary[Customer].extract(_.device_isMobile.getOrElse(0d).toBinary).asPredictor
     val device_operatingSystem = FeatureBuilder.PickList[Customer].extract(_.device_operatingSystem.toPickList).asPredictor
 
 
@@ -64,7 +65,7 @@ object GASimpleWithTransmogriAI {
 
 
     val totals_bounces = FeatureBuilder.Real[Customer].extract(_.totals_bounces.toReal).asPredictor
-    val totals_hits = FeatureBuilder.RealNN[Customer].extract(_.totals_hits.toRealNN).asPredictor
+    val totals_hits = FeatureBuilder.Real[Customer].extract(_.totals_hits.toReal).asPredictor
     val totals_newVisits = FeatureBuilder.Real[Customer].extract(_.totals_newVisits.toReal).asPredictor
     val totals_pageviews = FeatureBuilder.Real[Customer].extract(_.totals_pageviews.toReal).asPredictor
 

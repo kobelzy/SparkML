@@ -6,7 +6,7 @@ object CaseClass {
                        //用户通过什么渠道进入商店，共8种，Organic站42%， social 25% 。。。
                        channelGrouping: String,
                        //访问商店的时间，20171016
-                       date: String,
+                       date: Option[String],
                        //用户的唯一标识符，最终用这个做预测的id
                        fullVisitorId: String,
                        //访问商店行为的唯一识别符，有大约1k条的重复，所以不是唯一
@@ -14,9 +14,9 @@ object CaseClass {
                        //会话的标志服，对用户而言是唯一的，全局唯一的应该使用fullVisitorId和visitId的组合
                        visitId: String,
                        //会话的号码，如果是第一个会话，使用1，大部分为1，有极端值，最大395
-                       visitNumber: Double,
+                       visitNumber: Option[Double],
                        //时间戳，毫秒值
-                       visitStartTime: Long,
+                       visitStartTime: Option[Long],
 
 
 
@@ -26,7 +26,7 @@ object CaseClass {
                        //通过什么方式访问、桌面还是移动
                        device_deviceCategory: String,
                        //是否是移动设备
-                       device_isMobile: Double,
+                       device_isMobile: Option[Double],
                        //操作系统
                        device_operatingSystem: String,
 
@@ -60,7 +60,7 @@ object CaseClass {
                        //被拒绝总次数
                        totals_bounces: Option[Double],
                        //单曲总数
-                       totals_hits: Double,
+                       totals_hits: Option[Double],
                        //新访问总数
                        totals_newVisits: Option[Double],
                        //网页浏览次数
