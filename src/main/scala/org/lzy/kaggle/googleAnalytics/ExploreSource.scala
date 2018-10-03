@@ -1,4 +1,4 @@
-package scala.org.lzy.kaggle.googleAnalytics
+package org.lzy.kaggle.googleAnalytics
 
 import common.Utils
 import org.apache.spark.sql.SparkSession
