@@ -46,18 +46,22 @@ import org.lzy.transmogriAI.Passenger
   * TransmogrifAI example classification app using the Titanic dataset
   */
 object OpTitanic extends OpAppWithRunner with TitanicFeatures {
-  implicit val spark = SparkSession.builder.config(new SparkConf()).getOrCreate()
-
+  implicit val spark = SparkSession.builder
+    .master("local[*]")
+    .config(new SparkConf()).getOrCreate()
+  val randomSeed = 112233L
   import spark.implicits._
   ////////////////////////////////////////////////////////////////////////////////
   // READER DEFINITION
   /////////////////////////////////////////////////////////////////////////////////
-
-  val randomSeed = 112233L
+  val csvFilePath = ClassLoader.getSystemResource("TransmogrifData/TitanicPassengersTrainData.csv").toString
+  //  val simpleReader = DataReaders.Simple.csvCase[Passenger](
+  ////    key = _.id.toString
+  //  )
   val simpleReader = DataReaders.Simple.csvCase[Passenger](
-//    key = _.id.toString
+    path = Option(csvFilePath),
+    key = _.id.toString
   )
-
   ////////////////////////////////////////////////////////////////////////////////
   // WORKFLOW DEFINITION
   /////////////////////////////////////////////////////////////////////////////////
@@ -72,17 +76,17 @@ object OpTitanic extends OpAppWithRunner with TitanicFeatures {
 
   // Automated model selection
   val lr = new OpLogisticRegression()
-  val rf = new OpRandomForestClassifier()
+  //  val rf = new OpRandomForestClassifier()
   val models = Seq(
     lr -> new ParamGridBuilder()
       .addGrid(lr.regParam, Array(0.05, 0.1))
       .addGrid(lr.elasticNetParam, Array(0.01))
-      .build(),
-    rf -> new ParamGridBuilder()
-      .addGrid(rf.maxDepth, Array(5, 10))
-      .addGrid(rf.minInstancesPerNode, Array(10, 20, 30))
-      .addGrid(rf.seed, Array(randomSeed))
       .build()
+    //    rf -> new ParamGridBuilder()
+    //      .addGrid(rf.maxDepth, Array(5, 10))
+    //      .addGrid(rf.minInstancesPerNode, Array(10, 20, 30))
+    //      .addGrid(rf.seed, Array(randomSeed))
+    //      .build()
   )
   val splitter = DataSplitter(seed = randomSeed, reserveTestFraction = 0.1)
   val prediction = BinaryClassificationModelSelector

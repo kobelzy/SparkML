@@ -14,7 +14,7 @@ trait TitanicFeatures extends Serializable {
 
   val sex = FeatureBuilder.PickList[Passenger].extract(d => Option(d.sex).map(_.toString).toPickList).asPredictor
 
-  val age = FeatureBuilder.Real[Passenger].extract(d => Option(Double.unbox(d.age)).toReal).asPredictor
+  val age = FeatureBuilder.Real[Passenger].extract(d => d.age.toReal).asPredictor
 
   val sibSp = FeatureBuilder.PickList[Passenger].extract(d => Option(d.sibSp).map(_.toString).toPickList).asPredictor
 
@@ -22,7 +22,7 @@ trait TitanicFeatures extends Serializable {
 
   val ticket = FeatureBuilder.PickList[Passenger].extract(d => Option(d.ticket).map(_.toString).toPickList).asPredictor
 
-  val fare = FeatureBuilder.Real[Passenger].extract(d => Option(Double.unbox(d.fare)).toReal).asPredictor
+  val fare = FeatureBuilder.Real[Passenger].extract(d => d.fare.toReal).asPredictor
 
   val cabin = FeatureBuilder.PickList[Passenger].extract(d => Option(d.cabin).map(_.toString).toPickList).asPredictor
 

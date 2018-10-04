@@ -21,9 +21,8 @@ spark-submit --master yarn-cluster --queue lzy \
 --executor-memory 7g \
 --driver-memory 3g \
 --executor-cores 3 \
---packages com.salesforce.transmogrifai:transmogrifai-features_2.11:0.3.4,com.salesforce.transmogrifai:transmogrifai-readers_2.11:0.3.4
---class scala.org.lzy.kaggle.googleAnalytics.GASimpleWithTransmogriAI SparkML.jar
- */
+--packages com.salesforce.transmogrifai:transmogrifai-core_2.11:0.4.0 \
+--class org.lzy.kaggle.googleAnalytics.GASimpleWithTransmogriAI SparkML.jar */
 /**
   * Created by Administrator on 2018/10/1.
   * spark-submit --master yarn-cluster --queue lzy \
@@ -47,9 +46,10 @@ object GASimpleWithTransmogriAI extends OpAppWithRunner {
   //基础特征
   /////////////////////////////////////////////////////////////////////////////////
   val channelGrouping = FeatureBuilder.PickList[Customer].extract(_.channelGrouping.toPickList).asPredictor
-
   implicit val spark = SparkSession.builder.config(conf).getOrCreate()
   spark.sparkContext.setLogLevel("warn")
+
+  import spark.implicits._
   val date = FeatureBuilder.Date[Customer].extract(v => v.date.map(sdf.parse(_).getTime).toDate).asPredictor
   val fullVisitorId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
   val sessionId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
@@ -84,7 +84,6 @@ object GASimpleWithTransmogriAI extends OpAppWithRunner {
   /////////////////////////////////////////////////////////////////////////////////
   val customerFeatures = Seq(channelGrouping, date, fullVisitorId, sessionId, visitId, visitNumber, visitStartTime, device_browser, device_deviceCategory, device_isMobile, device_operatingSystem, geoNetwork_city, geoNetwork_continent, geoNetwork_country, geoNetwork_metro, geoNetwork_networkDomain, geoNetwork_region, geoNetwork_subContinent, totals_bounces, totals_hits, totals_newVisits, totals_pageviews, trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_keyword, trafficSource_medium, trafficSource_referralPath, trafficSource_source)
     .transmogrify()
-
   ////////////////////////////////////////////////////////////////////////////////
   //统计特征
   /////////////////////////////////////////////////////////////////////////////////
@@ -92,54 +91,41 @@ object GASimpleWithTransmogriAI extends OpAppWithRunner {
   //定义测试模型集
   /////////////////////////////////////////////////////////////////////////////////
   val randomSeed = 112233L
-
   ////////////////////////////////////////////////////////////////////////////////
   //数据泄露及空值处理
   /////////////////////////////////////////////////////////////////////////////////
   val prediction: FeatureLike[Prediction] =
-    RegressionModelSelector
-      //      .withCrossValidation()
-      .withCrossValidation(
-      dataSplitter = Some(DataSplitter(seed = randomSeed)), seed = randomSeed,
-      modelTypesToUse = Seq(OpGBTRegressor, OpRandomForestRegressor))
-      //RandomForestRegression, LinearRegression, GBTRegression
-      .setInput(totals_transactionRevenue, customerFeatures).getOutput()
+  RegressionModelSelector
+    //      .withCrossValidation()
+    .withCrossValidation(
+    dataSplitter = Some(DataSplitter(seed = randomSeed)), seed = randomSeed,
+    modelTypesToUse = Seq(OpGBTRegressor, OpRandomForestRegressor))
+    //RandomForestRegression, LinearRegression, GBTRegression
+    .setInput(totals_transactionRevenue, customerFeatures).getOutput()
   val evaluator = Evaluators.Regression()
     .setLabelCol(totals_transactionRevenue)
     .setPredictionCol(prediction)
   val trainDataReader = DataReaders.Simple.csvCase[Customer](path = Option(trainPath), key = v => v.fullVisitorId + "_" + v.sessionId)
+  val workflow: OpWorkflow = new OpWorkflow()
+    .setResultFeatures(prediction)
+  //  val scoreingReader = DataReaders.Simple.csvCase[Customer](path = Option(trainPath), key = v => v.fullVisitorId + "_" + v.sessionId)
+
   ////////////////////////////////////////////////////////////////////////////////
   // WORKFLOW
   /////////////////////////////////////////////////////////////////////////////////
-  import spark.implicits._
-
-  val workflow = new OpWorkflow()
-    .setResultFeatures(prediction)
 
   override def kryoRegistrator: Class[_ <: OpKryoRegistrator] = classOf[CustomerKryoRegistrator]
 
-  //      .setReader(trainDataReader)
-  def runner(opParams: OpParams) =
+  //          .setReader(trainDataReader)
+
+  override def runner(opParams: OpParams): OpWorkflowRunner =
     new OpWorkflowRunner(
       workflow = workflow,
       trainingReader = trainDataReader,
-      //        scoringReader=scoringReader,
+      scoringReader = trainDataReader,
       evaluationReader = Option(trainDataReader),
       evaluator = Option(evaluator),
       scoringEvaluator = None,
       featureToComputeUpTo = Option(customerFeatures)
     )
-
-
-  //    val fittedWorkflow = workflow.train()
-  //    println(s"Summary: ${fittedWorkflow.summary()}")
-  //
-  //    // Manifest the result features of the workflow
-  //    println("Scoring the model")
-  //    val (dataframe, metrics) = fittedWorkflow.scoreAndEvaluate(evaluator = evaluator)
-  //
-  //    println("Transformed dataframe columns:")
-  //    dataframe.columns.foreach(println)
-  //    println("Metrics:")
-  //    println(metrics)
 }
