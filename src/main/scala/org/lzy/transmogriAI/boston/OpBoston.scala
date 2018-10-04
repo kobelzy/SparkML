@@ -3,19 +3,19 @@ package org.lzy.transmogriAI.boston
 import com.salesforce.op._
 import com.salesforce.op.evaluators.Evaluators
 import com.salesforce.op.readers.CustomReader
-import com.salesforce.op.stages.impl.regression.{OpGBTRegressor, RegressionModelSelector}
+import com.salesforce.op.stages.impl.regression.RegressionModelsToTry.OpLinearRegression
+import com.salesforce.op.stages.impl.regression._
 import com.salesforce.op.stages.impl.tuning.DataSplitter
 import com.salesforce.op.utils.kryo.OpKryoRegistrator
 import org.apache.spark.SparkConf
-import org.apache.spark.ml.tuning.ParamGridBuilder
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, SparkSession}
+
 
 /**
   * TransmogrifAI Regression example on the Boston Dataset
   */
 object OpBoston extends OpAppWithRunner with BostonFeatures {
-
   val randomSeed = 112233L
   implicit val spark = SparkSession.builder
     .master("local[*]")
@@ -41,31 +41,33 @@ object OpBoston extends OpAppWithRunner with BostonFeatures {
       Left(test)
     }
   }
-  //val lr=new OpLinearRegression()
-  val gbdt = new OpGBTRegressor()
-  //    val rf = new OpRandomForestRegressor()
-  val models = Seq(
-    //  lr->new ParamGridBuilder()
-    //    .addGrid(lr.maxIter,Array(50))
-    //      .addGrid(lr.epsilon,Array(1.0))
-    //    .build()
-    gbdt -> new ParamGridBuilder()
-      //      .addGrid(gbdt.regParam, Array(0.05, 0.1))
-      //      .addGrid(gbdt.elasticNetParam, Array(0.01))
-      .build()
-    //        rf -> new ParamGridBuilder()
-    //          .addGrid(rf.maxDepth, Array(5, 10))
-    //          .addGrid(rf.minInstancesPerNode, Array(10, 20, 30))
-    //          .addGrid(rf.seed, Array(randomSeed))
-    //          .build()
-  )
+  //  val lr=new OpLinearRegression()
+  //  val gbdt = new OpGBTRegressor()
+  //      val rf = new OpRandomForestRegressor()
+  //  val models = Seq(
+  //      lr->new ParamGridBuilder()
+  //        .addGrid(lr.maxIter,Array(50))
+  //          .addGrid(lr.epsilon,Array(1.0))
+  //        .build()
+  //    gbdt -> new ParamGridBuilder()
+  //            .addGrid(gbdt.seed, Array(randomSeed))
+  //            .addGrid(gbdt.elasticNetParam, Array(0.01))
+  //      .build()
+  //            rf -> new ParamGridBuilder()
+  //              .addGrid(rf.maxDepth, Array(5, 10))
+  //              .addGrid(rf.minInstancesPerNode, Array(10, 20, 30))
+  //              .addGrid(rf.seed, Array(randomSeed))
+  //              .build()
+  //  )
 
   val houseFeatures = Seq(crim, zn, indus, chas, nox, rm, age, dis, rad, tax, ptratio, b, lstat).transmogrify()
+  val splitter = DataSplitter(seed = randomSeed, reserveTestFraction = 0.1)
+
   val prediction = RegressionModelSelector
-    .withCrossValidation(
-      dataSplitter = Some(DataSplitter(seed = randomSeed)), seed = randomSeed
-      //      ,modelTypesToUse = Seq(OpGBTRegressor, OpRandomForestRegressor)
-      , modelsAndParameters = models
+    .withTrainValidationSplit(
+      dataSplitter = Some(splitter), seed = randomSeed
+      , modelTypesToUse = Seq(OpLinearRegression)
+      //      , modelsAndParameters = models
     )
     .setInput(medv, houseFeatures)
     .getOutput()
