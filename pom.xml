@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xmlns="http://maven.apache.org/POM/4.0.0"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
@@ -21,14 +21,14 @@
         <mybatis.version>3.2.1</mybatis.version>
         <mysql.connector.java.version>5.1.41</mysql.connector.java.version>
         <fastjson.version>1.2.30</fastjson.version>
-        <transmogrifai.version>0.3.4</transmogrifai.version>
+        <transmogrifai.version>0.4.0</transmogrifai.version>
     </properties>
 
     <dependencies>
         <dependency>
-        <groupId>org.scala-lang</groupId>
-        <artifactId>scala-library</artifactId>
-        <version>${scala.version}</version>
+            <groupId>org.scala-lang</groupId>
+            <artifactId>scala-library</artifactId>
+            <version>${scala.version}</version>
         </dependency>
         <!--mlib自带了jackson2.6.5的包-->
         <dependency>
@@ -36,23 +36,17 @@
             <artifactId>spark-mllib_${scala.tools.version}</artifactId>
             <version>${spark.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.cloudera.sparkts</groupId>
-            <artifactId>sparkts</artifactId>
-            <version>0.4.1</version>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/com.github.hirofumi/xgboost4j-spark -->
         <!--<dependency>-->
-            <!--<groupId>com.github.hirofumi</groupId>-->
-            <!--<artifactId>xgboost4j-spark_2.11</artifactId>-->
-            <!--<version>0.7.2-p1</version>-->
+        <!--<groupId>com.cloudera.sparkts</groupId>-->
+        <!--<artifactId>sparkts</artifactId>-->
+        <!--<version>0.4.1</version>-->
         <!--</dependency>-->
 
+
         <!--<dependency>-->
-            <!--<groupId>ml.dmlc</groupId>-->
-            <!--<artifactId>xgboost4j</artifactId>-->
-            <!--<version>0.7</version>-->
+        <!--<groupId>ml.dmlc</groupId>-->
+        <!--<artifactId>xgboost4j</artifactId>-->
+        <!--<version>0.7</version>-->
         <!--</dependency>-->
 
         <dependency>
@@ -64,69 +58,66 @@
         <!-- https://mvnrepository.com/artifact/salesforce/TransmogrifAI -->
         <!--maven仓库添加地址-->
         <!--<mirror>-->
-            <!--<id>alimaven</id>-->
-            <!--<name>aliyun maven</name>-->
-            <!--<url>https://dl.bintray.com/spark-packages/maven/</url>-->
-            <!--<mirrorOf>central</mirrorOf>-->
+        <!--<id>alimaven</id>-->
+        <!--<name>aliyun maven</name>-->
+        <!--<url>https://dl.bintray.com/spark-packages/maven/</url>-->
+        <!--<mirrorOf>central</mirrorOf>-->
         <!--</mirror>-->
         <!--<dependency>-->
-            <!--<groupId>salesforce</groupId>-->
-            <!--<artifactId>TransmogrifAI</artifactId>-->
-            <!--<version>${transmogrifai.version}</version>-->
+        <!--<groupId>salesforce</groupId>-->
+        <!--<artifactId>TransmogrifAI</artifactId>-->
+        <!--<version>${transmogrifai.version}</version>-->
         <!--</dependency>-->
 
-        <dependency>
-            <groupId>com.salesforce.transmogrifai</groupId>
-            <artifactId>transmogrifai-features_2.11</artifactId>
-            <version>${transmogrifai.version}</version>
-        </dependency>
+        <!--<dependency>-->
+        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
+        <!--<artifactId>transmogrifai-features_2.11</artifactId>-->
+        <!--<version>${transmogrifai.version}</version>-->
+        <!--</dependency>-->
 
-        <!-- https://mvnrepository.com/artifact/com.salesforce.transmogrifai/transmogrifai-readers -->
-        <dependency>
-            <groupId>com.salesforce.transmogrifai</groupId>
-            <artifactId>transmogrifai-readers_2.11</artifactId>
-            <version>${transmogrifai.version}</version>
-        </dependency>
-        <!-- https://mvnrepository.com/artifact/com.salesforce.transmogrifai/transmogrifai-core -->
+        <!--<dependency>-->
+        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
+        <!--<artifactId>transmogrifai-readers_2.11</artifactId>-->
+        <!--<version>${transmogrifai.version}</version>-->
+        <!--</dependency>-->
         <dependency>
             <groupId>com.salesforce.transmogrifai</groupId>
             <artifactId>transmogrifai-core_2.11</artifactId>
             <version>${transmogrifai.version}</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/com.salesforce.transmogrifai/transmogrifai-models -->
-        <dependency>
-            <groupId>com.salesforce.transmogrifai</groupId>
-            <artifactId>transmogrifai-models_2.11</artifactId>
-            <version>${transmogrifai.version}</version>
-        </dependency>
-
         <!--<dependency>-->
             <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-            <!--<artifactId>transmogrifai-cli_2.11</artifactId>-->
-            <!--<version>${transmogrifai.version}</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-            <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-            <!--<artifactId>transmogrifai-utils_2.11</artifactId>-->
-            <!--<version>${transmogrifai.version}</version>-->
+        <!--<artifactId>transmogrifai-models_2.11</artifactId>-->
+        <!--<version>${transmogrifai.version}</version>-->
         <!--</dependency>-->
 
-        <dependency>
-            <groupId>com.salesforce.transmogrifai</groupId>
-            <artifactId>language-detector</artifactId>
-            <version>0.0.1</version>
-        </dependency>
-
         <!--<dependency>-->
-            <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-            <!--<artifactId>transmogrifai-templates_2.11</artifactId>-->
-            <!--<version>${transmogrifai.version}</version>-->
+        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
+        <!--<artifactId>transmogrifai-cli_2.11</artifactId>-->
+        <!--<version>${transmogrifai.version}</version>-->
         <!--</dependency>-->
         <!--<dependency>-->
-            <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-            <!--<artifactId>transmogrifai-testkit_2.11</artifactId>-->
-            <!--<version>${transmogrifai.version}</version>-->
+        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
+        <!--<artifactId>transmogrifai-utils_2.11</artifactId>-->
+        <!--<version>${transmogrifai.version}</version>-->
+        <!--</dependency>-->
+
+        <!--<dependency>-->
+        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
+        <!--<artifactId>language-detector</artifactId>-->
+        <!--<version>0.0.1</version>-->
+        <!--</dependency>-->
+
+        <!--<dependency>-->
+        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
+        <!--<artifactId>transmogrifai-templates_2.11</artifactId>-->
+        <!--<version>${transmogrifai.version}</version>-->
+        <!--</dependency>-->
+        <!--<dependency>-->
+        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
+        <!--<artifactId>transmogrifai-testkit_2.11</artifactId>-->
+        <!--<version>${transmogrifai.version}</version>-->
         <!--</dependency>-->
 
 
