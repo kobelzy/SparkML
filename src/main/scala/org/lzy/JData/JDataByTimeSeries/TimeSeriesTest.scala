@@ -1,14 +1,8 @@
 package org.lzy.JData.JDataByTimeSeries
 
 import java.sql.Timestamp
-import java.time.{ZoneId, ZonedDateTime}
 
-import org.apache.spark.mllib.linalg.{Vector, Vectors}
-import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.SparkSession
-import org.spark_project.dmg.pmml.ARIMA
-
-import scala.collection.mutable
 
 /**
   * Created by Administrator on 2018/5/22.

@@ -1,7 +1,6 @@
 package org.lzy.JData.JDataByTimeSeries
 
 import org.apache.spark.mllib.linalg.Vectors
-import org.spark_project.dmg.pmml.ARIMA
 /**
   * Created by Administrator on 2018/5/27.
   */
