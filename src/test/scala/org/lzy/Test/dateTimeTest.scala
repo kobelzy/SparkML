@@ -2,10 +2,9 @@ package org.lzy.Test
 
 import java.sql.Timestamp
 import java.text.SimpleDateFormat
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import java.time.{ZoneId, ZonedDateTime}
 
-import com.cloudera.sparkts.{DateTimeIndex, DayFrequency, UniformDateTimeIndex}
 
 /**
   * Auther: lzy
@@ -22,10 +21,10 @@ val formater=DateTimeFormatter.ofPattern("yyyy-MM-dd")
         println(timestampe)
         val zoneId = ZoneId.systemDefault()
 
-        val forcastTimeIndex:UniformDateTimeIndex=DateTimeIndex.uniformFromInterval(
-            ZonedDateTime.of(2017, 5, 1, 0, 0, 0, 0,zoneId),
-            ZonedDateTime.of(2017, 5, 31, 0, 0, 0, 0, zoneId),
-            new DayFrequency(1))
+      /*        val forcastTimeIndex:UniformDateTimeIndex=DateTimeIndex.uniformFromInterval(
+                  ZonedDateTime.of(2017, 5, 1, 0, 0, 0, 0,zoneId),
+                  ZonedDateTime.of(2017, 5, 31, 0, 0, 0, 0, zoneId),
+                  new DayFrequency(1))*/
 //        val forcastTimeArr=forcastTimeIndex.toZonedDateTimeArray()
 //                .map(date=>{
 //                    date.format(formater)
