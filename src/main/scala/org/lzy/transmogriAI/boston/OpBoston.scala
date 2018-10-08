@@ -7,9 +7,12 @@ import com.salesforce.op.stages.impl.regression.RegressionModelsToTry.OpLinearRe
 import com.salesforce.op.stages.impl.regression._
 import com.salesforce.op.stages.impl.tuning.DataSplitter
 import com.salesforce.op.utils.kryo.OpKryoRegistrator
+import common.SparkUtil
 import org.apache.spark.SparkConf
+import org.apache.spark.ml.tuning.ParamGridBuilder
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Dataset, SparkSession}
+import org.slf4j.impl.Log4jLoggerFactory
 
 
 /**
@@ -17,9 +20,9 @@ import org.apache.spark.sql.{Dataset, SparkSession}
   */
 object OpBoston extends OpAppWithRunner with BostonFeatures {
   val randomSeed = 112233L
-  implicit val spark = SparkSession.builder
-    .master("local[*]")
-    .config(new SparkConf()).getOrCreate()
+
+  implicit val spark=SparkUtil.getSpark()
+
   ////////////////////////////////////////////////////////////////////////////////
   // READERS DEFINITION
   /////////////////////////////////////////////////////////////////////////////////
@@ -41,14 +44,13 @@ object OpBoston extends OpAppWithRunner with BostonFeatures {
       Left(test)
     }
   }
-  //  val lr=new OpLinearRegression()
-  //  val gbdt = new OpGBTRegressor()
-  //      val rf = new OpRandomForestRegressor()
-  //  val models = Seq(
-  //      lr->new ParamGridBuilder()
-  //        .addGrid(lr.maxIter,Array(50))
-  //          .addGrid(lr.epsilon,Array(1.0))
-  //        .build()
+    val lr=new OpLinearRegression()
+    val gbdt = new OpGBTRegressor()
+        val rf = new OpRandomForestRegressor()
+    val models = Seq(
+        lr->new ParamGridBuilder()
+          .addGrid(lr.maxIter,Array(50))
+          .build()
   //    gbdt -> new ParamGridBuilder()
   //            .addGrid(gbdt.seed, Array(randomSeed))
   //            .addGrid(gbdt.elasticNetParam, Array(0.01))
@@ -58,7 +60,7 @@ object OpBoston extends OpAppWithRunner with BostonFeatures {
   //              .addGrid(rf.minInstancesPerNode, Array(10, 20, 30))
   //              .addGrid(rf.seed, Array(randomSeed))
   //              .build()
-  //  )
+    )
 
   val houseFeatures = Seq(crim, zn, indus, chas, nox, rm, age, dis, rad, tax, ptratio, b, lstat).transmogrify()
   val splitter = DataSplitter(seed = randomSeed, reserveTestFraction = 0.1)
@@ -66,8 +68,8 @@ object OpBoston extends OpAppWithRunner with BostonFeatures {
   val prediction = RegressionModelSelector
     .withTrainValidationSplit(
       dataSplitter = Some(splitter), seed = randomSeed
-      , modelTypesToUse = Seq(OpLinearRegression)
-      //      , modelsAndParameters = models
+//      , modelTypesToUse = Seq(OpLinearRegression)
+            , modelsAndParameters = models
     )
     .setInput(medv, houseFeatures)
     .getOutput()

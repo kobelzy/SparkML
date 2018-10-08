@@ -11,6 +11,7 @@ import com.salesforce.op.stages.impl.regression.RegressionModelsToTry._
 import com.salesforce.op.stages.impl.tuning.DataSplitter
 import com.salesforce.op.utils.kryo.OpKryoRegistrator
 import com.salesforce.op.{OpWorkflow, _}
+import common.SparkUtil
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
@@ -37,18 +38,16 @@ object GASimpleWithTransmogriAI extends OpAppWithRunner {
   val basePath = "E:/Dataset/GoogleAnalytics/"
   //  val basePath = "hdfs://10.95.3.172:9000/user/lzy/GoogleAnalyse/"
   val sdf = new SimpleDateFormat("yyyyMMdd")
-  val trainPath = basePath + "source/extracted_fields_test.csv"
+  val trainPath = basePath + "source/extracted_fields_train.csv"
   val testPath = basePath + "source/extracted_fields_test.csv"
   // Set up a SparkSession as normal
-  val conf = new SparkConf().setAppName(this.getClass.getSimpleName.stripSuffix("$"))
-    .setMaster("local[*]")
   ////////////////////////////////////////////////////////////////////////////////
   //基础特征
   /////////////////////////////////////////////////////////////////////////////////
-  val channelGrouping = FeatureBuilder.PickList[Customer].extract(_.channelGrouping.toPickList).asPredictor
-  implicit val spark = SparkSession.builder.config(conf).getOrCreate()
+  implicit val spark = SparkUtil.getSpark()
   spark.sparkContext.setLogLevel("warn")
 
+  val channelGrouping = FeatureBuilder.PickList[Customer].extract(_.channelGrouping.toPickList).asPredictor
   import spark.implicits._
   val date = FeatureBuilder.Date[Customer].extract(v => v.date.map(sdf.parse(_).getTime).toDate).asPredictor
   val fullVisitorId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor

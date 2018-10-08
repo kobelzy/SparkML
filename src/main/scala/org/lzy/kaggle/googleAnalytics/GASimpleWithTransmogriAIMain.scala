@@ -10,6 +10,7 @@ import com.salesforce.op.stages.impl.regression.RegressionModelSelector
 import com.salesforce.op.stages.impl.regression.RegressionModelsToTry._
 import com.salesforce.op.stages.impl.tuning.DataSplitter
 import com.salesforce.op.{OpWorkflow, _}
+import common.SparkUtil
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
@@ -34,10 +35,10 @@ spark-submit --master yarn-cluster --queue lzy \
   */
 object GASimpleWithTransmogriAIMain {
 
-  val basePath = "E:/Dataset/GoogleAnalytics/"
+  val basePath = "D:/Dataset/GoogleAnalytics/"
   //  val basePath = "hdfs://10.95.3.172:9000/user/lzy/GoogleAnalyse/"
   val sdf = new SimpleDateFormat("yyyyMMdd")
-  val trainPath = basePath + "source/extracted_fields_test.csv"
+  val trainPath = basePath + "source/extracted_fields_train.csv"
   val testPath = basePath + "source/extracted_fields_test.csv"
 
   def main(args: Array[String]): Unit = {
@@ -47,11 +48,8 @@ object GASimpleWithTransmogriAIMain {
   def run() = {
 
 
-    // Set up a SparkSession as normal
-    val conf = new SparkConf().setAppName(this.getClass.getSimpleName.stripSuffix("$"))
-      .setMaster("local[*]")
-    implicit val spark = SparkSession.builder.config(conf).getOrCreate()
-    spark.sparkContext.setLogLevel("warn")
+    implicit val spark: SparkSession = SparkUtil.getSpark()
+//    spark.sparkContext.setLogLevel("warn")
     import spark.implicits._
     ////////////////////////////////////////////////////////////////////////////////
     //基础特征

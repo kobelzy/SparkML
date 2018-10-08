@@ -5,7 +5,7 @@ import numpy as np
 import warnings
 from multiprocessing import Pool as Pool
 from pandas.core.common import SettingWithCopyWarning
-
+import pandas as pd
 
 def get_keys_for_field(field=None):
     the_dict = {
@@ -120,7 +120,7 @@ def develop_json_fields(df=None):
 
 
 def main(nrows=None):
-    basePath = "E:/Dataset/GoogleAnalytics/"
+    basePath = "D:/Dataset/GoogleAnalytics/"
 
     # Convert train
     train = pd.read_csv(basePath + 'source/train.csv', dtype='object', nrows=nrows, encoding='utf-8')
@@ -213,4 +213,4 @@ if __name__ == '__main__':
     except Exception as err:
         logger.exception('Exception occured')
         raise
-import pandas as pd
+
