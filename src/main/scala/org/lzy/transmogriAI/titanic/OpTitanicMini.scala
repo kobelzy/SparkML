@@ -6,6 +6,7 @@ import com.salesforce.op.features.types._
 import com.salesforce.op.readers.DataReaders
 import com.salesforce.op.stages.impl.classification.BinaryClassificationModelsToTry.{OpLogisticRegression, OpRandomForestClassifier}
 import com.salesforce.op.stages.impl.classification._
+import common.SparkUtil
 import org.apache.log4j.{Level, LogManager}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
@@ -17,11 +18,11 @@ object OpTitanicMini {
 
   def main(args: Array[String]): Unit = {
     LogManager.getLogger("com.salesforce.op").setLevel(Level.ERROR)
-    implicit val spark = SparkSession.builder.config(new SparkConf()).getOrCreate()
+    implicit val spark = SparkUtil.getSpark()
     import spark.implicits._
 
     // Read Titanic data as a DataFrame
-    val pathToData = Option(args(0))
+    val pathToData = Option(ClassLoader.getSystemResource("TransmogrifData/TitanicPassengersTrainData.csv").toString)
     val passengersData = DataReaders.Simple.csvCase[Passenger](pathToData, key = _.id.toString).readDataset().toDF()
 
     // Automated feature engineering

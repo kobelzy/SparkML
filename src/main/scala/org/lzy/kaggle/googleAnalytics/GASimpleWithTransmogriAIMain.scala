@@ -124,15 +124,16 @@ object GASimpleWithTransmogriAIMain {
 
 
     val fittedWorkflow = workflow.train()
-    println(s"Summary: ${fittedWorkflow.summary()}")
 
-    // Manifest the result features of the workflow
-    println("Scoring the model")
-    val (dataframe, metrics) = fittedWorkflow.scoreAndEvaluate(evaluator = evaluator)
-
-    println("Transformed dataframe columns:")
-    dataframe.columns.foreach(println)
-    println("Metrics:")
-    println(metrics)
+    println("Model summary:\n" + fittedWorkflow.summaryPretty())
+//    println(s"Summary: ${fittedWorkflow.summary()}")
+//    // Manifest the result features of the workflow
+//    println("Scoring the model")
+//    val (dataframe, metrics) = fittedWorkflow.scoreAndEvaluate(evaluator = evaluator)
+//
+//    println("Transformed dataframe columns:")
+//    dataframe.columns.foreach(println)
+//    println("Metrics:")
+//    println(metrics)
   }
 }
