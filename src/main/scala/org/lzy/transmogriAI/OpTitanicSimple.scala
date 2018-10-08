@@ -63,7 +63,6 @@ object OpTitanicSimple {
     // Set up a SparkSession as normal
     val conf = new SparkConf().setAppName(this.getClass.getSimpleName.stripSuffix("$"))
     implicit val spark = SparkSession.builder.config(conf).getOrCreate()
-
     ////////////////////////////////////////////////////////////////////////////////
     // RAW FEATURE DEFINITIONS
     /////////////////////////////////////////////////////////////////////////////////
