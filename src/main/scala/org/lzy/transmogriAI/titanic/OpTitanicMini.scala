@@ -36,9 +36,12 @@ object OpTitanicMini {
     val prediction = BinaryClassificationModelSelector
       .withCrossValidation(modelTypesToUse = Seq(OpLogisticRegression, OpRandomForestClassifier))
       .setInput(survived, checkedFeatures).getOutput()
-    val model = new OpWorkflow().setInputDataset(passengersData).setResultFeatures(prediction).train()
+    val model:OpWorkflowModel = new OpWorkflow().setInputDataset(passengersData).setResultFeatures(prediction).train()
+    model.score().show()
+
 
     println("Model summary:\n" + model.summaryPretty())
+
   }
 
   case class Passenger

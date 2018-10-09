@@ -35,8 +35,8 @@ spark-submit --master yarn-cluster --queue lzy \
   */
 object GASimpleWithTransmogriAIMain {
 
-  val basePath = "D:/Dataset/GoogleAnalytics/"
-  //  val basePath = "hdfs://10.95.3.172:9000/user/lzy/GoogleAnalyse/"
+//  val basePath = "D:/Dataset/GoogleAnalytics/"
+    val basePath = "hdfs://10.95.3.172:9000/user/lzy/GoogleAnalyse/"
   val sdf = new SimpleDateFormat("yyyyMMdd")
   val trainPath = basePath + "source/extracted_fields_train.csv"
   val testPath = basePath + "source/extracted_fields_test.csv"
@@ -122,18 +122,17 @@ object GASimpleWithTransmogriAIMain {
       .setResultFeatures(prediction)
       .setReader(trainDataReader)
 
-
-    val fittedWorkflow = workflow.train()
-
+    val fittedWorkflow:OpWorkflowModel = workflow.train()
+    fittedWorkflow.save(basePath+"model/bestModel",true)
     println("Model summary:\n" + fittedWorkflow.summaryPretty())
 //    println(s"Summary: ${fittedWorkflow.summary()}")
 //    // Manifest the result features of the workflow
 //    println("Scoring the model")
-//    val (dataframe, metrics) = fittedWorkflow.scoreAndEvaluate(evaluator = evaluator)
-//
-//    println("Transformed dataframe columns:")
-//    dataframe.columns.foreach(println)
-//    println("Metrics:")
-//    println(metrics)
+    val (dataframe, metrics) = fittedWorkflow.scoreAndEvaluate(evaluator = evaluator)
+
+    println("Transformed dataframe columns:")
+    dataframe.columns.foreach(println)
+    println("Metrics:")
+    println(metrics)
   }
 }
