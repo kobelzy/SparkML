@@ -1,17 +1,13 @@
 package org.lzy.kaggle.googleAnalytics
 
-import java.text.SimpleDateFormat
-
+import com.salesforce.op.{OpWorkflow, OpWorkflowModel}
 import com.salesforce.op.evaluators.Evaluators
+import com.salesforce.op.features.FeatureLike
 import com.salesforce.op.features.types._
-import com.salesforce.op.features.{FeatureBuilder, FeatureLike}
 import com.salesforce.op.readers.DataReaders
 import com.salesforce.op.stages.impl.regression.RegressionModelSelector
-import com.salesforce.op.stages.impl.regression.RegressionModelsToTry._
 import com.salesforce.op.stages.impl.tuning.DataSplitter
-import com.salesforce.op.{OpWorkflow, _}
 import common.SparkUtil
-import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
 /*
@@ -50,25 +46,25 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
 //      ,modelTypesToUse = Seq(OpGBTRegressor, OpRandomForestRegressor)
  )
       //RandomForestRegression, LinearRegression, GBTRegression
-      .setInput(totals_transactionRevenue, customerFeatures).getOutput()
+      .setInput(totals_transactionRevenue, finalFeatures).getOutput()
     val evaluator = Evaluators.Regression()
       .setLabelCol(totals_transactionRevenue)
       .setPredictionCol(prediction)
-    val trainDataReader = DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath), key = v => v.fullVisitorId + "_" + v.sessionId)
+    val trainDataReader = DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath), key = v => v.fullVisitorId+"")
     ////////////////////////////////////////////////////////////////////////////////
-    // WORKFLOW
+    // WORKFLOW训练及保存
     /////////////////////////////////////////////////////////////////////////////////
 
     val workflow = new OpWorkflow()
             .setResultFeatures(prediction)
-//      .setReader(trainDataReader)
-
-    val model=workflow.loadModel(Constants.basePath+"model/bestModel")
-    println(model.summary())
-//    val fittedWorkflow:OpWorkflowModel = workflow.train()
-//    fittedWorkflow.save(basePath+"model/bestModel",true)
-//    println("Model summary:\n" + fittedWorkflow.summaryPretty())
-////    println(s"Summary: ${fittedWorkflow.summary()}")
+      .setReader(trainDataReader)
+    val fittedWorkflow:OpWorkflowModel = workflow.train()
+    fittedWorkflow.save(Constants.basePath+"model/bestModel",true)
+    ////////////////////////////////////////////////////////////////////////////////
+    //模型评估
+    /////////////////////////////////////////////////////////////////////////////////
+    println(s"Summary: ${fittedWorkflow.summary()}")
+    println("Model summary:\n" + fittedWorkflow.summaryPretty())
 ////    // Manifest the result features of the workflow
 ////    println("Scoring the model")
 //    val (dataframe, metrics) = fittedWorkflow.scoreAndEvaluate(evaluator = evaluator)

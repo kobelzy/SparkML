@@ -19,21 +19,23 @@ import scala.util.{Failure, Success, Try}
   */
 
 object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
-    def main(args: Array[String]): Unit = {
-        val spark = SparkUtil.getSpark()
+  def main(args: Array[String]): Unit = {
+    val spark = SparkUtil.getSpark()
 
-        val prediction: FeatureLike[Prediction] = RegressionModelSelector
-                .withCrossValidation()
-                .setInput(totals_transactionRevenue, customerFeatures)
-                .getOutput()
+    val prediction: FeatureLike[Prediction] = RegressionModelSelector
+      .withCrossValidation()
+      .setInput(totals_transactionRevenue, finalFeatures)
+      .getOutput()
 
-        val modelPath = Constants.basePath + "model/bestModel"
-        val workflow = new OpWorkflow()
-                .setResultFeatures(prediction)
-        val model = workflow.loadModel(modelPath)
-//        model.score()
-        println(model.summary())
-
-
-    }
+    val modelPath = Constants.basePath + "model/bestModel"
+    val workflow = new OpWorkflow()
+      .setResultFeatures(prediction)
+    val model = workflow.loadModel(modelPath)
+    //        model.score()
+    println(model.summary())
+    println("")
+//    println(model.summaryJson())
+    println("-------------")
+    println(model.summaryPretty())
+  }
 }
