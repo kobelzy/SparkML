@@ -16,45 +16,26 @@ import org.apache.spark.sql.SparkSession
 
 /*
 
-spark-submit --master yarn-cluster --queue lzy \
+spark-submit --master yarn-client --queue all \
 --num-executors 15 \
 --executor-memory 7g \
 --driver-memory 3g \
 --executor-cores 3 \
 --packages com.salesforce.transmogrifai:transmogrifai-core_2.11:0.4.0 \
 --class org.lzy.kaggle.googleAnalytics.GASimpleWithTransmogriAI SparkML.jar */
-/**
-  * Created by Administrator on 2018/10/1.
-  * spark-submit --master yarn-cluster --queue lzy \
-  * --num-executors 15 \
-  * --executor-memory 7g \
-  * --driver-memory 3g \
-  * --executor-cores 3 \
-  * --packages com.salesforce.transmogrifai:transmogrifai-features_2.11:0.3.4,com.salesforce.transmogrifai:transmogrifai-readers_2.11:0.3.4,com.salesforce.transmogrifai:transmogrifai-core_2.11:0.3.4,com.salesforce.transmogrifai:transmogrifai-models_2.11:0.3.4,com.salesforce.transmogrifai:language-detector:0.0.1 \
-  * --class scala.org.lzy.kaggle.googleAnalytics.GASimpleWithTransmogriAI SparkML.jar
-  */
+
 object GASimpleWithTransmogriAIMain extends CustomerFeatures {
 
-//  val basePath = "D:/Dataset/GoogleAnalytics/"
-    val basePath = "hdfs://10.95.3.172:9000/user/lzy/GoogleAnalyse/"
-  val trainPath = basePath + "source/extracted_fields_train.csv"
-  val testPath = basePath + "source/extracted_fields_test.csv"
 
   def main(args: Array[String]): Unit = {
     run()
   }
 
   def run() = {
-
-
     implicit val spark: SparkSession = SparkUtil.getSpark()
 //    spark.sparkContext.setLogLevel("warn")
     import spark.implicits._
-    ////////////////////////////////////////////////////////////////////////////////
-    //创建特征向量
-    /////////////////////////////////////////////////////////////////////////////////
-    val customerFeatures = Seq(channelGrouping, date, fullVisitorId, sessionId, visitId, visitNumber, visitStartTime, device_browser, device_deviceCategory, device_isMobile, device_operatingSystem, geoNetwork_city, geoNetwork_continent, geoNetwork_country, geoNetwork_metro, geoNetwork_networkDomain, geoNetwork_region, geoNetwork_subContinent, totals_bounces, totals_hits, totals_newVisits, totals_pageviews, trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_keyword, trafficSource_medium, trafficSource_referralPath, trafficSource_source)
-      .transmogrify()
+
 
 
     ////////////////////////////////////////////////////////////////////////////////
@@ -62,12 +43,8 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
     /////////////////////////////////////////////////////////////////////////////////
     val randomSeed = 112233L
 
-    ////////////////////////////////////////////////////////////////////////////////
-    //数据泄露及空值处理
-    /////////////////////////////////////////////////////////////////////////////////
     val prediction: FeatureLike[Prediction] =
     RegressionModelSelector
-      //      .withCrossValidation()
       .withCrossValidation(
       dataSplitter = Some(DataSplitter(seed = randomSeed)), seed = randomSeed
 //      ,modelTypesToUse = Seq(OpGBTRegressor, OpRandomForestRegressor)
@@ -77,7 +54,7 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
     val evaluator = Evaluators.Regression()
       .setLabelCol(totals_transactionRevenue)
       .setPredictionCol(prediction)
-    val trainDataReader = DataReaders.Simple.csvCase[Customer](path = Option(trainPath), key = v => v.fullVisitorId + "_" + v.sessionId)
+    val trainDataReader = DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath), key = v => v.fullVisitorId + "_" + v.sessionId)
     ////////////////////////////////////////////////////////////////////////////////
     // WORKFLOW
     /////////////////////////////////////////////////////////////////////////////////
@@ -86,7 +63,7 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
             .setResultFeatures(prediction)
 //      .setReader(trainDataReader)
 
-    val model=workflow.loadModel(basePath+"model/bestModel")
+    val model=workflow.loadModel(Constants.basePath+"model/bestModel")
     println(model.summary())
 //    val fittedWorkflow:OpWorkflowModel = workflow.train()
 //    fittedWorkflow.save(basePath+"model/bestModel",true)
