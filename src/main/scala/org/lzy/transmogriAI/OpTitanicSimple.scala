@@ -62,6 +62,17 @@ object OpTitanicSimple {
     val testPath = ClassLoader.getSystemResource("TransmogrifData/TitanicPassengersTestData.csv").toString
     println(s"Using user-supplied CSV file path: $csvFilePath")
 
+    // Define a way to read data into our Passenger class from our CSV file
+    val trainDataReader = DataReaders.Simple.csvCase[Passenger](
+      path = Option(csvFilePath),
+      key = _.id.toString
+    )
+    trainDataReader.readDataset().show(false)
+    require(false)
+    val testDataReader = DataReaders.Simple.csvCase[Passenger](
+      path = Option(testPath),
+      key = _.id.toString
+    )
     ////////////////////////////////////////////////////////////////////////////////
     // RAW FEATURE DEFINITIONS
     /////////////////////////////////////////////////////////////////////////////////
@@ -78,6 +89,7 @@ object OpTitanicSimple {
     val fare = FeatureBuilder.Real[Passenger].extract(_.fare.toReal).asPredictor
     val cabin = FeatureBuilder.PickList[Passenger].extract(_.cabin.map(_.toString).toPickList).asPredictor
     val embarked = FeatureBuilder.PickList[Passenger].extract(_.embarked.map(_.toString).toPickList).asPredictor
+
 
     ////////////////////////////////////////////////////////////////////////////////
     // TRANSFORMED FEATURES
@@ -113,15 +125,7 @@ object OpTitanicSimple {
     // WORKFLOW
     /////////////////////////////////////////////////////////////////////////////////
 
-    // Define a way to read data into our Passenger class from our CSV file
-    val trainDataReader = DataReaders.Simple.csvCase[Passenger](
-      path = Option(csvFilePath),
-      key = _.id.toString
-    )
-    val testDataReader = DataReaders.Simple.csvCase[Passenger](
-      path = Option(testPath),
-      key = _.id.toString
-    )
+
     // Define a new workflow and attach our data reader
     val workflow: OpWorkflow =
       new OpWorkflow()

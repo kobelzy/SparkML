@@ -34,13 +34,16 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
       .setInput(totals_transactionRevenue, customerFeatures)
       .getOutput()
     val testDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.testPath), key = v => v.fullVisitorId + "")
-
     val modelPath = Constants.basePath + "model/bestModel"
+    val test_ds = testDataReader.readDataset()
+      test_ds.show(false)
+    test_ds.printSchema()
     val workflow = new OpWorkflow()
       .setResultFeatures(prediction)
-      .setReader(testDataReader)
-    //      .setInputDataset(testDataReader)
+//      .setReader(testDataReader)
+          .setInputDataset(test_ds)
     val model = workflow.loadModel(modelPath)
+      .setInputDataset(test_ds)
     //        model.score()
     //    println(model.summary())
     //    println("")
@@ -54,8 +57,6 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
     //  .setInput(totals_transactionRevenue, customerFeatures) .getOutput()
     //    lrModel.transform()
     val selectModel: SelectedModel = model.getOriginStageOf(prediction).asInstanceOf[SelectedModel]
-    val test_ds = testDataReader.readDataset()
-      test_ds.show(false)
     val pre_ds = selectModel.transform(test_ds)
     pre_ds.show(false)
   }

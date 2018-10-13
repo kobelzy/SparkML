@@ -14,7 +14,7 @@ case class Customer(
                      //会话的号码，如果是第一个会话，使用1，大部分为1，有极端值，最大395
                      visitNumber: Option[Double],
                      //时间戳，毫秒值
-                     visitStartTime: Option[Long],
+                     visitStartTime: Option[Double],
 
 
 

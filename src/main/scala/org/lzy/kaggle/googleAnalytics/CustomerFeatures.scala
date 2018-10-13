@@ -20,7 +20,7 @@ trait CustomerFeatures extends Serializable{
     val sessionId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
     val visitId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
     val visitNumber = FeatureBuilder.RealNN[Customer].extract(_.visitNumber.getOrElse(0d).toRealNN).asPredictor
-    val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => v.visitStartTime.map(_ * 1000).toDateTime).asPredictor
+    val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => v.visitStartTime.map(_.toLong * 1000).toDateTime).asPredictor
     val device_browser = FeatureBuilder.PickList[Customer].extract(_.device_browser.toPickList).asPredictor
     val device_deviceCategory = FeatureBuilder.PickList[Customer].extract(_.device_deviceCategory.toPickList).asPredictor
     val device_isMobile = FeatureBuilder.Binary[Customer].extract(_.device_isMobile.getOrElse(0d).toBinary).asPredictor

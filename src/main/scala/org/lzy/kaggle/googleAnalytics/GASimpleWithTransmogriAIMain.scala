@@ -8,7 +8,7 @@ import com.salesforce.op.readers.DataReaders
 import com.salesforce.op.stages.impl.regression.RegressionModelSelector
 import com.salesforce.op.stages.impl.selector.SelectedModel
 import com.salesforce.op.stages.impl.tuning.DataSplitter
-import common.SparkUtil
+import common.{SparkUtil, Utils}
 import org.apache.spark.sql.SparkSession
 
 /*
@@ -19,7 +19,7 @@ spark-submit --master yarn-client --queue all \
 --driver-memory 3g \
 --executor-cores 3 \
 --packages com.salesforce.transmogrifai:transmogrifai-core_2.11:0.4.0 \
---class org.lzy.kaggle.googleAnalytics.GASimpleWithTransmogriAI SparkML.jar */
+--class org.lzy.kaggle.googleAnalytics.GASimpleWithTransmogriAIMain SparkML.jar */
 
 object GASimpleWithTransmogriAIMain extends CustomerFeatures {
 
@@ -52,6 +52,10 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
       .setLabelCol(totals_transactionRevenue)
       .setPredictionCol(prediction)
     val trainDataReader = DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath), key = v => v.fullVisitorId+"")
+//    val util=new Utils(spark)
+//    val train_DS=util.readToCSV(Constants.trainPath).as[Customer]
+
+    trainDataReader.readDataset().show(false)
     ////////////////////////////////////////////////////////////////////////////////
     // WORKFLOW训练及保存
     /////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +63,7 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
     val workflow = new OpWorkflow()
             .setResultFeatures(prediction)
       .setReader(trainDataReader)
+//      .setInputDataset(train_DS)
     val fittedWorkflow:OpWorkflowModel = workflow.train()
     fittedWorkflow.save(Constants.basePath+"model/bestModel",true)
     ////////////////////////////////////////////////////////////////////////////////
