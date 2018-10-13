@@ -1,6 +1,6 @@
 package org.lzy.kaggle.googleAnalytics
 
-import com.salesforce.op.features.FeatureBuilder
+import com.salesforce.op.features.{FeatureBuilder, FeatureLike}
 import com.salesforce.op.features.types._
 import java.text.SimpleDateFormat
 /**
@@ -52,12 +52,12 @@ trait CustomerFeatures extends Serializable{
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-最终特征选择
     /////////////////////////////////////////////////////////////////////////////////
-    val customerFeatures = Seq(channelGrouping, date, fullVisitorId, sessionId, visitId, visitNumber, visitStartTime, device_browser, device_deviceCategory, device_isMobile, device_operatingSystem, geoNetwork_city, geoNetwork_continent, geoNetwork_country, geoNetwork_metro, geoNetwork_networkDomain, geoNetwork_region, geoNetwork_subContinent, totals_bounces, totals_hits, totals_newVisits, totals_pageviews, trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_keyword, trafficSource_medium, trafficSource_referralPath, trafficSource_source)
+    val customerFeatures: FeatureLike[OPVector] = Seq(channelGrouping, date, fullVisitorId, sessionId, visitId, visitNumber, visitStartTime, device_browser, device_deviceCategory, device_isMobile, device_operatingSystem, geoNetwork_city, geoNetwork_continent, geoNetwork_country, geoNetwork_metro, geoNetwork_networkDomain, geoNetwork_region, geoNetwork_subContinent, totals_bounces, totals_hits, totals_newVisits, totals_pageviews, trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_keyword, trafficSource_medium, trafficSource_referralPath, trafficSource_source)
             .transmogrify()
 
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-数据泄露及空值处理
     /////////////////////////////////////////////////////////////////////////////////
-    val sanityCheck = true
-    val finalFeatures = if (sanityCheck) totals_transactionRevenue.sanityCheck(customerFeatures) else customerFeatures
+//    val sanityCheck = true
+//    val finalFeatures = if (sanityCheck) totals_transactionRevenue.sanityCheck(customerFeatures) else customerFeatures
 }

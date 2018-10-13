@@ -1,11 +1,12 @@
 package org.lzy.kaggle.googleAnalytics
 
-import com.salesforce.op.{OpWorkflow, OpWorkflowModel}
+import com.salesforce.op.{ModelInsights, OpWorkflow, OpWorkflowModel}
 import com.salesforce.op.evaluators.Evaluators
 import com.salesforce.op.features.FeatureLike
 import com.salesforce.op.features.types._
 import com.salesforce.op.readers.DataReaders
 import com.salesforce.op.stages.impl.regression.RegressionModelSelector
+import com.salesforce.op.stages.impl.selector.SelectedModel
 import com.salesforce.op.stages.impl.tuning.DataSplitter
 import common.SparkUtil
 import org.apache.spark.sql.SparkSession
@@ -46,7 +47,7 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
 //      ,modelTypesToUse = Seq(OpGBTRegressor, OpRandomForestRegressor)
  )
       //RandomForestRegression, LinearRegression, GBTRegression
-      .setInput(totals_transactionRevenue, finalFeatures).getOutput()
+      .setInput(totals_transactionRevenue, customerFeatures).getOutput()
     val evaluator = Evaluators.Regression()
       .setLabelCol(totals_transactionRevenue)
       .setPredictionCol(prediction)
@@ -73,5 +74,6 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
 //    dataframe.columns.foreach(println)
 //    println("Metrics:")
 //    println(metrics)
+
   }
 }
