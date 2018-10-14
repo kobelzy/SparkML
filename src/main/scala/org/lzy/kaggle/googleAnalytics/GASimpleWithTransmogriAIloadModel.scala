@@ -14,10 +14,12 @@ import com.salesforce.op.readers.{CSVProductReader, DataReaders}
 import com.salesforce.op.stages.impl.feature.OpStringIndexerNoFilter
 import com.salesforce.op.stages.impl.selector.SelectedModel
 import com.salesforce.op.stages.sparkwrappers.specific.SparkModelConverter
+import com.salesforce.op.utils.stages.FitStagesUtil
+import org.apache.spark.ml.Transformer
 import org.apache.spark.ml.regression.RegressionModel
+import org.slf4j.LoggerFactory
 
 import scala.util.{Failure, Success, Try}
-
 /**
   * Auther: lzy
   * Description:
@@ -37,13 +39,13 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
     val modelPath = Constants.basePath + "model/bestModel"
     val test_ds = testDataReader.readDataset()
       test_ds.show(false)
-    test_ds.printSchema()
     val workflow = new OpWorkflow()
-      .setResultFeatures(prediction)
+      .setResultFeatures(prediction,customerFeatures)
 //      .setReader(testDataReader)
           .setInputDataset(test_ds)
     val model = workflow.loadModel(modelPath)
-      .setInputDataset(test_ds)
+//      .setInputDataset(test_ds)
+        .setReader(testDataReader)
     //        model.score()
     //    println(model.summary())
     //    println("")
@@ -56,8 +58,13 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
     //    val lr:FeatureLike[Prediction]=new OpRandomForestRegressor().setInput(totals_transactionRevenue, customerFeatures) .getOutput()
     //  .setInput(totals_transactionRevenue, customerFeatures) .getOutput()
     //    lrModel.transform()
+    model.computeDataUpTo(totals_transactionRevenue).show(false)
     val selectModel: SelectedModel = model.getOriginStageOf(prediction).asInstanceOf[SelectedModel]
     val pre_ds = selectModel.transform(test_ds)
     pre_ds.show(false)
+
+
+//    val op=toOP(selectModel,selectModel.uid).transform(pre_ds).show(false)
+    SparkModelConverter.toOPUnchecked(selectModel).transform(pre_ds).show(false)
   }
 }

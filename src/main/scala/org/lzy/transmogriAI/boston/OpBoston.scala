@@ -80,7 +80,6 @@ object OpBoston extends OpAppWithRunner with BostonFeatures {
   /////////////////////////////////////////////////////////////////////////////////
   val workflow = new OpWorkflow().setResultFeatures(prediction)
   val evaluator = Evaluators.Regression().setLabelCol(medv).setPredictionCol(prediction)
-
   override def kryoRegistrator: Class[_ <: OpKryoRegistrator] = classOf[BostonKryoRegistrator]
 
   def customRead(path: Option[String], spark: SparkSession): RDD[BostonHouse] = {

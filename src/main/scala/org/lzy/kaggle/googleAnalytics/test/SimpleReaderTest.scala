@@ -53,8 +53,8 @@ object SimpleReaderTest {
       .csv(Constants.trainPath)
 //        .map{case Row(channelGrouping_,date_,fullVisitorId_,sessionId_,visitId_,visitNumber_,visitStartTime_,device_browser_,device_deviceCategory_,device_isMobile_,device_operatingSystem_,geoNetwork_city_,geoNetwork_continent_,geoNetwork_country_,geoNetwork_metro_,geoNetwork_networkDomain_,geoNetwork_region_,geoNetwork_subContinent_,totals_bounces_,totals_hits_,totals_newVisits_,totals_pageviews_,totals_transactionRevenue_,trafficSource_adContent_,trafficSource_campaign_,trafficSource_isTrueDirect_,trafficSource_keyword_,trafficSource_medium_,trafficSource_referralPath_,trafficSource_source)=>
 //          val channelGrouping=channelGrouping_.toString
-//          val date:Any=Try(sdf.parse(date_.toString).getTime).getOrElse(None)
-//
+//        val l:Option[Long]=None
+//          val date:Option[Long]=Try(sdf.parse(date_.toString).getTime).toOption
 //        }
 
     train.show(false)
