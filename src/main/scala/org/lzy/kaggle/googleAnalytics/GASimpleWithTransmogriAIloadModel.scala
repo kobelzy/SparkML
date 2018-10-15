@@ -60,11 +60,13 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
     //    lrModel.transform()
     model.computeDataUpTo(totals_transactionRevenue).show(false)
     val selectModel: SelectedModel = model.getOriginStageOf(prediction).asInstanceOf[SelectedModel]
+    println(selectModel.extractParamMap())
     val pre_ds = selectModel.transform(test_ds)
     pre_ds.show(false)
 
 
 //    val op=toOP(selectModel,selectModel.uid).transform(pre_ds).show(false)
     SparkModelConverter.toOPUnchecked(selectModel).transform(pre_ds).show(false)
+//    SparkModelConverter.toOP(selectModel,selectModel.uid)
   }
 }

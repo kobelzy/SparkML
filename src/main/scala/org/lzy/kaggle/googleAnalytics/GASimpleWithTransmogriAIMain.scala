@@ -30,7 +30,7 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
 
   def run() = {
     implicit val spark: SparkSession = SparkUtil.getSpark()
-//    spark.sparkContext.setLogLevel("warn")
+    spark.sparkContext.setLogLevel("warn")
     import spark.implicits._
 
 

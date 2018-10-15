@@ -3,6 +3,7 @@ package org.lzy.kaggle.googleAnalytics
 import com.salesforce.op.features.{FeatureBuilder, FeatureLike}
 import com.salesforce.op.features.types._
 import java.text.SimpleDateFormat
+import scala.util.Try
 /**
   * Auther: lzy
   * Description:
@@ -15,12 +16,13 @@ trait CustomerFeatures extends Serializable{
     //[特征工程]-基础特征
     /////////////////////////////////////////////////////////////////////////////////
     val channelGrouping = FeatureBuilder.PickList[Customer].extract(_.channelGrouping.toPickList).asPredictor
-    val date = FeatureBuilder.Date[Customer].extract(v => v.date.map(sdf.parse(_).getTime).toDate).asPredictor
+    //有空值，""也是字符串
+    val date = FeatureBuilder.Date[Customer].extract(v => Try(sdf.parse(v.date.getOrElse("")).getTime).toOption.toDate).asPredictor
     val fullVisitorId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
     val sessionId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
     val visitId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
     val visitNumber = FeatureBuilder.RealNN[Customer].extract(_.visitNumber.getOrElse(0d).toRealNN).asPredictor
-    val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => v.visitStartTime.map(_.toLong * 1000).toDateTime).asPredictor
+    val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => v.visitStartTime.map(_ * 1000).toDateTime).asPredictor
     val device_browser = FeatureBuilder.PickList[Customer].extract(_.device_browser.toPickList).asPredictor
     val device_deviceCategory = FeatureBuilder.PickList[Customer].extract(_.device_deviceCategory.toPickList).asPredictor
     val device_isMobile = FeatureBuilder.Binary[Customer].extract(_.device_isMobile.getOrElse(0d).toBinary).asPredictor
@@ -58,6 +60,6 @@ trait CustomerFeatures extends Serializable{
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-数据泄露及空值处理
     /////////////////////////////////////////////////////////////////////////////////
-//    val sanityCheck = true
-//    val finalFeatures = if (sanityCheck) totals_transactionRevenue.sanityCheck(customerFeatures) else customerFeatures
+    val sanityCheck = true
+    val finalFeatures = if (sanityCheck) totals_transactionRevenue.sanityCheck(customerFeatures) else customerFeatures
 }
