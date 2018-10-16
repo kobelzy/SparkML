@@ -36,6 +36,7 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
       .setInput(totals_transactionRevenue, customerFeatures)
       .getOutput()
     val testDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.testPath), key = v => v.fullVisitorId + "")
+    testDataReader.readDataset().show(false)
     val modelPath = Constants.basePath + "model/bestModel"
     val test_ds = testDataReader.readDataset()
       test_ds.show(false)

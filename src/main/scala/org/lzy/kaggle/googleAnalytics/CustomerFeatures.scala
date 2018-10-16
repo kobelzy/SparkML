@@ -19,8 +19,8 @@ trait CustomerFeatures extends Serializable{
     //有空值，""也是字符串
     val date = FeatureBuilder.Date[Customer].extract(v => Try(sdf.parse(v.date.getOrElse("")).getTime).toOption.toDate).asPredictor
     val fullVisitorId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
-    val sessionId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
-    val visitId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
+    val sessionId = FeatureBuilder.Text[Customer].extract(_.fullVisitorId.toText).asPredictor
+    val visitId = FeatureBuilder.Text[Customer].extract(_.fullVisitorId.toText).asPredictor
     val visitNumber = FeatureBuilder.RealNN[Customer].extract(_.visitNumber.getOrElse(0d).toRealNN).asPredictor
     val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => v.visitStartTime.map(_ * 1000).toDateTime).asPredictor
     val device_browser = FeatureBuilder.PickList[Customer].extract(_.device_browser.toPickList).asPredictor
