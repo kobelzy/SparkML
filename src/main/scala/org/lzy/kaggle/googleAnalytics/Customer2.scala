@@ -1,6 +1,6 @@
 package org.lzy.kaggle.googleAnalytics
 
-case class Customer(
+case class Customer2(
                      //用户通过什么渠道进入商店，共8种，Organic站42%， social 25% 。。。
                      channelGrouping: String,
                      //访问商店的时间，20171016

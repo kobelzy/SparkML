@@ -1,25 +1,13 @@
 package org.lzy.kaggle.googleAnalytics
 
-import com.salesforce.op._
-import com.salesforce.op.features.types._
-import com.salesforce.op.features.{FeatureBuilder, FeatureLike}
+import com.salesforce.op.OpWorkflow
+import com.salesforce.op.features.FeatureLike
 import com.salesforce.op.features.types.Prediction
-import com.salesforce.op.stages.impl.regression.{OpRandomForestRegressionModel, OpRandomForestRegressor, RegressionModelSelector}
-import com.salesforce.op.stages.impl.tuning.DataSplitter
-import com.salesforce.op.{OpWorkflow, OpWorkflowModel, OpWorkflowModelReadWriteShared}
-import common.SparkUtil
-import java.text.SimpleDateFormat
-
 import com.salesforce.op.readers.{CSVProductReader, DataReaders}
-import com.salesforce.op.stages.impl.feature.OpStringIndexerNoFilter
+import com.salesforce.op.stages.impl.regression.RegressionModelSelector
 import com.salesforce.op.stages.impl.selector.SelectedModel
 import com.salesforce.op.stages.sparkwrappers.specific.SparkModelConverter
-import com.salesforce.op.utils.stages.FitStagesUtil
-import org.apache.spark.ml.Transformer
-import org.apache.spark.ml.regression.RegressionModel
-import org.slf4j.LoggerFactory
-
-import scala.util.{Failure, Success, Try}
+import common.SparkUtil
 /**
   * Auther: lzy
   * Description:
@@ -63,8 +51,6 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
     val selectModel: SelectedModel = model.getOriginStageOf(prediction).asInstanceOf[SelectedModel]
     println(selectModel.extractParamMap())
     val pre_ds = selectModel.transform(test_ds)
-    pre_ds.show(false)
-
 
 //    val op=toOP(selectModel,selectModel.uid).transform(pre_ds).show(false)
     SparkModelConverter.toOPUnchecked(selectModel).transform(pre_ds).show(false)
