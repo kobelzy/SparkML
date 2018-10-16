@@ -16,7 +16,8 @@ public class SmartProperties extends LinkedHashMap<String, String> {
      * Param:
      * path: properties文件相对路径，可多次调用load方法
      * Return:
-     * Created by licheng on 2018/4/4.
+     * Created by lzy on 2018/4/4.
+     *
      */
     public void load(String path) {
         String fileName = path.substring(path.lastIndexOf("/") + 1);
