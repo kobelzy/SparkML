@@ -15,14 +15,23 @@ trait CustomerFeatures extends Serializable{
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-基础特征
     /////////////////////////////////////////////////////////////////////////////////
+
+
+
+
     val channelGrouping = FeatureBuilder.PickList[Customer].extract(_.channelGrouping.toPickList).asPredictor
     //有空值，""也是字符串
-    val date = FeatureBuilder.Date[Customer].extract(v => Try(sdf.parse(v.date.getOrElse("").replace("-","")).getTime).toOption.toDate).asPredictor
+//    val date = FeatureBuilder.Date[Customer].extract(v => Try(sdf.parse(v.date.getOrElse("")).getTime).toOption.toDate).asPredictor
+    val date = FeatureBuilder.Date[Customer].extract(v => 1481904000000L.toDate).asPredictor
+    val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => v.visitStartTime.map(_.toLong * 1000).toDateTime).asPredictor
+//    val date=FeatureBuilder.Text[Customer].extract(_.fullVisitorId.toText).asPredictor
+
+
     val fullVisitorId = FeatureBuilder.ID[Customer].extract(_.fullVisitorId.toID).asPredictor
     val sessionId = FeatureBuilder.Text[Customer].extract(_.fullVisitorId.toText).asPredictor
     val visitId = FeatureBuilder.Text[Customer].extract(_.fullVisitorId.toText).asPredictor
     val visitNumber = FeatureBuilder.RealNN[Customer].extract(_.visitNumber.getOrElse(0d).toRealNN).asPredictor
-    val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => v.visitStartTime.map(_.toLong * 1000).toDateTime).asPredictor
+
     val device_browser = FeatureBuilder.PickList[Customer].extract(_.device_browser.toPickList).asPredictor
     val device_deviceCategory = FeatureBuilder.PickList[Customer].extract(_.device_deviceCategory.toPickList).asPredictor
     val device_isMobile = FeatureBuilder.Binary[Customer].extract(_.device_isMobile.getOrElse(0d).toBinary).asPredictor
