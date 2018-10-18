@@ -16,6 +16,6 @@ object Constants {
 //         basePath = "hdfs://10.95.3.172:9000/user/lzy/GoogleAnalyse/"
   }
 
-  val trainPath = basePath + "source/extracted_fields_train.csv"
-  val testPath = basePath + "source/extracted_fields_test.csv"
+  val trainPath = basePath + "source/extracted_fields_train_new.csv"
+  val testPath = basePath + "source/extracted_fields_test_new.csv"
 }

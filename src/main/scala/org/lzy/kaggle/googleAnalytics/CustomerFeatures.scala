@@ -21,8 +21,7 @@ trait CustomerFeatures extends Serializable{
 
     val channelGrouping = FeatureBuilder.PickList[Customer].extract(_.channelGrouping.toPickList).asPredictor
     //有空值，""也是字符串
-//    val date = FeatureBuilder.Date[Customer].extract(v => Try(sdf.parse(v.date.getOrElse("")).getTime).toOption.toDate).asPredictor
-    val date = FeatureBuilder.Date[Customer].extract(v => 1481904000000L.toDate).asPredictor
+    val date = FeatureBuilder.Date[Customer].extract(v => v.date.toDate).asPredictor
     val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => v.visitStartTime.map(_.toLong * 1000).toDateTime).asPredictor
 //    val date=FeatureBuilder.Text[Customer].extract(_.fullVisitorId.toText).asPredictor
 

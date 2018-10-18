@@ -4,7 +4,7 @@ case class Customer(
                      //用户通过什么渠道进入商店，共8种，Organic站42%， social 25% 。。。
                      channelGrouping: String,
                      //访问商店的时间，20171016
-                     date: Option[String],
+                     date: Long,
                      //用户的唯一标识符，最终用这个做预测的id
                      fullVisitorId: String,
                      //访问商店行为的唯一识别符，有大约1k条的重复，所以不是唯一
