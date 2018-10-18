@@ -51,7 +51,7 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
     val evaluator = Evaluators.Regression()
       .setLabelCol(totals_transactionRevenue)
       .setPredictionCol(prediction)
-    val trainDataReader = DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath))
+    val trainDataReader = DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath),key = _.fullVisitorId.toString)
 //    val util=new Utils(spark)
 //    val train_DS=util.readToCSV(Constants.trainPath).as[Customer]
 
