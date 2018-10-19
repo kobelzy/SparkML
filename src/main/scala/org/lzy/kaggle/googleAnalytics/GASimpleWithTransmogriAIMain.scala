@@ -65,7 +65,7 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
       .setReader(trainDataReader)
 //      .setInputDataset(train_DS)
     val fittedWorkflow:OpWorkflowModel = workflow.train()
-    fittedWorkflow.save(Constants.basePath+"model/bestModel2",true)
+    fittedWorkflow.save(Constants.modelPath,true)
     ////////////////////////////////////////////////////////////////////////////////
     //模型评估
     /////////////////////////////////////////////////////////////////////////////////

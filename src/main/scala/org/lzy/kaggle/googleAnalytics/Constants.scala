@@ -18,4 +18,8 @@ object Constants {
 
   val trainPath = basePath + "source/extracted_fields_train_new.csv"
   val testPath = basePath + "source/extracted_fields_test_new.csv"
+  val modelPath=basePath + "model/bestModel"
+  val modelPath2=basePath+"model/bestModel2"
+
+  val resultPath=basePath+"result/result1.csv"
 }
