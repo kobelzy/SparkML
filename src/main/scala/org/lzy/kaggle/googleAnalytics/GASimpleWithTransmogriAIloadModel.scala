@@ -24,28 +24,28 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
       .withCrossValidation()
       .setInput(totals_transactionRevenue, customerFeatures)
       .getOutput()
-    val testDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.testPath) ,key = v => v.fullVisitorId)
+    val testDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.testPath), key = v => v.fullVisitorId)
     val modelPath = Constants.modelPath
     val test_ds = testDataReader.readDataset()
-      test_ds.show(false)
+    test_ds.show(false)
     val workflow = new OpWorkflow()
-      .setResultFeatures(prediction,customerFeatures)
-//      .setReader(testDataReader)
-          .setInputDataset(test_ds)
+      .setResultFeatures(prediction, customerFeatures)
+      //      .setReader(testDataReader)
+      .setInputDataset(test_ds)
 
     val model = workflow.loadModel(modelPath)
-//      .setInputDataset(test_ds)
-        .setReader(testDataReader)
-    model.score(keepRawFeatures = true).show(false)
-//            val prediction_df=model.score(keepRawFeatures = true)
-//              .map(raw=>{
-//                val fullVisitorId=raw.getString(0)
-//                val transactionRevenue=raw.getMap[String,Double](1).getOrElse("prediction",0d)
-//                (fullVisitorId,transactionRevenue)
-//              }).toDF("fullVisitorId","transactionRevenue")
-//val util=new Utils(spark)
-//    util.writeToCSV(prediction_df,Constants.resultPath)
-//    prediction_df.show(false)
+      //      .setInputDataset(test_ds)
+      .setReader(testDataReader)
+    //    model.score(path=Option(Constants.resultPath)).show(false)
+    val prediction_df = model.score()
+      .map(raw => {
+        val fullVisitorId = raw.getString(0)
+        val transactionRevenue = raw.getMap[String, Double](1).getOrElse("prediction", 0d).formatted("%.4f")
+        (fullVisitorId, transactionRevenue)
+      }).toDF("fullVisitorId", "transactionRevenue")
+    val util = new Utils(spark)
+    prediction_df.show(false)
+    util.writeToCSV(prediction_df, Constants.resultPath)
 
 
 
@@ -60,13 +60,13 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
     //    val lr:FeatureLike[Prediction]=new OpRandomForestRegressor().setInput(totals_transactionRevenue, customerFeatures) .getOutput()
     //  .setInput(totals_transactionRevenue, customerFeatures) .getOutput()
     //    lrModel.transform()
-//    model.computeDataUpTo(totals_transactionRevenue).show(false)
-//    val selectModel: SelectedModel = model.getOriginStageOf(prediction).asInstanceOf[SelectedModel]
-//    println(selectModel.extractParamMap())
-//    val pre_ds = selectModel.transform(test_ds)
+    //    model.computeDataUpTo(totals_transactionRevenue).show(false)
+    //    val selectModel: SelectedModel = model.getOriginStageOf(prediction).asInstanceOf[SelectedModel]
+    //    println(selectModel.extractParamMap())
+    //    val pre_ds = selectModel.transform(test_ds)
 
-//    val op=toOP(selectModel,selectModel.uid).transform(pre_ds).show(false)
-//    SparkModelConverter.toOPUnchecked(selectModel).transform(pre_ds).show(false)
-//    SparkModelConverter.toOP(selectModel,selectModel.uid)
+    //    val op=toOP(selectModel,selectModel.uid).transform(pre_ds).show(false)
+    //    SparkModelConverter.toOPUnchecked(selectModel).transform(pre_ds).show(false)
+    //    SparkModelConverter.toOP(selectModel,selectModel.uid)
   }
 }
