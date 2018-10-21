@@ -4,7 +4,6 @@ import java.util.Date
 
 import com.salesforce.op.readers.{CSVProductReader, DataReaders}
 import common.SparkUtil
-import org.lzy.kaggle.googleAnalytics.{Constants, Customer2}
 
 object ReadTest {
   def main(args: Array[String]): Unit = {

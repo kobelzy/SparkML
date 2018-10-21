@@ -46,7 +46,8 @@ trait CustomerFeatures extends Serializable{
     val totals_hits = FeatureBuilder.Real[Customer].extract(_.totals_hits.toReal).asPredictor
     val totals_newVisits = FeatureBuilder.Real[Customer].extract(_.totals_newVisits.toReal).asPredictor
     val totals_pageviews = FeatureBuilder.Real[Customer].extract(_.totals_pageviews.toReal).asPredictor
-    val totals_transactionRevenue = FeatureBuilder.RealNN[Customer].extract(_.totals_transactionRevenue.getOrElse(0d).toRealNN).asResponse
+
+
     val trafficSource_adContent = FeatureBuilder.PickList[Customer].extract(_.trafficSource_adContent.toPickList).asPredictor
     val trafficSource_campaign = FeatureBuilder.PickList[Customer].extract(_.trafficSource_campaign.toPickList).asPredictor
     val trafficSource_isTrueDirect = FeatureBuilder.Binary[Customer].extract(_.trafficSource_isTrueDirect.getOrElse(0d).toBinary).asPredictor
@@ -55,6 +56,9 @@ trait CustomerFeatures extends Serializable{
     val trafficSource_referralPath = FeatureBuilder.PickList[Customer].extract(_.trafficSource_referralPath.toPickList).asPredictor
     val trafficSource_source = FeatureBuilder.PickList[Customer].extract(_.trafficSource_source.toPickList).asPredictor
 
+    val totals_transactionRevenue = FeatureBuilder.RealNN[Customer].extract(x=>math.log1p(x.totals_transactionRevenue.getOrElse(0d)).toRealNN).asResponse
+
+
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-统计特征
     /////////////////////////////////////////////////////////////////////////////////
@@ -62,7 +66,7 @@ trait CustomerFeatures extends Serializable{
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-最终特征选择
     /////////////////////////////////////////////////////////////////////////////////
-    val customerFeatures: FeatureLike[OPVector] = Seq(channelGrouping, date, fullVisitorId, sessionId, visitId, visitNumber, visitStartTime, device_browser, device_deviceCategory, device_isMobile, device_operatingSystem, geoNetwork_city, geoNetwork_continent, geoNetwork_country, geoNetwork_metro, geoNetwork_networkDomain, geoNetwork_region, geoNetwork_subContinent, totals_bounces, totals_hits, totals_newVisits, totals_pageviews, trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_keyword, trafficSource_medium, trafficSource_referralPath, trafficSource_source)
+    val customerFeatures: FeatureLike[OPVector] = Seq(channelGrouping, date,  visitNumber, visitStartTime, device_browser, device_deviceCategory, device_isMobile, device_operatingSystem, geoNetwork_city, geoNetwork_continent, geoNetwork_country, geoNetwork_metro, geoNetwork_networkDomain, geoNetwork_region, geoNetwork_subContinent, totals_bounces, totals_hits, totals_newVisits, totals_pageviews, trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_keyword, trafficSource_medium, trafficSource_referralPath, trafficSource_source)
             .transmogrify()
 
     ////////////////////////////////////////////////////////////////////////////////

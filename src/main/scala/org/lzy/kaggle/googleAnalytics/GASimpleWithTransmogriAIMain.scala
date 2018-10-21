@@ -1,10 +1,10 @@
 package org.lzy.kaggle.googleAnalytics
 
 import com.salesforce.op.{ModelInsights, OpWorkflow, OpWorkflowModel}
-import com.salesforce.op.evaluators.Evaluators
+import com.salesforce.op.evaluators.{Evaluators, OpRegressionEvaluator}
 import com.salesforce.op.features.FeatureLike
 import com.salesforce.op.features.types._
-import com.salesforce.op.readers.DataReaders
+import com.salesforce.op.readers.{CSVProductReader, DataReaders}
 import com.salesforce.op.stages.impl.regression.RegressionModelSelector
 import com.salesforce.op.stages.impl.selector.SelectedModel
 import com.salesforce.op.stages.impl.tuning.DataSplitter
@@ -34,26 +34,23 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
     import spark.implicits._
 
 
-
     ////////////////////////////////////////////////////////////////////////////////
     //定义测试模型集
     /////////////////////////////////////////////////////////////////////////////////
     val randomSeed = 112233L
 
     val prediction: FeatureLike[Prediction] =
-    RegressionModelSelector
-      .withCrossValidation(
-      dataSplitter = Some(DataSplitter(seed = randomSeed)), seed = randomSeed
-//      ,modelTypesToUse = Seq(OpGBTRegressor, OpRandomForestRegressor)
- )
-      //RandomForestRegression, LinearRegression, GBTRegression
-      .setInput(totals_transactionRevenue, customerFeatures).getOutput()
-    val evaluator = Evaluators.Regression()
-      .setLabelCol(totals_transactionRevenue)
-      .setPredictionCol(prediction)
-    val trainDataReader = DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath))
-//    val util=new Utils(spark)
-//    val train_DS=util.readToCSV(Constants.trainPath).as[Customer]
+      RegressionModelSelector
+        .withCrossValidation(
+          dataSplitter = Some(DataSplitter(seed = randomSeed)), seed = randomSeed
+          //      ,modelTypesToUse = Seq(OpGBTRegressor, OpRandomForestRegressor)
+        )
+        //RandomForestRegression, LinearRegression, GBTRegression
+        .setInput(totals_transactionRevenue, finalFeatures).getOutput()
+
+    val trainDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath), key = v => v.fullVisitorId)
+    //    val util=new Utils(spark)
+    //    val train_DS=util.readToCSV(Constants.trainPath).as[Customer]
 
     trainDataReader.readDataset().show(false)
     ////////////////////////////////////////////////////////////////////////////////
@@ -61,24 +58,28 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
     /////////////////////////////////////////////////////////////////////////////////
 
     val workflow = new OpWorkflow()
-            .setResultFeatures(prediction)
+      .setResultFeatures(prediction)
       .setReader(trainDataReader)
-//      .setInputDataset(train_DS)
-    val fittedWorkflow:OpWorkflowModel = workflow.train()
-    fittedWorkflow.save(Constants.modelPath,true)
+    //      .setInputDataset(train_DS)
+    val fittedWorkflow: OpWorkflowModel = workflow.train()
+    fittedWorkflow.save(Constants.modelPath, true)
     ////////////////////////////////////////////////////////////////////////////////
     //模型评估
     /////////////////////////////////////////////////////////////////////////////////
-    println(s"Summary: ${fittedWorkflow.summary()}")
+//    println(s"Summary: ${fittedWorkflow.summary()}")
     println("Model summary:\n" + fittedWorkflow.summaryPretty())
-////    // Manifest the result features of the workflow
-////    println("Scoring the model")
-//    val (dataframe, metrics) = fittedWorkflow.scoreAndEvaluate(evaluator = evaluator)
-//
-//    println("Transformed dataframe columns:")
-//    dataframe.columns.foreach(println)
-//    println("Metrics:")
-//    println(metrics)
+    ////    // Manifest the result features of the workflow
+    ////    println("Scoring the model")
+    //    val (dataframe, metrics) = fittedWorkflow.scoreAndEvaluate(evaluator = evaluator)
+    //
+    //    println("Transformed dataframe columns:")
+    //    dataframe.columns.foreach(println)
+    //    println("Metrics:")
+    //    println(metrics)
+    val evaluator = Evaluators.Regression()
+      .setLabelCol(totals_transactionRevenue)
+      .setPredictionCol(prediction)
 
+    println("均方根误差:"+fittedWorkflow.evaluate(evaluator = evaluator).RootMeanSquaredError)
   }
 }
