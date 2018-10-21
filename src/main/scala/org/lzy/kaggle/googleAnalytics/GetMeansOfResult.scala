@@ -18,15 +18,22 @@ run()
 
     result_df.show(false)
     println(result_df.count())
-    val distincted=result_df.groupBy("fullVisitorId")
-      .agg(mean("transactionRevenue").alias("transactionRevenue"))
+    val distincted=result_df
       .map(raw => {
         val fullVisitorId = raw.getString(0).toString
-        val transactionRevenue = raw.getDouble(1).formatted("%.4f")
+        val transactionRevenue = math.expm1(raw.getString(1).toDouble) match {
+          case a if a>=1000000  =>1000000
+          case b =>b
+        }
         (fullVisitorId, transactionRevenue)
 //        fullVisitorId,PredictedLogRevenue
       }).toDF("fullVisitorId", "PredictedLogRevenue")
     distincted.show(false)
-    util.writeToCSV(distincted,Constants.basePath+"result/result.csv")
+    util.writeToCSV(distincted,Constants.basePath+"result/expm1.csv")
+  }
+
+  def run2()={
+    val d1=0.008112021281382269
+    println(math.expm1(d1))
   }
 }

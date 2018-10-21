@@ -14,10 +14,10 @@ import org.apache.spark.sql.SparkSession
 /*
 
 spark-submit --master yarn-client --queue all \
---num-executors 15 \
---executor-memory 7g \
+--num-executors 16 \
+--executor-memory 10g \
 --driver-memory 3g \
---executor-cores 3 \
+--executor-cores 4 \
 --packages com.salesforce.transmogrifai:transmogrifai-core_2.11:0.4.0 \
 --class org.lzy.kaggle.googleAnalytics.GASimpleWithTransmogriAIMain SparkML.jar */
 

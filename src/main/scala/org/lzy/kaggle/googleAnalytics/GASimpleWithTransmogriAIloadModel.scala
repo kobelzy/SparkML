@@ -5,16 +5,18 @@ import com.salesforce.op.features.FeatureLike
 import com.salesforce.op.features.types.Prediction
 import com.salesforce.op.readers.{CSVProductReader, DataReaders}
 import com.salesforce.op.stages.impl.regression.RegressionModelSelector
-import com.salesforce.op.stages.impl.selector.SelectedModel
-import com.salesforce.op.stages.sparkwrappers.specific.SparkModelConverter
 import common.{SparkUtil, Utils}
+import org.apache.spark.sql.Row
+
 /**
   * Auther: lzy
   * Description:
   * Date Created by： 9:23 on 2018/10/9
   * Modified By：
   */
-
+/*
+spark-submit --master yarn-client --queue all --num-executors 16 --executor-memory 10g --driver-memory 3g --executor-cores 4 --packages com.salesforce.transmogrifai:transmogrifai-core_2.11:0.4.0 --class org.lzy.kaggle.googleAnalytics.GASimpleWithTransmogriAIloadModel SparkML.jar
+ */
 object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
   def main(args: Array[String]): Unit = {
     implicit val spark = SparkUtil.getSpark()
@@ -22,7 +24,7 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
     import spark.implicits._
     val prediction: FeatureLike[Prediction] = RegressionModelSelector
       .withCrossValidation()
-      .setInput(totals_transactionRevenue, customerFeatures)
+      .setInput(totals_transactionRevenue, finalFeatures)
       .getOutput()
     val testDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.testPath), key = v => v.fullVisitorId)
     val modelPath = Constants.modelPath
@@ -37,18 +39,21 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
       //      .setInputDataset(test_ds)
       .setReader(testDataReader)
     //    model.score(path=Option(Constants.resultPath)).show(false)
+    val util = new Utils(spark)
+
+
     val prediction_df = model.score()
       .map(raw => {
         val fullVisitorId = raw.getString(0)
-        val transactionRevenue = raw.getMap[String, Double](1).getOrElse("prediction", 0d).formatted("%.4f")
+        val transactionRevenue = math.expm1(raw.getMap[String, Double](1).getOrElse("prediction", 0d))
         (fullVisitorId, transactionRevenue)
-      }).toDF("fullVisitorId", "transactionRevenue")
-    val util = new Utils(spark)
-    prediction_df.show(false)
-    util.writeToCSV(prediction_df, Constants.resultPath)
-
-
-
+      }).toDF("fullVisitorId", "PredictedLogRevenue")
+      .groupBy("fullVisitorId").sum("PredictedLogRevenue")
+      .map{case Row(fullVisitorId:String,transactionRevenue:Double)=>
+        (fullVisitorId,math.log1p(transactionRevenue))
+      }
+      .toDF("fullVisitorId", "PredictedLogRevenue")
+    util.writeToCSV(prediction_df, Constants.basePath + "result/result.csv")
     //    println(model.summary())
     //    println("")
     //    //    println(model.summaryJson())

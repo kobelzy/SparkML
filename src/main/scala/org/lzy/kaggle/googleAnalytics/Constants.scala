@@ -21,5 +21,5 @@ object Constants {
   val modelPath=basePath + "model/bestModel"
   val modelPath2=basePath+"model/bestModel2"
 
-  val resultPath=basePath+"result/result1.csv"
+  val resultPath=basePath+"result/result.csv"
 }
