@@ -1,10 +1,11 @@
 package org.lzy.kaggle.googleAnalytics
 
+import com.salesforce.op.aggregators.CutOffTime
 import com.salesforce.op.{ModelInsights, OpWorkflow, OpWorkflowModel}
 import com.salesforce.op.evaluators.{Evaluators, OpRegressionEvaluator}
 import com.salesforce.op.features.FeatureLike
 import com.salesforce.op.features.types._
-import com.salesforce.op.readers.{CSVProductReader, DataReaders}
+import com.salesforce.op.readers.{AggregateParams, CSVProductReader, DataReaders}
 import com.salesforce.op.stages.impl.regression.RegressionModelSelector
 import com.salesforce.op.stages.impl.selector.SelectedModel
 import com.salesforce.op.stages.impl.tuning.DataSplitter
@@ -49,8 +50,16 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
         //RandomForestRegression, LinearRegression, GBTRegression
         .setInput(totals_transactionRevenue, finalFeatures).getOutput()
 
-    val trainDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath), key = v => v.fullVisitorId)
-    val testDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.testPath), key = v => v.fullVisitorId)
+    val trainDataReader: CSVProductReader[Customer] =
+//      DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath), key = v => v.fullVisitorId)
+    DataReaders.Aggregate.csvCase[Customer](path = Option(Constants.trainPath),
+      key = v => v.fullVisitorId,
+      aggregateParams = AggregateParams(
+        timeStampFn = Some[Customer => Long](s => s.date),
+        cutOffTime = CutOffTime.NoCutoff()
+      )
+    )
+    //    val testDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.testPath), key = v => v.fullVisitorId)
     //    val util=new Utils(spark)
     //    val train_DS=util.readToCSV(Constants.trainPath).as[Customer]
 
@@ -63,13 +72,13 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
       .setResultFeatures(prediction)
       .setReader(trainDataReader)
     //      .setInputDataset(train_DS)
-            .withRawFeatureFilter(Some(trainDataReader),Some(testDataReader))
+    //            .withRawFeatureFilter(Some(trainDataReader),Some(testDataReader))
     val fittedWorkflow: OpWorkflowModel = workflow.train()
     fittedWorkflow.save(Constants.modelPath, true)
     ////////////////////////////////////////////////////////////////////////////////
     //模型评估
     /////////////////////////////////////////////////////////////////////////////////
-//    println(s"Summary: ${fittedWorkflow.summary()}")
+    //    println(s"Summary: ${fittedWorkflow.summary()}")
     println("Model summary:\n" + fittedWorkflow.summaryPretty())
     ////    // Manifest the result features of the workflow
     ////    println("Scoring the model")
@@ -83,6 +92,6 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
       .setLabelCol(totals_transactionRevenue)
       .setPredictionCol(prediction)
 
-    println("均方根误差:"+fittedWorkflow.evaluate(evaluator = evaluator).RootMeanSquaredError)
+    println("均方根误差:" + fittedWorkflow.evaluate(evaluator = evaluator).RootMeanSquaredError)
   }
 }

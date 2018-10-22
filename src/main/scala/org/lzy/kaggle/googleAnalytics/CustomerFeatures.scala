@@ -3,6 +3,10 @@ package org.lzy.kaggle.googleAnalytics
 import com.salesforce.op.features.{FeatureBuilder, FeatureLike}
 import com.salesforce.op.features.types._
 import java.text.SimpleDateFormat
+
+import com.salesforce.op.aggregators.SumRealNN
+import org.joda.time.Duration
+
 import scala.util.Try
 /**
   * Auther: lzy
@@ -22,7 +26,7 @@ trait CustomerFeatures extends Serializable{
     val channelGrouping = FeatureBuilder.PickList[Customer].extract(_.channelGrouping.toPickList).asPredictor
     //有空值，""也是字符串
     val date = FeatureBuilder.Date[Customer].extract(v => v.date.toDate).asPredictor
-    val visitStartTime = FeatureBuilder.DateTime[Customer].extract(v => v.visitStartTime.map(_.toLong * 1000).toDateTime).asPredictor
+    val visitStartTime = FeatureBuilder.Date[Customer].extract(v => v.visitStartTime.map(_.toLong * 1000).toDate).asPredictor
 //    val date=FeatureBuilder.Text[Customer].extract(_.fullVisitorId.toText).asPredictor
 
 
@@ -62,7 +66,9 @@ trait CustomerFeatures extends Serializable{
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-统计特征
     /////////////////////////////////////////////////////////////////////////////////
-
+        val allVisitNum=FeatureBuilder.RealNN[Customer].extract(_.visitNumber.getOrElse(0d).toRealNN)
+      .aggregate(SumRealNN).window(Duration.standardDays(7))
+      .asPredictor
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-最终特征选择
     /////////////////////////////////////////////////////////////////////////////////
@@ -70,7 +76,9 @@ trait CustomerFeatures extends Serializable{
         device_browser, device_deviceCategory, device_isMobile, device_operatingSystem,
         geoNetwork_city, geoNetwork_continent, geoNetwork_country, geoNetwork_metro, geoNetwork_networkDomain, geoNetwork_region, geoNetwork_subContinent,
         totals_bounces, totals_hits, totals_newVisits, totals_pageviews,
-        trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_medium, trafficSource_referralPath, trafficSource_source)
+        trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_medium, trafficSource_referralPath, trafficSource_source,
+        allVisitNum
+    )
             .transmogrify()
 
     ////////////////////////////////////////////////////////////////////////////////
