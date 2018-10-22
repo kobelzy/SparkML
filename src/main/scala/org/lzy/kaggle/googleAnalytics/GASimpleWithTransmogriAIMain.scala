@@ -10,10 +10,11 @@ import com.salesforce.op.stages.impl.selector.SelectedModel
 import com.salesforce.op.stages.impl.tuning.DataSplitter
 import common.{SparkUtil, Utils}
 import org.apache.spark.sql.SparkSession
+import spire.std.option
 
 /*
 
-spark-submit --master yarn-client --queue all \
+spark-submit --master yarn-cluster --queue all \
 --num-executors 16 \
 --executor-memory 10g \
 --driver-memory 3g \
@@ -49,6 +50,7 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
         .setInput(totals_transactionRevenue, finalFeatures).getOutput()
 
     val trainDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath), key = v => v.fullVisitorId)
+    val testDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.testPath), key = v => v.fullVisitorId)
     //    val util=new Utils(spark)
     //    val train_DS=util.readToCSV(Constants.trainPath).as[Customer]
 
@@ -61,6 +63,7 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
       .setResultFeatures(prediction)
       .setReader(trainDataReader)
     //      .setInputDataset(train_DS)
+            .withRawFeatureFilter(Some(trainDataReader),Some(testDataReader))
     val fittedWorkflow: OpWorkflowModel = workflow.train()
     fittedWorkflow.save(Constants.modelPath, true)
     ////////////////////////////////////////////////////////////////////////////////
