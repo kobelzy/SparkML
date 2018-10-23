@@ -7,6 +7,7 @@ import com.salesforce.op.features.FeatureLike
 import com.salesforce.op.features.types._
 import com.salesforce.op.readers.{AggregateParams, CSVProductReader, DataReaders}
 import com.salesforce.op.stages.impl.regression.RegressionModelSelector
+import com.salesforce.op.stages.impl.regression.RegressionModelsToTry.{OpGBTRegressor, OpRandomForestRegressor}
 import com.salesforce.op.stages.impl.selector.SelectedModel
 import com.salesforce.op.stages.impl.tuning.DataSplitter
 import common.{SparkUtil, Utils}
@@ -45,20 +46,21 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
       RegressionModelSelector
         .withCrossValidation(
           dataSplitter = Some(DataSplitter(seed = randomSeed)), seed = randomSeed
-          //      ,modelTypesToUse = Seq(OpGBTRegressor, OpRandomForestRegressor)
+                ,modelTypesToUse = Seq( OpRandomForestRegressor)
         )
         //RandomForestRegression, LinearRegression, GBTRegression
         .setInput(totals_transactionRevenue, finalFeatures).getOutput()
 
     val trainDataReader: CSVProductReader[Customer] =
-//      DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath), key = v => v.fullVisitorId)
-    DataReaders.Aggregate.csvCase[Customer](path = Option(Constants.trainPath),
-      key = v => v.fullVisitorId,
-      aggregateParams = AggregateParams(
-        timeStampFn = Some[Customer => Long](s => s.date),
-        cutOffTime = CutOffTime.NoCutoff()
-      )
-    )
+      DataReaders.Simple.csvCase[Customer](path = Option(Constants.trainPath), key = v => v.fullVisitorId)
+//    DataReaders.Aggregate.csvCase[Customer](path = Option(Constants.trainPath),
+//      key = v => v.fullVisitorId,
+//      aggregateParams = AggregateParams(
+//        timeStampFn = Some[Customer => Long](s => s.date),
+//        cutOffTime = CutOffTime.NoCutoff()
+//      )
+//    )
+
     //    val testDataReader: CSVProductReader[Customer] = DataReaders.Simple.csvCase[Customer](path = Option(Constants.testPath), key = v => v.fullVisitorId)
     //    val util=new Utils(spark)
     //    val train_DS=util.readToCSV(Constants.trainPath).as[Customer]

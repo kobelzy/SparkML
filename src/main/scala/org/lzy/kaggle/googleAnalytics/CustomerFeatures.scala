@@ -16,6 +16,16 @@ import scala.util.Try
   */
 trait CustomerFeatures extends Serializable{
     val sdf = new SimpleDateFormat("yyyyMMdd")
+
+    def transfomNone(str:String)={
+        val newOp:Option[String]=str match {
+            case "(not set)" =>None
+            case "(none)"=>None
+            case "not available in demo dataset"=>None
+            case _=> Some(str)
+        }
+        newOp
+    }
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-基础特征
     /////////////////////////////////////////////////////////////////////////////////
@@ -35,17 +45,20 @@ trait CustomerFeatures extends Serializable{
     val visitId = FeatureBuilder.Text[Customer].extract(_.fullVisitorId.toText).asPredictor
     val visitNumber = FeatureBuilder.RealNN[Customer].extract(_.visitNumber.getOrElse(0d).toRealNN).asPredictor
 
-    val device_browser = FeatureBuilder.PickList[Customer].extract(_.device_browser.toPickList).asPredictor
+    val device_browser = FeatureBuilder.PickList[Customer].extract(v=>transfomNone(v.device_browser).toPickList).asPredictor
     val device_deviceCategory = FeatureBuilder.PickList[Customer].extract(_.device_deviceCategory.toPickList).asPredictor
     val device_isMobile = FeatureBuilder.Binary[Customer].extract(_.device_isMobile.getOrElse(0d).toBinary).asPredictor
-    val device_operatingSystem = FeatureBuilder.PickList[Customer].extract(_.device_operatingSystem.toPickList).asPredictor
-    val geoNetwork_city = FeatureBuilder.City[Customer].extract(_.geoNetwork_city.toCity).asPredictor
-    val geoNetwork_continent = FeatureBuilder.PickList[Customer].extract(_.geoNetwork_continent.toPickList).asPredictor
+    val device_operatingSystem = FeatureBuilder.PickList[Customer].extract(v=>transfomNone(v.device_operatingSystem).toPickList).asPredictor
+
+
+    val geoNetwork_city = FeatureBuilder.City[Customer].extract(v=>transfomNone(v.geoNetwork_city).toCity).asPredictor
+    val geoNetwork_continent = FeatureBuilder.PickList[Customer].extract(v=> transfomNone(v.geoNetwork_continent).toPickList).asPredictor
     val geoNetwork_country = FeatureBuilder.Country[Customer].extract(_.geoNetwork_country.toCountry).asPredictor
-    val geoNetwork_metro = FeatureBuilder.PickList[Customer].extract(_.geoNetwork_metro.toPickList).asPredictor
+    val geoNetwork_metro = FeatureBuilder.PickList[Customer].extract(v=>transfomNone(v.geoNetwork_metro).toPickList).asPredictor
     val geoNetwork_networkDomain = FeatureBuilder.URL[Customer].extract(_.geoNetwork_networkDomain.toURL).asPredictor
-    val geoNetwork_region = FeatureBuilder.PickList[Customer].extract(_.geoNetwork_region.toPickList).asPredictor
+    val geoNetwork_region = FeatureBuilder.PickList[Customer].extract(v=>transfomNone(v.geoNetwork_region).toPickList).asPredictor
     val geoNetwork_subContinent = FeatureBuilder.PickList[Customer].extract(_.geoNetwork_subContinent.toPickList).asPredictor
+
     val totals_bounces = FeatureBuilder.Real[Customer].extract(_.totals_bounces.toReal).asPredictor
     val totals_hits = FeatureBuilder.Real[Customer].extract(_.totals_hits.toReal).asPredictor
     val totals_newVisits = FeatureBuilder.Real[Customer].extract(_.totals_newVisits.toReal).asPredictor
@@ -53,10 +66,10 @@ trait CustomerFeatures extends Serializable{
 
 
     val trafficSource_adContent = FeatureBuilder.PickList[Customer].extract(_.trafficSource_adContent.toPickList).asPredictor
-    val trafficSource_campaign = FeatureBuilder.PickList[Customer].extract(_.trafficSource_campaign.toPickList).asPredictor
+    val trafficSource_campaign = FeatureBuilder.PickList[Customer].extract(v=>transfomNone(v.trafficSource_campaign).toPickList).asPredictor
     val trafficSource_isTrueDirect = FeatureBuilder.Binary[Customer].extract(_.trafficSource_isTrueDirect.getOrElse(0d).toBinary).asPredictor
     val trafficSource_keyword = FeatureBuilder.Text[Customer].extract(_.geoNetwork_subContinent.toText).asPredictor
-    val trafficSource_medium = FeatureBuilder.PickList[Customer].extract(_.trafficSource_medium.toPickList).asPredictor
+    val trafficSource_medium = FeatureBuilder.PickList[Customer].extract(v=>transfomNone(v.trafficSource_medium).toPickList).asPredictor
     val trafficSource_referralPath = FeatureBuilder.PickList[Customer].extract(_.trafficSource_referralPath.toPickList).asPredictor
     val trafficSource_source = FeatureBuilder.PickList[Customer].extract(_.trafficSource_source.toPickList).asPredictor
 
@@ -66,9 +79,9 @@ trait CustomerFeatures extends Serializable{
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-统计特征
     /////////////////////////////////////////////////////////////////////////////////
-        val allVisitNum=FeatureBuilder.RealNN[Customer].extract(_.visitNumber.getOrElse(0d).toRealNN)
-      .aggregate(SumRealNN).window(Duration.standardDays(7))
-      .asPredictor
+//        val allVisitNum=FeatureBuilder.RealNN[Customer].extract(_.visitNumber.getOrElse(0d).toRealNN)
+//      .aggregate(SumRealNN).window(Duration.standardDays(7))
+//      .asPredictor
     ////////////////////////////////////////////////////////////////////////////////
     //[特征工程]-最终特征选择
     /////////////////////////////////////////////////////////////////////////////////
@@ -76,8 +89,7 @@ trait CustomerFeatures extends Serializable{
         device_browser, device_deviceCategory, device_isMobile, device_operatingSystem,
         geoNetwork_city, geoNetwork_continent, geoNetwork_country, geoNetwork_metro, geoNetwork_networkDomain, geoNetwork_region, geoNetwork_subContinent,
         totals_bounces, totals_hits, totals_newVisits, totals_pageviews,
-        trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_medium, trafficSource_referralPath, trafficSource_source,
-        allVisitNum
+        trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_medium, trafficSource_referralPath, trafficSource_source
     )
             .transmogrify()
 
