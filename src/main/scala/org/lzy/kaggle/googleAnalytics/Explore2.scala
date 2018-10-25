@@ -1,5 +1,7 @@
 package org.lzy.kaggle.googleAnalytics
 
+import java.util.Date
+
 import common.{SparkUtil, Utils}
 
 object Explore2 {
