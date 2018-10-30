@@ -21,7 +21,7 @@ spark-submit --master yarn-cluster --queue all \
 --executor-memory 10g \
 --driver-memory 3g \
 --executor-cores 4 \
---packages com.salesforce.transmogrifai:transmogrifai-core_2.11:0.4.0 \
+--packages com.salesforce.transmogrifai:transmogrifai-core_2.11:0.4.0,joda-time:joda-time:2.10.1 \
 --class org.lzy.kaggle.googleAnalytics.GASimpleWithTransmogriAIMain SparkML.jar */
 
 object GASimpleWithTransmogriAIMain extends CustomerFeatures {
@@ -46,7 +46,7 @@ object GASimpleWithTransmogriAIMain extends CustomerFeatures {
       RegressionModelSelector
         .withCrossValidation(
           dataSplitter = Some(DataSplitter(seed = randomSeed)), seed = randomSeed
-                ,modelTypesToUse = Seq( OpRandomForestRegressor)
+//                ,modelTypesToUse = Seq( OpRandomForestRegressor)
         )
         //RandomForestRegression, LinearRegression, GBTRegression
         .setInput(totals_transactionRevenue, finalFeatures).getOutput()

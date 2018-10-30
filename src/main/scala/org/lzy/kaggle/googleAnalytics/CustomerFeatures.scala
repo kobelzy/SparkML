@@ -1,15 +1,12 @@
 package org.lzy.kaggle.googleAnalytics
 
-import com.salesforce.op.features.{FeatureBuilder, FeatureLike}
-import com.salesforce.op.features.types._
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
-import com.salesforce.op.aggregators.SumRealNN
-import org.joda.time.Duration
-
-import scala.util.Try
-
+import com.salesforce.op.features.types._
+import com.salesforce.op.features.{FeatureBuilder, FeatureLike}
+import org.dmg.pmml.True
+import org.joda.time.DateTime
 /**
   * Auther: lzy
   * Description:
@@ -87,9 +84,8 @@ trait CustomerFeatures extends Serializable {
   }).asPredictor
   //获取星期几
   val week=FeatureBuilder.PickList[Customer].extract(v=>{
-    val cal= Calendar.getInstance()
-    cal.setTimeInMillis(v.visitStartTime.getOrElse(0d).toLong)
-    cal.get(Calendar.DAY_OF_WEEK).toString.toPickList
+    val dt=new DateTime(v.visitStartTime.getOrElse(0d)toLong)
+    dt.dayOfWeek().toString.toPickList
   }).asPredictor
 
 val source_country=FeatureBuilder.PickList[Customer].extract(v=>{
@@ -125,11 +121,22 @@ val source_country=FeatureBuilder.PickList[Customer].extract(v=>{
         channelGrouping_os.toPickList
     }).asPredictor
 
-
-
 //        val allVisitNum=FeatureBuilder.RealNN[Customer].extract(_.visitNumber.getOrElse(0d).toRealNN)
 //      .aggregate(SumRealNN).window(Duration.standardDays(7))
 //      .asPredictor
+  val histNN=totals_hits.fillMissingWithMean()
+  val time_occurs=visitStartTime.occurs()
+  val time_UnitCircle=visitStartTime.toUnitCircle()
+
+//  print("Start add time period feature...")
+//  df.sort_values(['fullVisitorId', 'date'], ascending=True, inplace=True)
+//  df['next_revisit_time'] = (
+//    df['date'] - df[['fullVisitorId', 'date']].groupby('fullVisitorId')['date'].shift(1)
+//  ).astype(np.int64) // 1e9 // 60 // 60
+//  df['prev_revisit_time'] = (
+//    df['date'] - df[['fullVisitorId', 'date']].groupby('fullVisitorId')['date'].shift(-1)
+//  ).astype(np.int64) // 1e9 // 60 // 60
+//  print("Finished time periodfeature...")
 ////////////////////////////////////////////////////////////////////////////////
 //[特征工程]-最终特征选择
 /////////////////////////////////////////////////////////////////////////////////
@@ -140,7 +147,8 @@ totals_bounces, totals_hits, totals_newVisits, totals_pageviews,
 trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, trafficSource_medium, trafficSource_referralPath, trafficSource_source
   ,
   isVisitIdEqStartTime,week,source_country,campaign_medium,browser_category,browser_os,device_deviceCategory_cahnnelGrouping,
-  channelGrouping_browser,channelGrouping_os
+  channelGrouping_browser,channelGrouping_os,
+  histNN,time_occurs,time_UnitCircle
 
 )
 .transmogrify ()
@@ -148,6 +156,6 @@ trafficSource_adContent, trafficSource_campaign, trafficSource_isTrueDirect, tra
 ////////////////////////////////////////////////////////////////////////////////
 //[特征工程]-数据泄露及空值处理
 /////////////////////////////////////////////////////////////////////////////////
-val sanityCheck = true
+val sanityCheck = false
 val finalFeatures = if (sanityCheck) totals_transactionRevenue.sanityCheck (customerFeatures) else customerFeatures
 }
