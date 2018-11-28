@@ -86,39 +86,8 @@
             <version>${transmogrifai.version}</version>
         </dependency>
 
-        <!--<dependency>-->
-            <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-        <!--<artifactId>transmogrifai-models_2.11</artifactId>-->
-        <!--<version>${transmogrifai.version}</version>-->
-        <!--</dependency>-->
 
-        <!--<dependency>-->
-        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-        <!--<artifactId>transmogrifai-cli_2.11</artifactId>-->
-        <!--<version>${transmogrifai.version}</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-        <!--<artifactId>transmogrifai-utils_2.11</artifactId>-->
-        <!--<version>${transmogrifai.version}</version>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-        <!--<artifactId>language-detector</artifactId>-->
-        <!--<version>0.0.1</version>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-        <!--<artifactId>transmogrifai-templates_2.11</artifactId>-->
-        <!--<version>${transmogrifai.version}</version>-->
-        <!--</dependency>-->
-        <!--<dependency>-->
-        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-        <!--<artifactId>transmogrifai-testkit_2.11</artifactId>-->
-        <!--<version>${transmogrifai.version}</version>-->
-        <!--</dependency>-->
+  
 
         <dependency>
             <groupId>joda-time</groupId>
