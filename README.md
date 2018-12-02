@@ -1,5 +1,6 @@
 # SparkML
  [![Spark version](https://img.shields.io/badge/spark-2.3-brightgreen.svg)](https://spark.apache.org/downloads.html) [![Scala version](https://img.shields.io/badge/scala-2.11-brightgreen.svg)](https://www.scala-lang.org/download/2.11.12.html) 
+
 基于SparkML2.0进行的Kaggle、JData等比赛
 
 ## 比赛1 2018JData如期而至销量预测 top35
