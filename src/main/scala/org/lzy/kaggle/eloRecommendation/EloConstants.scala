@@ -3,7 +3,7 @@ package org.lzy.kaggle.eloRecommendation
 object EloConstants {
   var basePath = "hdfs://10.95.3.172:9000/user/lzy/EloRecommendation/"
   if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) {
-    basePath = "D:/Dataset/EloRecommendation"
+    basePath = "D:/Dataset/EloRecommendation/"
     //         basePath = "hdfs://10.95.3.172:9000/user/lzy/GoogleAnalyse/"
   }
 
