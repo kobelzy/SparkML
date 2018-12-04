@@ -28,32 +28,35 @@
  - city_id	城市脱敏id
  - state_id	州脱敏id
  - category_1	脱敏商品1
- - category_2	脱敏商品
+ - category_2	脱敏商品2
  - category_3	脱敏商品3
 
 ###new_merchant_period（196303，196万行）
 结构与historical一致
 
 ###merchants(334697)
- - merchant_id	客户id
- - merchant_group_id	客户分组id
- - merchant_category_id	客户商品id（脱敏）
- - subsector_id 商品分类
- - numerical_1	脱敏指标
- - numerical_2	脱敏指标
- - category_1	脱敏商品
- - most_recent_sales_range	Range of revenue (monetary units) in last active month --> A > B > C > D > E
- - most_recent_purchases_range	Range of quantity of transactions in last active month --> A > B > C > D > E
- - avg_sales_lag3	Monthly average of revenue in last 3 months divided by revenue in last active month
- - avg_purchases_lag3	Monthly average of transactions in last 3 months divided by transactions in last active month
- - active_months_lag3	Quantity of active months within last 3 months
- - avg_sales_lag6	Monthly average of revenue in last 6 months divided by revenue in last active month
- - avg_purchases_lag6	Monthly average of transactions in last 6 months divided by transactions in last active month
- - active_months_lag6	Quantity of active months within last 6 months
- - avg_sales_lag12	Monthly average of revenue in last 12 months divided by revenue in last active month
- - avg_purchases_lag12	Monthly average of transactions in last 12 months divided by transactions in last active month
- - active_months_lag12	Quantity of active months within last 12 months
- - category_4	anonymized category
+ - merchant_id	商家id
+ - merchant_group_id	商家分组id
+ - merchant_category_id	商家商品id（脱敏）
  - city_id	City identifier (anonymized )
  - state_id	State identifier (anonymized )
- - category_2	anonymized category
+ - subsector_id 商品分类
+ - numerical_1	脱敏指标1
+ - numerical_2	脱敏指标2
+ - category_1	脱敏商品1
+ - category_2	脱敏商品2
+ - category_4	脱敏商品4
+ - most_recent_sales_range	Range of revenue (monetary units) in last active month --> A > B > C > D > E
+ - most_recent_purchases_range	Range of quantity of transactions in last active month --> A > B > C > D > E
+ - avg_sales_lag3	过去3个月的月平均收入除以上一个活跃月份的收入 ,Monthly average of revenue in last 3 months divided by revenue in last active month
+ - avg_purchases_lag3	最后3个月的每月平均交易除以上一个活跃月份的交易数 ,Monthly average of transactions in last 3 months divided by transactions in last active month
+ - active_months_lag3	过去3个月内活跃月份的数量,Quantity of active months within last 3 months
+ - avg_sales_lag6	过去6个月的月平均收入除以上一个活跃月份的收入,Monthly average of revenue in last 6 months divided by revenue in last active month
+ - avg_purchases_lag6	过去6个月的每月平均交易额除以上一个活跃月份的交易数,Monthly average of transactions in last 6 months divided by transactions in last active month
+ - active_months_lag6	过去6个月内活跃月份的数量Quantity of active months within last 6 months
+ - avg_sales_lag12	过去12个月的月平均收入除以上一个活跃月份的收入,Monthly average of revenue in last 12 months divided by revenue in last active month
+ - avg_purchases_lag12	过去12个月的每月平均交易额除以上一个活跃月份的交易数,Monthly average of transactions in last 12 months divided by transactions in last active month
+ - active_months_lag12	过去12个月内活跃月份的数量,Quantity of active months within last 12 months
+
+
+
