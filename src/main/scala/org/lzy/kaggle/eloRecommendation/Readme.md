@@ -15,7 +15,7 @@
 与train结构一致，没有target项
 
 ###historical_transaction（29112361，2千900万）
-
+信用卡过去三个月的消费记录
  - card_id	
  - month_lag	距离参考日期的月份间隔
  - purchase_date	购买时间
@@ -32,6 +32,7 @@
  - category_3	脱敏商品3
 
 ###new_merchant_period（196303，196万行）
+信用卡当前月的消费记录
 结构与historical一致
 
 ###merchants(334697)
