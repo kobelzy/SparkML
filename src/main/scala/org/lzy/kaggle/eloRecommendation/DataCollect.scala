@@ -1,9 +1,12 @@
 package org.lzy.kaggle.eloRecommendation
 
 import common.{SparkUtils, Utils}
+import org.lzy.kaggle.eloRecommendation.EloConstants.basePath
 
 object DataCollect {
-
+  def main(args: Array[String]): Unit = {
+    collect
+  }
 
   /**
     * train:first_active_month,card_id,feature_1,feature_2,feature_3,target
@@ -28,15 +31,17 @@ object DataCollect {
         $"category_1".alias("merchant_category_1"),$"category_2".alias("merchant_category_2"),$"category_4".alias("merchant_category_4"),$"city_id".alias("merchant_city_id"),$"state_id".alias("merchant_state_id"),$"subsector_id".alias("merchant_subsector_id"),
         $"most_recent_sales_range",$"most_recent_purchases_range",$"avg_sales_lag3",$"avg_purchases_lag3",$"active_months_lag3",$"avg_sales_lag6",$"avg_purchases_lag6",$"active_months_lag6",$"avg_sales_lag12",$"avg_purchases_lag12",$"active_months_lag12"
       )
-    val newTransactions_df=utils.readToCSV(EloConstants.newMerChantTransactions)
-    val historyTransactions_df=utils.readToCSV(EloConstants.historical)
+    val newTransactions_df=utils.readToCSV(EloConstants.newMerChantTransactions_mini)
+    val historyTransactions_df=utils.readToCSV(EloConstants.historical_mini)
     val transactions_df=newTransactions_df.union(historyTransactions_df)
 
 
-    train_df      .join(transactions_df,"card_id")
+    val all_df=train_df      .join(transactions_df,"card_id")
       .join(merchants_df,"merchant_category_id")
-
+all_df.show(false)
 
 
   }
+
+
 }
