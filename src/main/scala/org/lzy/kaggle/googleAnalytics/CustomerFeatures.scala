@@ -1,11 +1,9 @@
 package org.lzy.kaggle.googleAnalytics
 
 import java.text.SimpleDateFormat
-import java.util.Calendar
 
 import com.salesforce.op.features.types._
 import com.salesforce.op.features.{FeatureBuilder, FeatureLike}
-import org.dmg.pmml.True
 import org.joda.time.DateTime
 /**
   * Auther: lzy
