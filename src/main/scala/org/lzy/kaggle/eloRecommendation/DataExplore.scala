@@ -1,6 +1,6 @@
 package org.lzy.kaggle.eloRecommendation
 
-import common.{SparkUtils, Utils}
+import common.{SparkUtils, DataUtils}
 import org.apache.spark.sql.functions._
 object DataExplore {
   def main(args: Array[String]): Unit = {
@@ -13,7 +13,7 @@ object DataExplore {
 
   def run1()={
     val spark=SparkUtils.getSpark("elo")
-    val utils=new Utils(spark)
+    val utils=new DataUtils(spark)
 
 
     val train_df=utils.readToCSV(EloConstants.trainPath)
@@ -50,7 +50,7 @@ object DataExplore {
 
   def merchantsExplor()={
     val spark=SparkUtils.getSpark("elo")
-    val utils=new Utils(spark)
+    val utils=new DataUtils(spark)
     val merchants_df=utils.readToCSV(EloConstants.merchants)
 
     println("merchants长度："+merchants_df.count())
@@ -66,7 +66,7 @@ object DataExplore {
   def explorNewAndHistory()={
 
           val spark=SparkUtils.getSpark("elo")
-    val utils=new Utils(spark)
+    val utils=new DataUtils(spark)
 
 
     val newMerChantTransactions_df=utils.readToCSV(EloConstants.newMerChantTransactions_mini)
@@ -80,7 +80,7 @@ object DataExplore {
 
   def exploreCardId()={
     val spark=SparkUtils.getSpark("elo")
-    val utils=new Utils(spark)
+    val utils=new DataUtils(spark)
     val train_df=utils.readToCSV(EloConstants.trainPath)
 
 
