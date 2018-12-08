@@ -1,7 +1,8 @@
 package org.lzy.kaggle.eloRecommendation
 
-import common.{SparkUtils, DataUtils}
+import common.{DataUtils, SparkUtil}
 import org.apache.spark.sql.functions._
+import org.apache.spark.util.SparkUtils
 object DataExplore {
   def main(args: Array[String]): Unit = {
 //  run1()
@@ -12,34 +13,34 @@ object DataExplore {
 
 
   def run1()={
-    val spark=SparkUtils.getSpark("elo")
+    val spark=SparkUtil.getSpark()
     val utils=new DataUtils(spark)
 
 
-    val train_df=utils.readToCSV(EloConstants.trainPath)
+    val train_df=utils.read_csv(EloConstants.trainPath)
 
     println("train_df长度："+train_df.count())
     train_df.show(false)
 
-    val test_df=utils.readToCSV(EloConstants.testPath)
+    val test_df=utils.read_csv(EloConstants.testPath)
 
     println("test_df长度："+test_df.count())
     test_df.show(false)
 
 
-    val newMerChantTransactions_df=utils.readToCSV(EloConstants.newMerChantTransactions)
+    val newMerChantTransactions_df=utils.read_csv(EloConstants.newMerChantTransactions)
 
     println("newMerChantTransactions_df长度："+newMerChantTransactions_df.count())
     newMerChantTransactions_df.show(false)
 
 
-    val historical_df=utils.readToCSV(EloConstants.historical)
+    val historical_df=utils.read_csv(EloConstants.historical)
 
     println("historical_df长度："+historical_df.count())
     historical_df.show(false)
 
 
-    val merchants_df=utils.readToCSV(EloConstants.merchants)
+    val merchants_df=utils.read_csv(EloConstants.merchants)
 
     println("merchants长度："+merchants_df.count())
     merchants_df.show(false)
@@ -49,9 +50,9 @@ object DataExplore {
   }
 
   def merchantsExplor()={
-    val spark=SparkUtils.getSpark("elo")
+    val spark=SparkUtil.getSpark()
     val utils=new DataUtils(spark)
-    val merchants_df=utils.readToCSV(EloConstants.merchants)
+    val merchants_df=utils.read_csv(EloConstants.merchants)
 
     println("merchants长度："+merchants_df.count())
     merchants_df.show(false)
@@ -65,26 +66,26 @@ object DataExplore {
 
   def explorNewAndHistory()={
 
-          val spark=SparkUtils.getSpark("elo")
+          val spark=SparkUtil.getSpark()
     val utils=new DataUtils(spark)
 
 
-    val newMerChantTransactions_df=utils.readToCSV(EloConstants.newMerChantTransactions_mini)
+    val newMerChantTransactions_df=utils.read_csv(EloConstants.newMerChantTransactions_mini)
 
 
 
-    val historical_df=utils.readToCSV(EloConstants.historical_mini)
+    val historical_df=utils.read_csv(EloConstants.historical_mini)
     newMerChantTransactions_df.join(historical_df,"card_id").show(false)
   }
 
 
   def exploreCardId()={
-    val spark=SparkUtils.getSpark("elo")
+    val spark=SparkUtil.getSpark()
     val utils=new DataUtils(spark)
-    val train_df=utils.readToCSV(EloConstants.trainPath)
+    val train_df=utils.read_csv(EloConstants.trainPath)
 
 
-    val test_df=utils.readToCSV(EloConstants.testPath)
+    val test_df=utils.read_csv(EloConstants.testPath)
 //    val train_group=train_df.groupBy("card_id").count()
 //    val train_count=train_group.filter("count > 1")
 //    println(train_group.count())

@@ -12,7 +12,7 @@ class DataUtils(spark: SparkSession) {
 
 
 
-    def readToCSV(path: String,sep:String=","): DataFrame = {
+    def read_csv(path: String, sep:String=","): DataFrame = {
         val data = spark.read.option("header", "true")
           .option("nullValue", "NA")
           .option("inferSchema", "true")
@@ -29,7 +29,7 @@ class DataUtils(spark: SparkSession) {
  * Param: [df,path]
  * Return: void
  */
-    def writeToCSV(df:DataFrame,path:String)={
+    def to_csv(df:DataFrame, path:String)={
         df.coalesce(1).write.option("header", "true")
                 .mode(SaveMode.Overwrite)
                 .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
