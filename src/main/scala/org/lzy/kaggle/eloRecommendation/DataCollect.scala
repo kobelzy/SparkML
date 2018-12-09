@@ -4,8 +4,7 @@ import java.sql.Timestamp
 import java.time.{Duration, LocalDateTime}
 
 import common.{DataUtils, SparkUtil}
-import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec.B
-import org.apache.spark.sql.{DataFrame, Dataset}
+import org.apache.spark.sql.{DataFrame, Dataset, Encoders}
 import org.lzy.kaggle.eloRecommendation.EloConstants.basePath
 import org.apache.spark.sql.functions._
 
@@ -101,6 +100,7 @@ object DataCollect {
             (card_id2month_lag,count,installments_sum ,installments_mean,purchase_amount_sum ,purchase_amount_mean )
           }
 
+    transaction_ds.rdd.map(t=>(t.month_lag,t)).groupByKey()
     val transaction_card_ds
     = transaction_ds.groupByKey(_.authorized_flag)
       .mapGroups { case (card_id, iter_) =>
