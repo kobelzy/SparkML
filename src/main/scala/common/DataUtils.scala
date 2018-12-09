@@ -8,25 +8,11 @@ import org.apache.spark.sql.functions._
   * Date Created by： 17:04 on 2018/6/27
   * Modified By：
   */
-class Utils(spark: SparkSession) {
+class DataUtils(spark: SparkSession) {
 
-    import spark.implicits._
-    /**
-      * 获取csv转换为DF
-      *
-      * @param path
-      * @return
-      */
-    def readToCSV(path: String): DataFrame = {
-        val data = spark.read.option("header", "true")
-                .option("nullValue", "NA")
-                .option("inferSchema", "true")
-                .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
-                .csv(path)
-        data
-    }
 
-    def readToCSV(path: String,sep:String=","): DataFrame = {
+
+    def read_csv(path: String, sep:String=","): DataFrame = {
         val data = spark.read.option("header", "true")
           .option("nullValue", "NA")
           .option("inferSchema", "true")
@@ -43,7 +29,7 @@ class Utils(spark: SparkSession) {
  * Param: [df,path]
  * Return: void
  */
-    def writeToCSV(df:DataFrame,path:String)={
+    def to_csv(df:DataFrame, path:String)={
         df.coalesce(1).write.option("header", "true")
                 .mode(SaveMode.Overwrite)
                 .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
@@ -51,12 +37,4 @@ class Utils(spark: SparkSession) {
                 .csv(path)
 
     }
-}
-object Utils{
-    case class people(name:String,age:Int)
-//def ds_map(ds:Dataset[people])={
-//ds.map(a=>a.name.split("_")(0))
-//}
-
-
 }

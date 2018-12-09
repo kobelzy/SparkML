@@ -12,7 +12,7 @@
         <encoding>UTF-8</encoding>
         <scala.version>2.11.11</scala.version>
         <scala.tools.version>2.11</scala.tools.version>
-        <spark.version>2.2.2</spark.version>
+        <spark.version>2.4.0</spark.version>
         <hbase.version>1.4.0</hbase.version>
         <hadoop.version>2.7.3</hadoop.version>
         <kafka.version>1.0.0</kafka.version>
@@ -21,7 +21,7 @@
         <mybatis.version>3.2.1</mybatis.version>
         <mysql.connector.java.version>5.1.41</mysql.connector.java.version>
         <fastjson.version>1.2.30</fastjson.version>
-        <transmogrifai.version>0.4.0</transmogrifai.version>
+        <transmogrifai.version>0.5.0</transmogrifai.version>
     </properties>
 
     <dependencies>
@@ -36,18 +36,7 @@
             <artifactId>spark-mllib_${scala.tools.version}</artifactId>
             <version>${spark.version}</version>
         </dependency>
-        <!--<dependency>-->
-        <!--<groupId>com.cloudera.sparkts</groupId>-->
-        <!--<artifactId>sparkts</artifactId>-->
-        <!--<version>0.4.1</version>-->
-        <!--</dependency>-->
 
-
-        <!--<dependency>-->
-        <!--<groupId>ml.dmlc</groupId>-->
-        <!--<artifactId>xgboost4j</artifactId>-->
-        <!--<version>0.7</version>-->
-        <!--</dependency>-->
 
         <dependency>
             <groupId>com.github.hirofumi</groupId>
@@ -55,31 +44,7 @@
             <version>0.7.2-p1</version>
         </dependency>
 
-        <!-- https://mvnrepository.com/artifact/salesforce/TransmogrifAI -->
-        <!--maven仓库添加地址-->
-        <!--<mirror>-->
-        <!--<id>alimaven</id>-->
-        <!--<name>aliyun maven</name>-->
-        <!--<url>https://dl.bintray.com/spark-packages/maven/</url>-->
-        <!--<mirrorOf>central</mirrorOf>-->
-        <!--</mirror>-->
-        <!--<dependency>-->
-        <!--<groupId>salesforce</groupId>-->
-        <!--<artifactId>TransmogrifAI</artifactId>-->
-        <!--<version>${transmogrifai.version}</version>-->
-        <!--</dependency>-->
 
-        <!--<dependency>-->
-        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-        <!--<artifactId>transmogrifai-features_2.11</artifactId>-->
-        <!--<version>${transmogrifai.version}</version>-->
-        <!--</dependency>-->
-
-        <!--<dependency>-->
-        <!--<groupId>com.salesforce.transmogrifai</groupId>-->
-        <!--<artifactId>transmogrifai-readers_2.11</artifactId>-->
-        <!--<version>${transmogrifai.version}</version>-->
-        <!--</dependency>-->
         <dependency>
             <groupId>com.salesforce.transmogrifai</groupId>
             <artifactId>transmogrifai-core_2.11</artifactId>
