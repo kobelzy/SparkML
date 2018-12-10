@@ -78,6 +78,12 @@ object DataCollect {
   }
 
   def extractFeatureFromTransaction(transaction_ds: Dataset[caseTransactions]) = {
+    transaction_ds.groupBy("card_id","month_lag")
+      .agg("installments"->"sum","installments"->"mean","installments"->"min","installments"->"max","installments"->"std",
+        "purchase_amount"->"sum","purchase_amount"->"mean","purchase_amount"->"min","purchase_amount"->"max","purchase_amount"->"std"
+      )
+      .groupBy("card_id")
+      .pivot()
     //    (authorized_flag:Int,card_id:String, city_id:String, category_1:Int, installments:Int, category_3:String, merchant_category_id:String, merchant_id:String,
     //      month_lag:Int, purchase_amount:Double, purchase_date :Timestamp, category_2:Double, state_id:String, subsector_id:String)
     /*
@@ -89,16 +95,23 @@ object DataCollect {
 
             val installments_sum = iter.map(_.installments).sum.toDouble
             val installments_mean = installments_sum / count
-//            val installments_max = iter.map(_.installments).max.toDouble
-//            val installments_min = iter.map(_.installments).min.toDouble
+            val installments_min = iter.map(_.installments).min.toDouble
+            val installments_max = iter.map(_.installments).max.toDouble
 
             val purchase_amount_sum = iter.map(_.purchase_amount).sum
             val purchase_amount_mean = purchase_amount_sum / count
-//            val purchase_amount_max = iter.map(_.purchase_amount).max
-//            val purchase_amount_min = iter.map(_.purchase_amount).min
+            val purchase_amount_min = iter.map(_.purchase_amount).min
+            val purchase_amount_max = iter.map(_.purchase_amount).max
 
-            (card_id2month_lag,count,installments_sum ,installments_mean,purchase_amount_sum ,purchase_amount_mean )
+            val card_id=card_id2month_lag.split("_").head
+            (card_id,count,installments_sum ,installments_mean,installments_min,installments_max,purchase_amount_sum ,purchase_amount_mean,purchase_amount_min,purchase_amount_max )
           }
+        .groupByKey(_._1)
+        .mapGroups{case (card_id,iter)=>
+        //对每个指标计算平均值以及std
+        }
+
+
 
     transaction_ds.rdd.map(t=>(t.month_lag,t)).groupByKey()
     val transaction_card_ds
@@ -122,14 +135,16 @@ object DataCollect {
         val purchase_months = iter.map(_.purchase_date.toLocalDateTime.getMonthValue.toDouble - 2)
         val purchase_months_sum = purchase_months.sum
         val purchase_months_mean = purchase_months_sum / count
+        val purchase_months_min=purchase_months.min
+        val purchase_months_max=purchase_months.max
+
 
         val city_num = iter.map(_.city_id).toSet.size
         val state_num = iter.map(_.state_id).toSet.size
         val subsector_num = iter.map(_.subsector_id).toSet.size
 
-        val monts = iter.map(_.month_lag).sum / count
-        val count2=iter.size
-        (card_id, monts, count, category_1_sum, category_1_mean, category_2_sum, category_2_mean, purchase_months_sum, purchase_months_mean, city_num, state_num, subsector_num,count2)
+        val months = iter.map(_.month_lag).sum / count
+        (card_id, months, count, category_1_sum, category_1_mean, category_2_sum, category_2_mean, purchase_months_sum, purchase_months_mean, city_num, state_num, subsector_num,purchase_months_min,purchase_months_max)
       }
     transaction_card_ds
     //    val aff_map=Map(())
