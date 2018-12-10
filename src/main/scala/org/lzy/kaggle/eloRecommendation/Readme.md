@@ -36,7 +36,7 @@
  - card_id	
  - month_lag	距离参考日期的月份间隔
  - purchase_date	购买时间
- - authorized_flag	置信标签，Y是经过确认的，N是没有的
+ - authorized_flag	置信标签，Y是经过确认的，N是没有的，new中都是Y
  - installments	分期付款期数
  - merchant_category_id	客户商品id (anonymized )
  - subsector_id	商家商品种类id (anonymized )

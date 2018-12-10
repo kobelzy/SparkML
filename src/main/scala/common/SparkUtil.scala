@@ -1,15 +1,19 @@
 package common
 
 import java.io.File
+
+import org.apache
 import org.apache.log4j.PropertyConfigurator
+import org.apache.spark
 import org.apache.spark.SparkConf
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{DataFrame, SaveMode, SparkSession}
 import org.apache.spark.sql.functions._
 
 /**
   * Created by Administrator on 2018/7/19.
   */
 object SparkUtil {
+
     def OsName() = {
         System.getProperty("os.name").toLowerCase()
     }
@@ -60,21 +64,5 @@ object SparkUtil {
     }
 
 
-    def main(args: Array[String]): Unit = {
-        println(OsName)
 
-//    val format_udf = udf { prediction: Double =>
-//      "%08.9f".format(prediction)
-//    }
-//    val spark=getSpark()
-//    import spark.implicits._
-//    val utils=new Utils(spark)
-//    val leak=utils.readToCSV("E:\\dataset\\Kaggle_Santander\\leak.csv").toDF("id","leak")
-//    val all=utils.readToCSV("E:\\dataset\\Kaggle_Santander\\s152.csv").toDF("id","all")
-//    println("all_count:"+all.count())
-//    val joined=all.join(leak,"id")
-//val result=joined.withColumn("target",when($"leak"===0.0,$"all").otherwise($"leak")).select($"id",format_udf($"target"))
-//result.show(false)
-//    utils.writeToCSV(result,"E:\\dataset\\Kaggle_Santander\\news.csv")
-    }
 }
