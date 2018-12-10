@@ -22,6 +22,7 @@
         <mysql.connector.java.version>5.1.41</mysql.connector.java.version>
         <fastjson.version>1.2.30</fastjson.version>
         <transmogrifai.version>0.5.0</transmogrifai.version>
+        <joda-time.version>2.10.1</joda-time.version>
     </properties>
 
     <dependencies>
@@ -57,7 +58,7 @@
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
-            <version>2.10.1</version>
+            <version>${joda-time.version}</version>
         </dependency>
 
 
