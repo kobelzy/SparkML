@@ -52,6 +52,7 @@ object DataCollect {
 
 
     train.show(false)
+    train.printSchema()
   }
 
   def extractTranAndTest()={
@@ -108,20 +109,27 @@ object DataCollect {
     按照月份+card进行分组的，和月份有关的统计项有：installments，purchase_amount
      */
     val im_purchase_ds = transaction_ds.groupBy("card_id", "month_lag")
-      .agg("installments" -> "sum", "installments" -> "avg", "installments" -> "min", "installments" -> "max", "installments" -> "std",
-        "purchase_amount" -> "sum", "purchase_amount" -> "avg", "purchase_amount" -> "min", "purchase_amount" -> "max", "purchase_amount" -> "std"
+
+
+
+      .agg(sum("installments").alias("installments_sum"), min("installments").alias("installments_min"),max("installments").alias("installments_max"),stddev("installments").alias("installments_std"),
+        sum("purchase_amount").alias("purchase_amount_sum"), min("purchase_amount").alias("purchase_amount_min"),max("purchase_amount").alias("purchase_amount_max"),stddev("purchase_amount").alias("purchase_amount_std")
       ).na.fill(0d)
       .groupBy("card_id")
-      .agg("sum(installments)" -> "std", "sum(installments)" -> "avg", "avg(installments)" -> "std", "avg(installments)" -> "avg",
-        "min(installments)" -> "std", "min(installments)" -> "avg", "max(installments)" -> "std", "max(installments)" -> "avg", "stddev(installments)" -> "std", "stddev(installments)" -> "avg",
-        "sum(purchase_amount)" -> "std", "sum(purchase_amount)" -> "avg", "avg(purchase_amount)" -> "std", "avg(purchase_amount)" -> "avg",
-        "min(purchase_amount)" -> "std", "min(purchase_amount)" -> "avg", "max(purchase_amount)" -> "std", "max(purchase_amount)" -> "avg", "stddev(purchase_amount)" -> "std", "stddev(purchase_amount)" -> "avg"
+      .agg(stddev("installments_sum").alias("installments_sum_stddev"),avg("installments_sum").alias("installments_sum_avg"),
+        stddev("installments_min").alias("installments_min_stddev"),avg("installments_min").alias("installments_min_avg"),
+        stddev("installments_max").alias("installments_max_stddev"),avg("installments_max").alias("installments_max_avg"),
+        stddev("installments_std").alias("installments_std_stddev"),avg("installments_std").alias("installments_std_avg"),
+        stddev("purchase_amount_sum").alias("purchase_amount_sum_stddev"),avg("purchase_amount_sum").alias("purchase_amount_sum_avg"),
+        stddev("purchase_amount_min").alias("purchase_amount_min_stddev"),avg("purchase_amount_min").alias("purchase_amount_min_avg"),
+        stddev("purchase_amount_max").alias("purchase_amount_max_stddev"),avg("purchase_amount_max").alias("purchase_amount_max_avg"),
+        stddev("purchase_amount_std").alias("purchase_amount_std_stddev"),avg("purchase_amount_std").alias("purchase_amount_std_avg")
       ).na.fill(0d)
 
 
     val transaction_card_ds = transaction_ds.groupBy("card_id")
-      .agg(avg("category_1"), stddev("category_1"), avg("category_2"), stddev("category_2"),
-        countDistinct("city_id"), countDistinct("state_id"), countDistinct("subsector_id"), avg("month_lag")
+      .agg(avg("category_1").alias("category_1_avg"), stddev("category_1").alias("category_1_std"), avg("category_2").alias("category_2_avg"), stddev("category_2").alias("category_2_std"),
+        countDistinct("city_id").alias("city_id_count"), countDistinct("state_id").alias("state_id_count"), countDistinct("subsector_id").alias("subsector_id_count"), avg("month_lag").alias("month_lag_avg")
       )
       .na.fill(0d)
 
