@@ -3,7 +3,7 @@ package org.lzy.kaggle.googleAnalytics.test
 import java.text.SimpleDateFormat
 
 import com.salesforce.op.readers.DataReaders
-import common.{SparkUtil, Utils}
+import common.{DataUtils, SparkUtil}
 import org.apache.spark.sql.Row
 import org.lzy.kaggle.googleAnalytics.{Constants, Customer}
 import org.lzy.transmogriAI.Passenger
@@ -20,7 +20,7 @@ object SimpleReaderTest {
   def run1() = {
     implicit val spark = SparkUtil.getSpark()
     import spark.implicits._
-    val util=new Utils(spark)
+    val util=new DataUtils(spark)
 //    val train=util.readToCSV(Constants.trainPath)
 //    train.show(false)
 

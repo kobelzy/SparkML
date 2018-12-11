@@ -1,6 +1,6 @@
 package org.lzy.kaggle.googleAnalytics
 
-import common.{SparkUtil, Utils}
+import common.{DataUtils, SparkUtil}
 import org.apache.spark.sql.functions._
 object GetMeansOfResult {
   def main(args: Array[String]): Unit = {
@@ -10,7 +10,7 @@ run()
     val spark=SparkUtil.getSpark()
     import spark.implicits._
     spark.sparkContext.setLogLevel("warn")
-    val util=new Utils(spark)
+    val util=new DataUtils(spark)
     val result_df=    spark.read.option("header", "true")
       .option("nullValue", "NA")
       .option("timestampFormat", "yyyy/MM/dd HH:mm:ss ZZ")
@@ -29,7 +29,7 @@ run()
 //        fullVisitorId,PredictedLogRevenue
       }).toDF("fullVisitorId", "PredictedLogRevenue")
     distincted.show(false)
-    util.writeToCSV(distincted,Constants.basePath+"result/expm1.csv")
+    util.to_csv(distincted,Constants.basePath+"result/expm1.csv")
   }
 
   def run2()={

@@ -2,15 +2,15 @@ package org.lzy.kaggle.googleAnalytics
 
 import java.util.Date
 
-import common.{SparkUtil, Utils}
+import common.{DataUtils, SparkUtil}
 
 object Explore2 {
   def main(args: Array[String]): Unit = {
     implicit val spark=SparkUtil.getSpark()
     val sc=spark.sparkContext
     sc.setLogLevel("warn")
-    val util=new Utils(spark)
-    val train=util.readToCSV(Constants.trainPath)
+    val util=new DataUtils(spark)
+    val train=util.read_csv(Constants.trainPath)
     train.show(false)
     val device_browser=train.select("device_browser").distinct()
     println(device_browser.count())

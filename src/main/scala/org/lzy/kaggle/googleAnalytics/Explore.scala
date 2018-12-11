@@ -1,6 +1,6 @@
 package org.lzy.kaggle.googleAnalytics
 
-import common.Utils
+import common.DataUtils
 import org.apache.spark.sql.SparkSession
 
 import scala.util.Try
@@ -12,7 +12,7 @@ object Explore {
     val sc = spark.sparkContext
     sc.setLogLevel("WARN")
 
-    val utils = new Utils(spark)
+    val utils = new DataUtils(spark)
     //    val train_df=utils.readToCSV("D:\\Dataset\\GoogleAnalytics\\source\\train.csv","(,[^ ])")
     //    val teset_df=utils.readToCSV("D:\\Dataset\\GoogleAnalytics\\source\\test.csv")
     //    train_df.printSchema()

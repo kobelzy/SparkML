@@ -10,7 +10,7 @@ import com.salesforce.op.stages.impl.regression.RegressionModelSelector
 import com.salesforce.op.stages.impl.regression.RegressionModelsToTry.{OpGBTRegressor, OpRandomForestRegressor}
 import com.salesforce.op.stages.impl.selector.SelectedModel
 import com.salesforce.op.stages.impl.tuning.DataSplitter
-import common.{SparkUtil, Utils}
+import common.{SparkUtil, DataUtils}
 import org.apache.spark.sql.SparkSession
 import spire.std.option
 

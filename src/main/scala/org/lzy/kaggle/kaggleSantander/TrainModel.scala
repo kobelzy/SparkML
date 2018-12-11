@@ -1,6 +1,6 @@
 package org.lzy.kaggle.kaggleSantander
 
-import common.{FeatureUtils, Utils}
+import common.{DataUtils, FeatureUtils}
 import org.apache.spark.ml.classification.GBTClassificationModel
 import org.apache.spark.ml.regression.GBTRegressionModel
 import org.apache.spark.ml.tuning.TrainValidationSplitModel
@@ -110,7 +110,7 @@ class TrainModel(spark: SparkSession) {
   def fitByGBDT(train_df_source: DataFrame, test_df: DataFrame, fdr: Double, num: Int = 1000) = {
     val models = new Models(spark)
     val featureExact = new FeatureExact(spark)
-    val utils = new Utils(spark)
+    val utils = new DataUtils(spark)
 
     //        val train_df = train_df_source.withColumn("target",  log1p($"target"))
     val train_df = train_df_source.withColumn("target", round(log1p($"target")))
@@ -147,7 +147,7 @@ class TrainModel(spark: SparkSession) {
       //            .withColumn("target", format_udf(abs($"prediction" * 10000d)))
       .withColumn("target", format_udf(expm1(abs($"prediction"))))
       .select("id", "target")
-    utils.writeToCSV(result_df, Constant.basePath + s"submission/lr_${System.currentTimeMillis()}")
+    utils.to_csv(result_df, Constant.basePath + s"submission/lr_${System.currentTimeMillis()}")
   }
 
   /** *
@@ -222,7 +222,7 @@ class TrainModel(spark: SparkSession) {
     * Return: void
     */
   def writeSub(df: DataFrame) = {
-    val utils = new Utils(spark)
+    val utils = new DataUtils(spark)
     val format_udf = udf { prediction: Double =>
       "%08.9f".format(prediction)
     }
@@ -230,7 +230,7 @@ class TrainModel(spark: SparkSession) {
       .select("id", Constant.lableCol)
     val subName = s"sub_${System.currentTimeMillis()}"
     println(s"当前结果文件：${subName}")
-    utils.writeToCSV(result_df, Constant.basePath + s"submission/$subName")
+    utils.to_csv(result_df, Constant.basePath + s"submission/$subName")
     println("action:?" + result_df.count())
   }
 
@@ -304,7 +304,7 @@ class TrainModel(spark: SparkSession) {
 
   def lagSelectFakeRows(train:DataFrame,test:DataFrame)={
     val featureExact=new FeatureExact(spark)
-    val utils=new Utils(spark)
+    val utils=new DataUtils(spark)
 //           val (nonUgly_test_df, non_ugly_indexes, ugly_indexes)= featureExact.getBueautifulTest(train,test)
     val nonUgly_test_df=spark.read.parquet(Constant.basePath+"cache/nonUgly_test_df")
 
@@ -335,6 +335,6 @@ class TrainModel(spark: SparkSession) {
       .na.fill(0d)
     val subName = s"sub_${System.currentTimeMillis()}"
     println(s"当前结果文件：${subName}")
-    utils.writeToCSV(result, Constant.basePath + s"submission/$subName")
+    utils.to_csv(result, Constant.basePath + s"submission/$subName")
   }
 }

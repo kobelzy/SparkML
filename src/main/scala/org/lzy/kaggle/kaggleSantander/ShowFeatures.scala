@@ -1,6 +1,6 @@
 package org.lzy.kaggle.kaggleSantander
 
-import common.Utils
+import common.DataUtils
 import org.apache.spark.sql.SparkSession
 
 /**
@@ -21,12 +21,12 @@ object ShowFeatures {
     config.set("spark.shuffle.io.maxRetries", "60")
     config.set("spark.default.parallelism", "54")
     config.set("spark.serializer", "org.apache.spark.serializer.KryoSerializer")
-    val utils = new Utils(spark)
+    val utils = new DataUtils(spark)
     val models = new Models(spark)
     val featureExact = new FeatureExact(spark)
     val run = new Run(spark)
     val trainModel = new TrainModel(spark)
-    val train_df = utils.readToCSV(Constant.basePath + "AData/train.csv").repartition(100).cache()
+    val train_df = utils.read_csv(Constant.basePath + "AData/train.csv").repartition(100).cache()
 //    val test_df = utils.readToCSV(Constant.basePath + "AData/test.csv").repartition(100).cache()
     val features_df=train_df.select("target","f190486d6")
     features_df.show(1000,false)

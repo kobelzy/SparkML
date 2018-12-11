@@ -5,7 +5,7 @@ import com.salesforce.op.features.FeatureLike
 import com.salesforce.op.features.types.Prediction
 import com.salesforce.op.readers.{CSVProductReader, DataReaders}
 import com.salesforce.op.stages.impl.regression.RegressionModelSelector
-import common.{SparkUtil, Utils}
+import common.{DataUtils, SparkUtil}
 import org.apache.spark.sql.Row
 
 /**
@@ -39,7 +39,7 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
       //      .setInputDataset(test_ds)
       .setReader(testDataReader)
     //    model.score(path=Option(Constants.resultPath)).show(false)
-    val util = new Utils(spark)
+    val util = new DataUtils(spark)
 
 
     val prediction_df = model.score()
@@ -53,7 +53,7 @@ object GASimpleWithTransmogriAIloadModel extends CustomerFeatures {
         (fullVisitorId,math.log1p(transactionRevenue))
       }
       .toDF("fullVisitorId", "PredictedLogRevenue")
-    util.writeToCSV(prediction_df, Constants.basePath + "result/result.csv")
+    util.to_csv(prediction_df, Constants.basePath + "result/result.csv")
     //    println(model.summary())
     //    println("")
     //    //    println(model.summaryJson())
