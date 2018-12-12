@@ -31,8 +31,7 @@ object DataCollect {
 
 
 
-  val spark = SparkUtil.getSpark()
-  spark.sparkContext.setLogLevel("WARN")
+  val spark = Run.spark
   val utils = new DataUtils(spark)
 
   import spark.implicits._
@@ -56,7 +55,7 @@ object DataCollect {
   }
 
   def extractTranAndTest()={
-    val train_df = utils.read_csv(EloConstants.trainPath)
+    val train_df = utils.read_csv(EloConstants.trainPath).sample(0.01)
     val test_df = utils.read_csv(EloConstants.testPath)
 
     (train_df,test_df)

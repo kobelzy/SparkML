@@ -1,6 +1,6 @@
 package org.lzy.kaggle.kaggleSantander
 
-import ml.dmlc.xgboost4j.scala.spark.XGBoostEstimator
+//import ml.dmlc.xgboost4j.scala.spark.XGBoostEstimator
 import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.lzy.JData.JDataByLeaner.UDLogisticEvaluator
@@ -35,17 +35,17 @@ object XGBoostModel {
 
         val evaluator:UDLogisticEvaluator=new UDLogisticEvaluator()
 
-        val xgbEstimator = new XGBoostEstimator(xgboostParam)
+//        val xgbEstimator = new XGBoostEstimator(xgboostParam)
         //            .setPredictionCol(predictCol)
 
         val paramGrid = new ParamGridBuilder()
-                .addGrid(xgbEstimator.round, Array(round))
+//                .addGrid(xgbEstimator.round, Array(round))
 //                  .addGrid(xgbEstimator.eta, Array(0.1,0.05,0.2))
-                .addGrid(xgbEstimator.nWorkers,Array(15))
+//                .addGrid(xgbEstimator.nWorkers,Array(15))
                 //        .addGrid(xgbEstimator.subSample,Array(0.5))
                 .build()
         val tv=new TrainValidationSplit()
-                .setEstimator(xgbEstimator)
+//                .setEstimator(xgbEstimator)
                 .setEvaluator(evaluator)
 //      .setEvaluator(new MulticlassClassificationEvaluator())
                 .setEstimatorParamMaps(paramGrid)
