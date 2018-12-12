@@ -1,6 +1,6 @@
 package org.lzy.JData.JDataByLeaner
 
-import ml.dmlc.xgboost4j.scala.spark.{XGBoost, XGBoostEstimator, XGBoostModel}
+import ml.dmlc.xgboost4j.scala.spark.{XGBoost, XGBoostEstimator}
 import org.apache.spark.ml
 import org.apache.spark.ml.{PipelineModel, Transformer}
 import org.apache.spark.ml.evaluation.{MulticlassClassificationEvaluator, RegressionEvaluator}
