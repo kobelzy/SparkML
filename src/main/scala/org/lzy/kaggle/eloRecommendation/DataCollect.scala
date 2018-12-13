@@ -37,30 +37,30 @@ object DataCollect {
   import spark.implicits._
 
   def main(args: Array[String]): Unit = {
-    val (new_feature_df,authorized_feature_df,history_df)= collectTransaction
-    new_feature_df.show(false)
-    val   (train_df,test_df) =extractTranAndTest
+//    val (new_feature_df,authorized_feature_df,history_df)= collectTransaction
+//    new_feature_df.show(false)
+//    val   (train_df,test_df) =extractTranAndTest
 
-    val train=train_df.join(new_feature_df,Seq("card_id"),"left")
-      .join(authorized_feature_df,Seq("card_id"),"left")
-      .join(history_df,Seq("card_id"),"left")
+//    val train=train_df.join(new_feature_df,Seq("card_id"),"left")
+//      .join(authorized_feature_df,Seq("card_id"),"left")
+//      .join(history_df,Seq("card_id"),"left")
 
     //    val test=test_df.join(new_feature_df,$"card_id","left")
     //      .join(authorized_feature_df,$"card_id","left")
     //      .join(history_df,$"card_id","left")
 
 
-    train.show(false)
-    train.printSchema()
+//    train.show(false)
+//    train.printSchema()
   }
 
   def extractTranAndTest()={
-    val train_df = utils.read_csv(EloConstants.trainPath).sample(0.01)
+    val train_df = utils.read_csv(EloConstants.trainPath)
     val test_df = utils.read_csv(EloConstants.testPath)
 
     (train_df,test_df)
   }
-  def collectTransaction() = {
+  def collectTransaction(historicalPath:String,newPath:String) = {
     val merchants_df = utils.read_csv(EloConstants.merchants)
       .select($"merchant_group_id", $"merchant_category_id", $"numerical_1", $"numerical_2",
         $"category_1".alias("category_1_merchant"), $"category_2".alias("category_2_merchant"), $"category_4".alias("category_4_merchant"), $"city_id".alias("city_id_merchant"), $"state_id".alias("state_id_merchant"), $"subsector_id".alias("subsector_id_merchant"),
@@ -68,10 +68,10 @@ object DataCollect {
       )
 
 
-    val historyTransaction_ds: Dataset[caseTransactions] = transformTransaction(utils.read_csv(EloConstants.historical_mini))
+    val new_ds = transformTransaction(utils.read_csv(newPath))
+    val historyTransaction_ds: Dataset[caseTransactions] = transformTransaction(utils.read_csv(historicalPath))
     val authorized_ds = historyTransaction_ds.filter(_.authorized_flag == 1)
     val history_ds = historyTransaction_ds.filter(_.authorized_flag == 0)
-    val new_ds = transformTransaction(utils.read_csv(EloConstants.newMerChantTransactions_mini))
     //    historyTransaction_ds.show(false)
     //    historyTransaction_ds.printSchema()
     //    val all_df=train_df      .join(transactions_df,"card_id")

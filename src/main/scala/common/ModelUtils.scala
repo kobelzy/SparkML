@@ -1,6 +1,5 @@
 package common
 
-import ml.dmlc.xgboost4j.scala.spark.XGBoostEstimator
 import org.apache.spark.ml.evaluation.RegressionEvaluator
 import org.apache.spark.ml.tuning.{ParamGridBuilder, TrainValidationSplit}
 import org.apache.spark.sql.{DataFrame, SparkSession}
@@ -43,17 +42,17 @@ class ModelUtils(spark: SparkSession) {
             "subsample" -> 0.8,
             "verbose_eval" -> 0
         )
-        val xgbEstimator = new XGBoostEstimator(xgboostParam)
+//        val xgbEstimator = new XGBoostEstimator(xgboostParam)
         //            .setPredictionCol(predictCol)
 //val evaluator=new UDRegressionEvaluator()
 val paramGrid = new ParamGridBuilder()
-        .addGrid(xgbEstimator.round, Array(round))
+//        .addGrid(xgbEstimator.round, Array(round))
 //            .addGrid(xgbEstimator.eta, Array(0.01,0.05))
-        .addGrid(xgbEstimator.nWorkers, Array(15))
+//        .addGrid(xgbEstimator.nWorkers, Array(15))
 //        .addGrid(xgbEstimator.subSample,Array(0.5))
         .build()
         val tv = new TrainValidationSplit()
-                .setEstimator(xgbEstimator)
+//                .setEstimator(xgbEstimator)
 //            .setEvaluator(evaluator)
                 .setEvaluator(new RegressionEvaluator())
                 .setEstimatorParamMaps(paramGrid)

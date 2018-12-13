@@ -12,13 +12,11 @@
         <encoding>UTF-8</encoding>
         <scala.version>2.11.11</scala.version>
         <scala.tools.version>2.11</scala.tools.version>
-        <spark.version>2.4.0</spark.version>
+        <spark.version>2.3.1</spark.version>
         <hbase.version>1.4.0</hbase.version>
         <hadoop.version>2.7.3</hadoop.version>
         <kafka.version>1.0.0</kafka.version>
-        <jedis.version>2.9.0</jedis.version>
         <junit.version>4.12</junit.version>
-        <mybatis.version>3.2.1</mybatis.version>
         <mysql.connector.java.version>5.1.41</mysql.connector.java.version>
         <fastjson.version>1.2.30</fastjson.version>
         <transmogrifai.version>0.5.0</transmogrifai.version>
@@ -39,11 +37,11 @@
         </dependency>
 
 
-        <dependency>
-            <groupId>com.github.hirofumi</groupId>
-            <artifactId>xgboost4j-spark_2.11</artifactId>
-            <version>0.7.2-p1</version>
-        </dependency>
+        <!--<dependency>-->
+            <!--<groupId>com.github.hirofumi</groupId>-->
+            <!--<artifactId>xgboost4j-spark_2.11</artifactId>-->
+            <!--<version>0.7.2-p1</version>-->
+        <!--</dependency>-->
 
 
         <dependency>
