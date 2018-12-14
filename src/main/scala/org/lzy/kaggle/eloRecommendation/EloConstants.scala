@@ -17,8 +17,8 @@ object EloConstants {
   val newMerChantTransactions_mini=basePath+"source/new_merchant_transactions_mini.csv"
 
 
-  val modelPath=basePath + "model/bestModel"
-  val modelPath2=basePath+"model/bestModel2"
+  val modelPath=basePath + "model/bestMode"
 
-  val resultPath=basePath+"result/result.csv"
+
+  val resultPath=basePath+"result/submission"
 }

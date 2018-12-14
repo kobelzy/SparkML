@@ -57,7 +57,7 @@ object DataCollect {
   def extractTranAndTest()={
     val train_df = utils.read_csv(EloConstants.trainPath)
     val test_df = utils.read_csv(EloConstants.testPath)
-
+      .withColumn("target",lit(0d))
     (train_df,test_df)
   }
   def collectTransaction(historicalPath:String,newPath:String) = {

@@ -1,6 +1,7 @@
 package org.lzy.kaggle.eloRecommendation
 
-import common.SparkUtil
+import common.{DataUtils, SparkUtil}
+import org.apache.spark.sql.SaveMode
 import org.lzy.kaggle.eloRecommendation.DataCollect.{collectTransaction, extractTranAndTest}
 
 /*
@@ -18,17 +19,16 @@ spark-submit --master yarn-cluster --queue all \
  */
 object Run {
   val spark = SparkUtil.getSpark()
-  spark.sparkContext.setLogLevel("WARN")
+  //  spark.sparkContext.setLogLevel("WARN")
 
   import spark.implicits._
-
+  val dataUtils=new DataUtils(spark)
   def main(args: Array[String]): Unit = {
     trainModel()
   }
 
-  def trainModel() = {
-
-    val (new_feature_df, authorized_feature_df, history_df) = collectTransaction(EloConstants.historical,EloConstants.newMerChantTransactions)
+  def aggreDate() = {
+    val (new_feature_df, authorized_feature_df, history_df) = collectTransaction(EloConstants.historical, EloConstants.newMerChantTransactions)
     val (train_df, test_df) = extractTranAndTest
     //    new_feature_df.show(false)
     //    authorized_feature_df.show(false)
@@ -38,14 +38,34 @@ object Run {
       .join(history_df, Seq("card_id"), "left")
       .na.drop()
 
-    train.show(false)
-
     val train_ds = train.as[Record]
-    train_ds.write.parquet(EloConstants.basePath + "source/train_ds")
+    train_ds.write.mode(SaveMode.Overwrite).parquet(EloConstants.basePath + "cache/train_ds")
+
+    val test = test_df.join(new_feature_df, Seq("card_id"), "left")
+      .join(authorized_feature_df, Seq("card_id"), "left")
+      .join(history_df, Seq("card_id"), "left")
+      .na.drop()
+    val test_ds = test.as[Record]
+
+    test_ds.write.mode(SaveMode.Overwrite).parquet(EloConstants.basePath + "cache/test_ds")
+
+  }
+
+  def trainModel() = {
+
+    val train_ds = spark.read.parquet(EloConstants.basePath + "cache/train_ds").as[Record]
+    train_ds.show(false)
     val model = OpElo.trainModel(train_ds)
-    model.save(EloConstants.basePath + "model/model1")
+    model.save(EloConstants.modelPath)
     println("Model summary:\n" + model.summaryPretty())
     OpElo.evaluateModel(model)
+  }
 
+  def predict()={
+    val test_ds = spark.read.parquet(EloConstants.basePath + "cache/test_ds").as[Record]
+    test_ds.show(false)
+    case class Submission(card_id:String,target:Double)
+    val submission_ds=OpElo.predict(test_ds,EloConstants.modelPath).toDF("card_id","target")
+    dataUtils.to_csv(submission_ds,EloConstants.resultPath)
   }
 }

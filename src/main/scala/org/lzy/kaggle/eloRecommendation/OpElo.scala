@@ -26,15 +26,15 @@ object OpElo extends RecordFeatures {
     .setInput(target,features)
     .getOutput()
 
-  def trainModel(train_df:Dataset[Record])={
+  def trainModel(train_ds:Dataset[Record])={
 
 
     ////////////////////////////////////////////////////////////////////////////////
     // WORKFLOW DEFINITION
     /////////////////////////////////////////////////////////////////////////////////
     val workflow=new OpWorkflow()
-      .setInputDataset(train_df)
       .setResultFeatures(prediction)
+      .setInputDataset[Record](train_ds,key=_.card_id)
 
     val model:OpWorkflowModel=workflow.train()
     model
@@ -46,5 +46,17 @@ object OpElo extends RecordFeatures {
       .setPredictionCol(prediction)
 
     println("均方根误差:" + model.evaluate(evaluator = evaluator).RootMeanSquaredError)
+  }
+
+
+  def predict(test_ds:Dataset[Record],modelPath: String)={
+    val workflow = new OpWorkflow()
+      .setResultFeatures(prediction, target)
+      .setInputDataset[Record](test_ds,key=_.card_id)
+
+    val model = workflow.loadModel(modelPath)
+
+    val score_ds=model.score()
+    score_ds
   }
 }
