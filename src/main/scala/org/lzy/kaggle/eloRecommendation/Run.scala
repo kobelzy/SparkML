@@ -8,7 +8,7 @@ import org.lzy.kaggle.eloRecommendation.DataCollect.{collectTransaction, extract
 
 
 spark-submit --master yarn-cluster --queue all \
---num-executors 15 \
+--num-executors 10 \
 --executor-memory 18g \
 --driver-memory 10g \
 --executor-cores 4 \
@@ -24,7 +24,9 @@ object Run {
   import spark.implicits._
   val dataUtils=new DataUtils(spark)
   def main(args: Array[String]): Unit = {
+    aggreDate
     trainModel()
+    predict
   }
 
   def aggreDate() = {
