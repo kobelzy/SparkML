@@ -4,7 +4,7 @@ import com.salesforce.op.evaluators.Evaluators
 import com.salesforce.op.features.FeatureLike
 import com.salesforce.op.features.types.Prediction
 import com.salesforce.op.stages.impl.regression.RegressionModelSelector
-import com.salesforce.op.stages.impl.regression.RegressionModelsToTry.OpRandomForestRegressor
+import com.salesforce.op.stages.impl.regression.RegressionModelsToTry.{OpRandomForestRegressor, OpXGBoostRegressor}
 import com.salesforce.op.stages.impl.tuning.DataSplitter
 import com.salesforce.op.{OpWorkflow, OpWorkflowModel}
 import common.SparkUtil
@@ -21,7 +21,7 @@ object OpElo extends RecordFeatures {
   val prediction:FeatureLike[Prediction]=RegressionModelSelector
     .withCrossValidation(
       dataSplitter = Some(DataSplitter(seed=randomSeed))
-//      ,modelTypesToUse = Seq( OpRandomForestRegressor)
+      ,modelTypesToUse = Seq( OpXGBoostRegressor)
     )
     .setInput(target,features)
     .getOutput()

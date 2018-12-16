@@ -24,7 +24,7 @@ object Run {
   import spark.implicits._
   val dataUtils=new DataUtils(spark)
   def main(args: Array[String]): Unit = {
-    aggreDate
+//    aggreDate
     trainModel()
     predict
   }
