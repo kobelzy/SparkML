@@ -68,8 +68,8 @@ object DataCollect {
       )
 
 
-    val new_ds = transformTransaction(utils.read_csv(newPath))
-    val historyTransaction_ds: Dataset[caseTransactions] = transformTransaction(utils.read_csv(historicalPath))
+    val new_ds = transformTransaction(utils.read_csv(newPath)).repartition(100)
+    val historyTransaction_ds: Dataset[caseTransactions] = transformTransaction(utils.read_csv(historicalPath)).repartition(100)
     val authorized_ds = historyTransaction_ds.filter(_.authorized_flag == 1)
     val history_ds = historyTransaction_ds.filter(_.authorized_flag == 0)
     //    historyTransaction_ds.show(false)
