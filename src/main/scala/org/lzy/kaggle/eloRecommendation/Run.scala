@@ -1,6 +1,7 @@
 package org.lzy.kaggle.eloRecommendation
 
 import common.{DataUtils, SparkUtil}
+import ml.dmlc.xgboost4j.scala.spark.TrackerConf
 import org.apache.spark.sql.SaveMode
 import org.lzy.kaggle.eloRecommendation.DataCollect.{collectTransaction, extractTranAndTest}
 
@@ -58,7 +59,7 @@ object Run {
     val train_ds = spark.read.parquet(EloConstants.basePath + "cache/train_ds").as[Record]
     train_ds.show(false)
     val model = OpElo.trainModel(train_ds)
-    model.save(EloConstants.modelPath)
+    model.save(EloConstants.modelPath,true)
     println("Model summary:\n" + model.summaryPretty())
     OpElo.evaluateModel(model)
   }
@@ -69,5 +70,7 @@ object Run {
     case class Submission(card_id:String,target:Double)
     val submission_ds=OpElo.predict(test_ds,EloConstants.modelPath).toDF("card_id","target")
     dataUtils.to_csv(submission_ds,EloConstants.resultPath)
+    val a=TrackerConf
+
   }
 }
