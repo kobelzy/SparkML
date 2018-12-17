@@ -20,7 +20,7 @@ spark-submit --master yarn-cluster --queue all \
  */
 object Run {
   val spark = SparkUtil.getSpark()
-  //  spark.sparkContext.setLogLevel("WARN")
+    spark.sparkContext.setLogLevel("WARN")
 
   import spark.implicits._
   val dataUtils=new DataUtils(spark)

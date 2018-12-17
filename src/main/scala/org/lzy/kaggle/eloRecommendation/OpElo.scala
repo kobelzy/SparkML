@@ -3,8 +3,8 @@ package org.lzy.kaggle.eloRecommendation
 import com.salesforce.op.evaluators.Evaluators
 import com.salesforce.op.features.FeatureLike
 import com.salesforce.op.features.types.Prediction
-import com.salesforce.op.stages.impl.regression.{OpXGBoostRegressor, RegressionModelSelector}
-import com.salesforce.op.stages.impl.regression.RegressionModelsToTry.{OpRandomForestRegressor, OpXGBoostRegressor}
+import com.salesforce.op.stages.impl.regression.{OpDecisionTreeRegressor, OpXGBoostRegressor, RegressionModelSelector}
+import com.salesforce.op.stages.impl.regression.RegressionModelsToTry._
 import com.salesforce.op.stages.impl.tuning.DataSplitter
 import com.salesforce.op.{OpWorkflow, OpWorkflowModel}
 import common.SparkUtil
@@ -29,12 +29,11 @@ object OpElo extends RecordFeatures {
                 .addGrid(xg.minChildWeight, Array(10.0))
                 .addGrid(xg.numRound, Array(100))
                 .build())
-    xg.setSilent()
     val prediction: FeatureLike[Prediction] = RegressionModelSelector
             .withCrossValidation(
                 dataSplitter = Some(DataSplitter(seed = randomSeed))
-                //      ,modelTypesToUse = Seq( OpXGBoostRegressor)
-                , modelsAndParameters = models
+                      ,modelTypesToUse = Seq( OpRandomForestRegressor,OpLinearRegression,OpGBTRegressor,OpGeneralizedLinearRegression)
+//                , modelsAndParameters = models
             )
             .setInput(target, features)
             .getOutput()
