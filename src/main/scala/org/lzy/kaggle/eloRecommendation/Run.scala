@@ -25,9 +25,9 @@ object Run {
   import spark.implicits._
   val dataUtils=new DataUtils(spark)
   def main(args: Array[String]): Unit = {
-//    aggreDate
-//    trainModel()
-//    predict
+    aggreDate
+    trainModel()
+    predict
     OpElo.showSummary(EloConstants.modelPath)
   }
 
@@ -40,7 +40,7 @@ object Run {
     val train = train_df.join(new_feature_df, Seq("card_id"), "left")
       .join(authorized_feature_df, Seq("card_id"), "left")
       .join(history_df, Seq("card_id"), "left")
-      .na.drop()
+      .na.fill(0d)
 
     val train_ds = train.as[Record]
     train_ds.write.mode(SaveMode.Overwrite).parquet(EloConstants.basePath + "cache/train_ds")
@@ -48,7 +48,7 @@ object Run {
     val test = test_df.join(new_feature_df, Seq("card_id"), "left")
       .join(authorized_feature_df, Seq("card_id"), "left")
       .join(history_df, Seq("card_id"), "left")
-      .na.drop()
+      .na.fill(0d)
     val test_ds = test.as[Record]
 
     test_ds.write.mode(SaveMode.Overwrite).parquet(EloConstants.basePath + "cache/test_ds")
