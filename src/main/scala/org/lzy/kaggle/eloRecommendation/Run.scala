@@ -20,14 +20,15 @@ spark-submit --master yarn-cluster --queue all \
  */
 object Run {
   val spark = SparkUtil.getSpark()
-    spark.sparkContext.setLogLevel("WARN")
+//    spark.sparkContext.setLogLevel("WARN")
 
   import spark.implicits._
   val dataUtils=new DataUtils(spark)
   def main(args: Array[String]): Unit = {
 //    aggreDate
-    trainModel()
-    predict
+//    trainModel()
+//    predict
+    OpElo.showSummary(EloConstants.modelPath)
   }
 
   def aggreDate() = {
@@ -65,10 +66,18 @@ object Run {
   }
 
   def predict()={
+
     val test_ds = spark.read.parquet(EloConstants.basePath + "cache/test_ds").as[Record]
     test_ds.show(false)
+
     case class Submission(card_id:String,target:Double)
-    val submission_ds=OpElo.predict(test_ds,EloConstants.modelPath).toDF("card_id","target")
+    val submission_ds=OpElo.predict(test_ds,EloConstants.modelPath)
+            .map(raw=>{
+              val cardId=raw.getString(0)
+              val target=raw.getMap[String, Double](1).getOrElse("prediction", 0d)
+              (cardId,target)
+            })
+            .toDF("card_id","target")
     dataUtils.to_csv(submission_ds,EloConstants.resultPath)
     val a=TrackerConf
 

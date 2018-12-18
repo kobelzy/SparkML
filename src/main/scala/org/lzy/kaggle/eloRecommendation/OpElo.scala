@@ -32,7 +32,7 @@ object OpElo extends RecordFeatures {
     val prediction: FeatureLike[Prediction] = RegressionModelSelector
             .withCrossValidation(
                 dataSplitter = Some(DataSplitter(seed = randomSeed))
-                      ,modelTypesToUse = Seq( OpRandomForestRegressor,OpLinearRegression,OpGBTRegressor,OpGeneralizedLinearRegression)
+                      ,modelTypesToUse = Seq( OpRandomForestRegressor,OpLinearRegression,OpGBTRegressor)
 //                , modelsAndParameters = models
             )
             .setInput(target, features)
@@ -64,11 +64,23 @@ object OpElo extends RecordFeatures {
     def predict(test_ds: Dataset[Record], modelPath: String) = {
         val workflow = new OpWorkflow()
                 .setResultFeatures(prediction, target)
-                .setInputDataset[Record](test_ds, key = _.card_id)
+//                .setInputDataset[Record](test_ds, key = _.card_id)
 
         val model = workflow.loadModel(modelPath)
+                .setInputDataset[Record](test_ds, key = _.card_id)
+
+        println("Model summary:\n" + model.summaryPretty())
 
         val score_ds = model.score()
         score_ds
+    }
+
+    def showSummary( modelPath: String) = {
+        val workflow = new OpWorkflow()
+                .setResultFeatures(prediction, target)
+
+        val model = workflow.loadModel(modelPath)
+        println("Model summary:\n" + model.summaryPretty())
+
     }
 }
