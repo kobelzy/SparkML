@@ -20,12 +20,12 @@ spark-submit --master yarn-cluster --queue all \
  */
 object Run {
   val spark = SparkUtil.getSpark()
-//    spark.sparkContext.setLogLevel("WARN")
+    spark.sparkContext.setLogLevel("WARN")
 
   import spark.implicits._
   val dataUtils=new DataUtils(spark)
   def main(args: Array[String]): Unit = {
-    aggreDate
+//    aggreDate
     trainModel()
     predict
     OpElo.showSummary(EloConstants.modelPath)
@@ -58,6 +58,7 @@ object Run {
   def trainModel() = {
 
     val train_ds = spark.read.parquet(EloConstants.basePath + "cache/train_ds").as[Record]
+        .filter(_.target > -30)
     train_ds.show(false)
     val model = OpElo.trainModel(train_ds)
     model.save(EloConstants.modelPath,true)
