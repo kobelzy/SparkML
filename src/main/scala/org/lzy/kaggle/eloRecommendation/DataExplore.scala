@@ -4,17 +4,20 @@ import common.{DataUtils, SparkUtil}
 import org.apache.spark.sql.functions._
 import org.apache.spark.util.SparkUtils
 object DataExplore {
+
+  val spark=SparkUtil.getSpark()
+  spark.sparkContext.setLogLevel("WARN")
+  val utils=new DataUtils(spark)
   def main(args: Array[String]): Unit = {
 //  run1()
 //    merchantsExplor()
 //    explorNewAndHistory
-    exploreCardId
+//    exploreCardId
+    cardIdCount
   }
 
 
   def run1()={
-    val spark=SparkUtil.getSpark()
-    val utils=new DataUtils(spark)
 
 
     val train_df=utils.read_csv(EloConstants.trainPath)
@@ -50,8 +53,6 @@ object DataExplore {
   }
 
   def merchantsExplor()={
-    val spark=SparkUtil.getSpark()
-    val utils=new DataUtils(spark)
     val merchants_df=utils.read_csv(EloConstants.merchants)
 
     println("merchants长度："+merchants_df.count())
@@ -80,8 +81,7 @@ object DataExplore {
 
 
   def exploreCardId()={
-    val spark=SparkUtil.getSpark()
-    val utils=new DataUtils(spark)
+
     val train_df=utils.read_csv(EloConstants.trainPath)
 
 
@@ -96,5 +96,27 @@ object DataExplore {
     val joined=train_df.join(test_df,"card_id")
     println(joined.count())
     joined.show(false)
+  }
+
+
+  def cardIdCount()={
+    import spark.implicits._
+    val newMerChantTransactions_df=utils.read_csv(EloConstants.newMerChantTransactions)
+      .select("card_id").distinct()
+  println(newMerChantTransactions_df.count())
+    val historical_df=utils.read_csv(EloConstants.historical)
+      .select("card_id","authorized_flag")
+    println(historical_df.filter($"historical_df" === "Y").select("card_id").distinct().count())
+    println(historical_df.filter($"historical_df" === "N").select("card_id").distinct().count())
+
+    val test_df=utils.read_csv(EloConstants.testPath)
+      .select("card_id").distinct()
+
+    println(test_df.count())
+
+    println(test_df.intersect(newMerChantTransactions_df).count())
+    println(test_df.intersect(historical_df).count())
+
+
   }
 }

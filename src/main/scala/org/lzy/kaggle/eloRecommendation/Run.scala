@@ -25,14 +25,17 @@ object Run {
   import spark.implicits._
   val dataUtils=new DataUtils(spark)
   def main(args: Array[String]): Unit = {
-//    aggreDate
+    aggreDate
     trainModel()
     predict
     OpElo.showSummary(EloConstants.modelPath)
   }
 
   def aggreDate() = {
-    val (new_feature_df, authorized_feature_df, history_df) = collectTransaction(EloConstants.historical, EloConstants.newMerChantTransactions)
+    val (new_feature_df, authorized_feature_df, history_df) =
+//      collectTransaction(EloConstants.historical_mini, EloConstants.newMerChantTransactions_mini)
+      collectTransaction(EloConstants.historical, EloConstants.newMerChantTransactions)
+
     val (train_df, test_df) = extractTranAndTest
     //    new_feature_df.show(false)
     //    authorized_feature_df.show(false)
@@ -40,7 +43,7 @@ object Run {
     val train = train_df.join(new_feature_df, Seq("card_id"), "left")
       .join(authorized_feature_df, Seq("card_id"), "left")
       .join(history_df, Seq("card_id"), "left")
-      .na.fill(0d)
+
 
     val train_ds = train.as[Record]
     train_ds.write.mode(SaveMode.Overwrite).parquet(EloConstants.basePath + "cache/train_ds")
@@ -48,7 +51,7 @@ object Run {
     val test = test_df.join(new_feature_df, Seq("card_id"), "left")
       .join(authorized_feature_df, Seq("card_id"), "left")
       .join(history_df, Seq("card_id"), "left")
-      .na.fill(0d)
+
     val test_ds = test.as[Record]
 
     test_ds.write.mode(SaveMode.Overwrite).parquet(EloConstants.basePath + "cache/test_ds")
@@ -58,7 +61,7 @@ object Run {
   def trainModel() = {
 
     val train_ds = spark.read.parquet(EloConstants.basePath + "cache/train_ds").as[Record]
-        .filter(_.target > -30)
+//        .filter(_.target > -30)
     train_ds.show(false)
     val model = OpElo.trainModel(train_ds)
     model.save(EloConstants.modelPath,true)
