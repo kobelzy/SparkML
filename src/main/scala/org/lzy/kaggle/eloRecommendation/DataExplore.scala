@@ -102,12 +102,12 @@ object DataExplore {
   def cardIdCount()={
     import spark.implicits._
     val newMerChantTransactions_df=utils.read_csv(EloConstants.newMerChantTransactions)
-      .select("card_id").distinct()
-  println(newMerChantTransactions_df.count())
+//      .select("card_id").distinct()
+//  println(newMerChantTransactions_df.count())
     val historical_df=utils.read_csv(EloConstants.historical)
       .select("card_id","authorized_flag")
-    println(historical_df.filter($"historical_df" === "Y").select("card_id").distinct().count())
-    println(historical_df.filter($"historical_df" === "N").select("card_id").distinct().count())
+    println(historical_df.filter($"authorized_flag" === "Y").select("card_id").distinct().count())
+    println(historical_df.filter($"authorized_flag" === "N").select("card_id").distinct().count())
 
     val test_df=utils.read_csv(EloConstants.testPath)
       .select("card_id").distinct()
