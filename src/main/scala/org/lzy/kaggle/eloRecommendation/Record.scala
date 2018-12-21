@@ -1,6 +1,9 @@
 package org.lzy.kaggle.eloRecommendation
 
+import java.sql.Timestamp
+
 import com.salesforce.op.features.FeatureBuilder
+import com.salesforce.op.features.types.DateTime
 
 case class Record(
 
@@ -37,6 +40,9 @@ case class Record(
                    new_diff_month_avg: Option[Double],
                    new_week_avg: Option[Double],
                    new_count_month: Option[Double],
+                   new_purchase_date_max:Option[Long],
+                   new_purchase_date_min:Option[Long],
+                   new_purchase_date_list:Option[Seq[Long]],
 
                    auth_installments_sum_stddev: Option[Double],
                    auth_installments_sum_avg: Option[Double],
@@ -65,6 +71,10 @@ case class Record(
                    auth_diff_month_avg: Option[Double],
                    auth_week_avg: Option[Double],
                    auth_count_month: Option[Double],
+                   auth_purchase_date_max:Option[Long],
+                   auth_purchase_date_min:Option[Long],
+                   auth_purchase_date_list:Option[List[Long]],
+
 
 
                    hist_installments_sum_stddev: Option[Double],
@@ -93,5 +103,9 @@ case class Record(
                    hist_month_lag_avg: Option[Double],
                    hist_diff_month_avg: Option[Double],
                    hist_week_avg: Option[Double],
-                   hist_count_month: Option[Double]
+                   hist_count_month: Option[Double],
+                   hist_purchase_date_max:Option[Long],
+                   hist_purchase_date_min:Option[Long],
+                   hist_purchase_date_list:Option[List[Long]]
+
                  )

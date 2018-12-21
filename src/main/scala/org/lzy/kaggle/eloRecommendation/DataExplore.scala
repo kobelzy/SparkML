@@ -106,16 +106,16 @@ object DataExplore {
 //  println(newMerChantTransactions_df.count())
     val historical_df=utils.read_csv(EloConstants.historical)
       .select("card_id","authorized_flag")
-    println(historical_df.filter($"authorized_flag" === "Y").select("card_id").distinct().count())
-    println(historical_df.filter($"authorized_flag" === "N").select("card_id").distinct().count())
+  val historical_df_y= historical_df.filter($"authorized_flag" === "Y").select("card_id").distinct()
+    val historical_df_n=historical_df.filter($"authorized_flag" === "N").select("card_id").distinct()
 
     val test_df=utils.read_csv(EloConstants.testPath)
       .select("card_id").distinct()
 
     println(test_df.count())
 
-    println(test_df.intersect(newMerChantTransactions_df).count())
-    println(test_df.intersect(historical_df).count())
+    println(test_df.intersect(historical_df_y).count())
+    println(test_df.intersect(historical_df_n).count())
 
 
   }

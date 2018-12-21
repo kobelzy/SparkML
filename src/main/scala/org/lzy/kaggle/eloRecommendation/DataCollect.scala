@@ -53,9 +53,9 @@ object DataCollect {
     //    train.printSchema()
   }
 
-  def extractTranAndTest() = {
-    val train_df = utils.read_csv(EloConstants.trainPath)
-    val test_df = utils.read_csv(EloConstants.testPath)
+  def extractTranAndTest(trainPaht:String,testPath:String) = {
+    val train_df = utils.read_csv(trainPaht)
+    val test_df = utils.read_csv(testPath)
       .withColumn("target", lit(0d))
     (train_df, test_df)
   }
@@ -87,6 +87,7 @@ object DataCollect {
   }
 
 
+  def time2Long=udf{time:Timestamp=>time.getTime}
   /**
     * 转换transaction交易数据为指定ds
     *
@@ -100,6 +101,7 @@ object DataCollect {
       .withColumn("diff_month", datediff(current_timestamp(), $"purchase_date") / 30)
       .withColumn("week", dayofweek($"purchase_date"))
       .withColumn("month", month($"purchase_date"))
+      .withColumn("purchase_date",time2Long($"purchase_date"))
 
       .as[caseTransactions]
   }
@@ -134,12 +136,19 @@ object DataCollect {
       ).na.fill(0d)
 
 
+//    historical_transactions['month_diff'] = ((datetime.datetime.today() - historical_transactions['purchase_date']).dt.days)//30
+//    historical_transactions['month_diff'] += historical_transactions['month_lag']
+//
+//    new_transactions['month_diff'] = ((datetime.datetime.today() - new_transactions['purchase_date']).dt.days)//30
+//    new_transactions['month_diff'] += new_transactions['month_lag']
     val transaction_card_ds = transaction_ds.groupBy("card_id")
       .agg(avg("category_1").alias("category_1_avg"), stddev("category_1").alias("category_1_std"),
         avg("category_2").alias("category_2_avg"), stddev("category_2").alias("category_2_std"),
         countDistinct("city_id").alias("city_id_count"), countDistinct("state_id").alias("state_id_count"),
         countDistinct("subsector_id").alias("subsector_id_count"), avg("month_lag").alias("month_lag_avg"),
-        mean("diff_month").alias("diff_month_avg"), avg("week").alias("week_avg"), countDistinct("month").as("count_month")
+        mean("diff_month").alias("diff_month_avg"), avg("week").alias("week_avg"), countDistinct("month").as("count_month"),
+        max("purchase_date").alias("purchase_date_max"),min("purchase_date").alias("purchase_date_min"),
+        sort_array(collect_list("purchase_date")).alias("purchase_date_list")
       )
       .na.fill(0d)
 

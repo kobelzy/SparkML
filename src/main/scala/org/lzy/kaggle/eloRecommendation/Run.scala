@@ -20,23 +20,27 @@ spark-submit --master yarn-cluster --queue all \
  */
 object Run {
   val spark = SparkUtil.getSpark()
-    spark.sparkContext.setLogLevel("WARN")
+  spark.sparkContext.setLogLevel("WARN")
 
   import spark.implicits._
-  val dataUtils=new DataUtils(spark)
+
+  val dataUtils = new DataUtils(spark)
+
   def main(args: Array[String]): Unit = {
-    aggreDate
-    trainModel()
+//    aggreDate
+    trainModel
     predict
-    OpElo.showSummary(EloConstants.modelPath)
+    //    OpElo.showSummary(EloConstants.modelPath)
   }
 
   def aggreDate() = {
-    val (new_feature_df, authorized_feature_df, history_df) =
-//      collectTransaction(EloConstants.historical_mini, EloConstants.newMerChantTransactions_mini)
-      collectTransaction(EloConstants.historical, EloConstants.newMerChantTransactions)
+      val(trainPath,testPath,historicalPath,newTransactionPath)= if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) (EloConstants.trainPath_mini,EloConstants.testPath_mini,EloConstants.historical_mini, EloConstants.newMerChantTransactions_mini)
+      else (EloConstants.trainPath,EloConstants.testPath,EloConstants.historical, EloConstants.newMerChantTransactions)
 
-    val (train_df, test_df) = extractTranAndTest
+    val (new_feature_df, authorized_feature_df, history_df) = collectTransaction(historicalPath, newTransactionPath)
+
+
+    val (train_df, test_df) = extractTranAndTest(trainPath,testPath)
     //    new_feature_df.show(false)
     //    authorized_feature_df.show(false)
     //    history_df.show(false)
@@ -44,8 +48,8 @@ object Run {
       .join(authorized_feature_df, Seq("card_id"), "left")
       .join(history_df, Seq("card_id"), "left")
 
-
     val train_ds = train.as[Record]
+    train_ds.show(false)
     train_ds.write.mode(SaveMode.Overwrite).parquet(EloConstants.basePath + "cache/train_ds")
 
     val test = test_df.join(new_feature_df, Seq("card_id"), "left")
@@ -55,35 +59,31 @@ object Run {
     val test_ds = test.as[Record]
 
     test_ds.write.mode(SaveMode.Overwrite).parquet(EloConstants.basePath + "cache/test_ds")
-
   }
 
   def trainModel() = {
 
     val train_ds = spark.read.parquet(EloConstants.basePath + "cache/train_ds").as[Record]
-//        .filter(_.target > -30)
-    train_ds.show(false)
+    //        .filter(_.target > -30)
     val model = OpElo.trainModel(train_ds)
-    model.save(EloConstants.modelPath,true)
+    model.save(EloConstants.modelPath, true)
     println("Model summary:\n" + model.summaryPretty())
     OpElo.evaluateModel(model)
   }
 
-  def predict()={
+  def predict() = {
 
     val test_ds = spark.read.parquet(EloConstants.basePath + "cache/test_ds").as[Record]
-    test_ds.show(false)
 
-    case class Submission(card_id:String,target:Double)
-    val submission_ds=OpElo.predict(test_ds,EloConstants.modelPath)
-            .map(raw=>{
-              val cardId=raw.getString(0)
-              val target=raw.getMap[String, Double](1).getOrElse("prediction", 0d)
-              (cardId,target)
-            })
-            .toDF("card_id","target")
-    dataUtils.to_csv(submission_ds,EloConstants.resultPath)
-    val a=TrackerConf
+    case class Submission(card_id: String, target: Double)
+    val submission_ds = OpElo.predict(test_ds, EloConstants.modelPath)
+      .map(raw => {
+        val cardId = raw.getString(0)
+        val target = raw.getMap[String, Double](1).getOrElse("prediction", 0d)
+        (cardId, target)
+      })
+      .toDF("card_id", "target")
+    dataUtils.to_csv(submission_ds, EloConstants.resultPath)
 
   }
 }
