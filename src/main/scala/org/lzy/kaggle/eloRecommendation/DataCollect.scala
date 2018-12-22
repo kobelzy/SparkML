@@ -1,8 +1,8 @@
 package org.lzy.kaggle.eloRecommendation
 
 import java.sql.Timestamp
-
 import common.{DataUtils, SparkUtil}
+import org.apache.spark.ml.feature.OneHotEncoderEstimator
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset}
 
@@ -56,11 +56,11 @@ object DataCollect {
   def extractTranAndTest(trainPaht:String,testPath:String) = {
     val train_df = utils.read_csv(trainPaht)
     val test_df = utils.read_csv(testPath)
-      .withColumn("target", lit(0d))
+            .withColumn("target", lit(0d))
     (train_df, test_df)
-  }
+}
 
-  def collectTransaction(historicalPath: String, newPath: String) = {
+def collectTransaction(historicalPath: String, newPath: String) = {
     val merchants_df = utils.read_csv(EloConstants.merchants)
       .select($"merchant_group_id", $"merchant_category_id", $"numerical_1", $"numerical_2",
         $"category_1".alias("category_1_merchant"), $"category_2".alias("category_2_merchant"), $"category_4".alias("category_4_merchant"),
@@ -114,6 +114,8 @@ object DataCollect {
     * @return
     */
   def extractFeatureFromTransaction(transaction_ds: Dataset[caseTransactions], suffix: String) = {
+      val onthot=new OneHotEncoderEstimator()
+
     /*
     按照月份+card进行分组的，和月份有关的统计项有：installments，purchase_amount
      */

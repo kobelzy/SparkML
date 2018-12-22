@@ -42,7 +42,7 @@ trait RecordFeatures {
   val new_week_avg = FeatureBuilder.Real[Record].extract(_.new_week_avg.toReal).asPredictor
   val new_purchase_date_max = FeatureBuilder.DateTime[Record].extract(_.new_purchase_date_max.toDateTime).asPredictor
   val new_purchase_date_min = FeatureBuilder.DateTime[Record].extract(_.new_purchase_date_min.toDateTime).asPredictor
-  val new_purchase_date_list = FeatureBuilder.DateTimeList[Record].extract(_.new_purchase_date_list.getOrElse(Seq.empty[Long]).toDateTimeList).asPredictor
+//  val new_purchase_date_list = FeatureBuilder.DateTimeList[Record].extract(_.new_purchase_date_list.getOrElse(Seq.empty[Long]).toDateTimeList).asPredictor
 
 
 
@@ -76,7 +76,7 @@ trait RecordFeatures {
   val auth_week_avg = FeatureBuilder.Real[Record].extract(_.auth_week_avg.toReal).asPredictor
   val auth_purchase_date_max = FeatureBuilder.DateTime[Record].extract(_.auth_purchase_date_max.toDateTime).asPredictor
   val auth_purchase_date_min = FeatureBuilder.DateTime[Record].extract(_.auth_purchase_date_min.toDateTime).asPredictor
-  val auth_purchase_date_list = FeatureBuilder.DateTimeList[Record].extract(_.auth_purchase_date_list.getOrElse(Seq.empty[Long]).toDateTimeList).asPredictor
+//  val auth_purchase_date_list = FeatureBuilder.DateTimeList[Record].extract(_.auth_purchase_date_list.getOrElse(Seq.empty[Long]).toDateTimeList).asPredictor
 
 
 
@@ -110,7 +110,7 @@ trait RecordFeatures {
   val hist_week_avg = FeatureBuilder.Real[Record].extract(_.hist_week_avg.toReal).asPredictor
   val hist_purchase_date_max = FeatureBuilder.DateTime[Record].extract(_.hist_purchase_date_max.toDateTime).asPredictor
   val hist_purchase_date_min = FeatureBuilder.DateTime[Record].extract(_.hist_purchase_date_min.toDateTime).asPredictor
-  val hist_purchase_date_list = FeatureBuilder.DateTimeList[Record].extract(_.hist_purchase_date_list.getOrElse(Seq.empty[Long]).toDateTimeList).asPredictor
+//  val hist_purchase_date_list = FeatureBuilder.DateTimeList[Record].extract(_.hist_purchase_date_list.getOrElse(Seq.empty[Long]).toDateTimeList).asPredictor
 
 
 
@@ -119,17 +119,17 @@ trait RecordFeatures {
     new_installments_sum_stddev, new_installments_sum_avg, new_installments_min_stddev, new_installments_min_avg, new_installments_max_stddev, new_installments_max_avg, new_installments_std_stddev, new_installments_std_avg,
     new_purchase_amount_sum_stddev, new_purchase_amount_sum_avg, new_purchase_amount_min_stddev, new_purchase_amount_min_avg, new_purchase_amount_max_stddev, new_purchase_amount_max_avg, new_purchase_amount_std_stddev, new_purchase_amount_std_avg,
     new_category_1_avg, new_category_1_std, new_category_2_avg, new_category_2_std, new_city_id_count, new_state_id_count, new_subsector_id_count, new_month_lag_avg, new_diff_month_avg, new_count_month, new_week_avg,
-    new_purchase_date_max, new_purchase_date_min,new_purchase_date_list,
+    new_purchase_date_max, new_purchase_date_min,
 
     auth_installments_sum_stddev, auth_installments_sum_avg, auth_installments_min_stddev, auth_installments_min_avg, auth_installments_max_stddev, auth_installments_max_avg, auth_installments_std_stddev, auth_installments_std_avg,
     auth_purchase_amount_sum_stddev, auth_purchase_amount_sum_avg, auth_purchase_amount_min_stddev, auth_purchase_amount_min_avg, auth_purchase_amount_max_stddev, auth_purchase_amount_max_avg, auth_purchase_amount_std_stddev, auth_purchase_amount_std_avg,
     auth_category_1_avg, auth_category_1_std, auth_category_2_avg, auth_category_2_std, auth_city_id_count, auth_state_id_count, auth_subsector_id_count, auth_month_lag_avg, auth_diff_month_avg, auth_count_month, auth_week_avg,
-    auth_purchase_date_max, auth_purchase_date_min,auth_purchase_date_list,
+    auth_purchase_date_max, auth_purchase_date_min,
 
     hist_installments_sum_stddev, hist_installments_sum_avg, hist_installments_min_stddev, hist_installments_min_avg, hist_installments_max_stddev, hist_installments_max_avg, hist_installments_std_stddev, hist_installments_std_avg,
     hist_purchase_amount_sum_stddev, hist_purchase_amount_sum_avg, hist_purchase_amount_min_stddev, hist_purchase_amount_min_avg, hist_purchase_amount_max_stddev, hist_purchase_amount_max_avg, hist_purchase_amount_std_stddev, hist_purchase_amount_std_avg,
     hist_category_1_avg, hist_category_1_std, hist_category_2_avg, hist_category_2_std, hist_city_id_count, hist_state_id_count, hist_subsector_id_count, hist_month_lag_avg, hist_diff_month_avg, hist_count_month, hist_week_avg,
-    hist_purchase_date_max, hist_purchase_date_min,hist_purchase_date_list
+    hist_purchase_date_max, hist_purchase_date_min
 
   ).transmogrify()
 }
