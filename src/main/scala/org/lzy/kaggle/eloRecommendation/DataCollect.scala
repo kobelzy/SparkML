@@ -1,8 +1,9 @@
 package org.lzy.kaggle.eloRecommendation
 
 import java.sql.Timestamp
+
 import common.{DataUtils, SparkUtil}
-import org.apache.spark.ml.feature.OneHotEncoderEstimator
+import org.apache.spark.ml.feature.{OneHotEncoder, OneHotEncoderEstimator}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.{DataFrame, Dataset}
 
@@ -106,6 +107,8 @@ def collectTransaction(historicalPath: String, newPath: String) = {
       .as[caseTransactions]
   }
 
+
+
   /**
     * 抽取交易数据的特征
     *
@@ -143,6 +146,11 @@ def collectTransaction(historicalPath: String, newPath: String) = {
 //
 //    new_transactions['month_diff'] = ((datetime.datetime.today() - new_transactions['purchase_date']).dt.days)//30
 //    new_transactions['month_diff'] += new_transactions['month_lag']
+
+//   val transaction_oh_ds= Array("category_2","category_3").foldLeft(transaction_ds)((ds,column)=>{
+//      new OneHotEncoder().setInputCol(column).setOutputCol(column+"_onehot").setDropLast(false).transform(ds)
+//    })
+
     val transaction_card_ds = transaction_ds.groupBy("card_id")
       .agg(avg("category_1").alias("category_1_avg"), stddev("category_1").alias("category_1_std"),
         avg("category_2").alias("category_2_avg"), stddev("category_2").alias("category_2_std"),
@@ -150,7 +158,8 @@ def collectTransaction(historicalPath: String, newPath: String) = {
         countDistinct("subsector_id").alias("subsector_id_count"), avg("month_lag").alias("month_lag_avg"),
         mean("diff_month").alias("diff_month_avg"), avg("week").alias("week_avg"), countDistinct("month").as("count_month"),
         max("purchase_date").alias("purchase_date_max"),min("purchase_date").alias("purchase_date_min"),
-        sort_array(collect_list("purchase_date")).alias("purchase_date_list")
+//        sort_array(collect_list("purchase_date")).alias("purchase_date_list")
+        collect_list("category_1").alias("category_1_list"),collect_list("category_2").alias("category_2_list")
       )
       .na.fill(0d)
 

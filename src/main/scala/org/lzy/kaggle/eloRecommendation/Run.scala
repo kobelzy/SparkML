@@ -27,20 +27,22 @@ object Run {
   val dataUtils = new DataUtils(spark)
 
   def main(args: Array[String]): Unit = {
-//    aggreDate
+
+        aggreDate
     trainModel
     predict
     //    OpElo.showSummary(EloConstants.modelPath)
   }
 
   def aggreDate() = {
-      val(trainPath,testPath,historicalPath,newTransactionPath)= if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1) (EloConstants.trainPath_mini,EloConstants.testPath_mini,EloConstants.historical_mini, EloConstants.newMerChantTransactions_mini)
-      else (EloConstants.trainPath,EloConstants.testPath,EloConstants.historical, EloConstants.newMerChantTransactions)
+    val (trainPath, testPath, historicalPath, newTransactionPath) = if (System.getProperty("os.name").toLowerCase().indexOf("windows") != -1)
+      (EloConstants.trainPath_mini, EloConstants.testPath_mini, EloConstants.historical_mini, EloConstants.newMerChantTransactions_mini)
+    else (EloConstants.trainPath, EloConstants.testPath, EloConstants.historical, EloConstants.newMerChantTransactions)
 
     val (new_feature_df, authorized_feature_df, history_df) = collectTransaction(historicalPath, newTransactionPath)
 
 
-    val (train_df, test_df) = extractTranAndTest(trainPath,testPath)
+    val (train_df, test_df) = extractTranAndTest(trainPath, testPath)
     //    new_feature_df.show(false)
     //    authorized_feature_df.show(false)
     //    history_df.show(false)

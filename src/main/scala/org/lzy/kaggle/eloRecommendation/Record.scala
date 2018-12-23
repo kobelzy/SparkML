@@ -40,9 +40,11 @@ case class Record(
                    new_diff_month_avg: Option[Double],
                    new_week_avg: Option[Double],
                    new_count_month: Option[Double],
-                   new_purchase_date_max:Option[Long],
-                   new_purchase_date_min:Option[Long],
-                   new_purchase_date_list:Option[Seq[Long]],
+                   new_purchase_date_max: Option[Long],
+                   new_purchase_date_min: Option[Long],
+                                      new_purchase_date_list:Option[Seq[Long]],
+                   new_category_1_list: Option[Seq[Double]],
+                   new_category_2_list: Option[Seq[Double]],
 
                    auth_installments_sum_stddev: Option[Double],
                    auth_installments_sum_avg: Option[Double],
@@ -71,10 +73,11 @@ case class Record(
                    auth_diff_month_avg: Option[Double],
                    auth_week_avg: Option[Double],
                    auth_count_month: Option[Double],
-                   auth_purchase_date_max:Option[Long],
-                   auth_purchase_date_min:Option[Long],
-                   auth_purchase_date_list:Option[List[Long]],
-
+                   auth_purchase_date_max: Option[Long],
+                   auth_purchase_date_min: Option[Long],
+                                      auth_purchase_date_list:Option[List[Long]],
+                   auth_category_1_list: Option[Seq[Double]],
+                   auth_category_2_list: Option[Seq[Double]],
 
 
                    hist_installments_sum_stddev: Option[Double],
@@ -104,8 +107,9 @@ case class Record(
                    hist_diff_month_avg: Option[Double],
                    hist_week_avg: Option[Double],
                    hist_count_month: Option[Double],
-                   hist_purchase_date_max:Option[Long],
-                   hist_purchase_date_min:Option[Long],
-                   hist_purchase_date_list:Option[List[Long]]
-
+                   hist_purchase_date_max: Option[Long],
+                   hist_purchase_date_min: Option[Long],
+                                      hist_purchase_date_list:Option[List[Long]],
+                   hist_category_1_list: Option[Seq[Double]],
+                   hist_category_2_list: Option[Seq[Double]]
                  )
