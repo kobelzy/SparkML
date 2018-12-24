@@ -158,7 +158,7 @@ def collectTransaction(historicalPath: String, newPath: String) = {
         countDistinct("subsector_id").alias("subsector_id_count"), avg("month_lag").alias("month_lag_avg"),
         mean("diff_month").alias("diff_month_avg"), avg("week").alias("week_avg"), countDistinct("month").as("count_month"),
         max("purchase_date").alias("purchase_date_max"),min("purchase_date").alias("purchase_date_min"),
-//        sort_array(collect_list("purchase_date")).alias("purchase_date_list")
+        sort_array(collect_list("purchase_date")).alias("purchase_date_list"),
         collect_list("category_1").alias("category_1_list"),collect_list("category_2").alias("category_2_list")
       )
       .na.fill(0d)
