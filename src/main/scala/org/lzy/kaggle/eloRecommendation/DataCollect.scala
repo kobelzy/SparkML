@@ -2,6 +2,7 @@ package org.lzy.kaggle.eloRecommendation
 
 import java.sql.Timestamp
 
+import com.salesforce.op.stages.impl.feature.{OpOneHotVectorizer, OpStringIndexer}
 import common.{DataUtils, SparkUtil}
 import org.apache.spark.ml.feature.{OneHotEncoder, OneHotEncoderEstimator}
 import org.apache.spark.sql.functions._
@@ -148,6 +149,8 @@ def collectTransaction(historicalPath: String, newPath: String) = {
 //    new_transactions['month_diff'] += new_transactions['month_lag']
 
 //   val transaction_oh_ds= Array("category_2","category_3").foldLeft(transaction_ds)((ds,column)=>{
+////     new OpStringIndexer[]()
+////     new OpOneHotVectorizer[]() {}
 //      new OneHotEncoder().setInputCol(column).setOutputCol(column+"_onehot").setDropLast(false).transform(ds)
 //    })
 
