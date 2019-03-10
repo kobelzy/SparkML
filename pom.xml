@@ -12,7 +12,7 @@
         <encoding>UTF-8</encoding>
         <scala.version>2.11.11</scala.version>
         <scala.tools.version>2.11</scala.tools.version>
-        <spark.version>2.3.1</spark.version>
+        <spark.version>2.4.0</spark.version>
         <hbase.version>1.4.0</hbase.version>
         <hadoop.version>2.7.3</hadoop.version>
         <kafka.version>1.0.0</kafka.version>
