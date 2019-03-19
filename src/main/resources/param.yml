@@ -1,0 +1,7 @@
+minInterval: 600
+maxInterval: 18000
+# details 是一个map
+details:
+  name: bolaent
+  age: 32
+  home: 美国
