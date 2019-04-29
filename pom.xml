@@ -38,9 +38,9 @@
 
 
         <!--<dependency>-->
-            <!--<groupId>com.github.hirofumi</groupId>-->
-            <!--<artifactId>xgboost4j-spark_2.11</artifactId>-->
-            <!--<version>0.7.2-p1</version>-->
+        <!--<groupId>com.github.hirofumi</groupId>-->
+        <!--<artifactId>xgboost4j-spark_2.11</artifactId>-->
+        <!--<version>0.7.2-p1</version>-->
         <!--</dependency>-->
 
 
@@ -51,15 +51,55 @@
         </dependency>
 
 
-  
-
         <dependency>
             <groupId>joda-time</groupId>
             <artifactId>joda-time</artifactId>
             <version>${joda-time.version}</version>
         </dependency>
 
+        <!--解析yaml文件-->
+        <dependency>
+            <groupId>org.yaml</groupId>
+            <artifactId>snakeyaml</artifactId>
+            <version>1.24</version>
+        </dependency>
 
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_2.11</artifactId>
+            <version>3.0.0</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalactic</groupId>
+            <artifactId>scalactic_2.12</artifactId>
+            <version>3.0.5</version>
+        </dependency>
     </dependencies>
 
+
+    <build>
+
+        <plugins>
+            <!-- enable scalatest -->
+            <plugin>
+                <groupId>org.scalatest</groupId>
+                <artifactId>scalatest-maven-plugin</artifactId>
+                <version>1.0</version>
+                <configuration>
+                    <reportsDirectory>${project.build.directory}/surefire-reports</reportsDirectory>
+                    <junitxml>.</junitxml>
+                    <filereports>WDF TestSuite.txt</filereports>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>test</id>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 </project>
