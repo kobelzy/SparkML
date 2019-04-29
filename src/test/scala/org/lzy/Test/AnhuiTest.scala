@@ -18,5 +18,6 @@ object AnhuiTest {
     val op = Some("1")
     val op2: Option[String] = None
     println(Array(op, op2).mkString("|"))
+
   }
 }

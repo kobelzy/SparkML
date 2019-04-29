@@ -30,5 +30,6 @@ object PviotTest {
       .pivot("项目", Seq("项目1", "项目2"))
       .agg(sum("收入"))
       .show(false)
+    val map=Map(1->"a")
   }
 }
