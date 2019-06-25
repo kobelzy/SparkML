@@ -1,20 +1,21 @@
 package org.lzy.streaming
 
 import common.SparkUtil
-import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.{DataFrame, ForeachWriter}
 import org.apache.spark.sql.streaming.{OutputMode, ProcessingTime}
 
 
 object structedStreaming {
   def run() = {
     val sparkSession=SparkUtil.getSpark()
+    import sparkSession.implicits._
     val df:DataFrame=sparkSession.readStream
       .format("kafka")
       .option("kafka.bootstrap.servers", "host1:port1,host2:port2")
       .option("subscribe", "topic.*")
       .load()
 
-    val jdbcWriter:JDBCSink=new JDBCSink("url","user","pwd")
+    val jdbcWriter=new JDBCSink("url","user","pwd")
 
   val query=  df.writeStream
       .foreach(jdbcWriter)

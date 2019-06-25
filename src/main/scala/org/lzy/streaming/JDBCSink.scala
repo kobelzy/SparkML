@@ -1,8 +1,8 @@
 package org.lzy.streaming
 import java.sql._
 
-import org.apache.spark.sql.ForeachWriter
-class JDBCSink(url:String,user :String,pwd:String) extends ForeachWriter[(String,Long)]{
+import org.apache.spark.sql.{ForeachWriter, Row}
+class JDBCSink(url:String,user :String,pwd:String) extends ForeachWriter[Row]{
   val driver ="org.postgresql.Driver"
 //  val url="jdbc:postgresql://localhost:5432/postgres"
   var connection:Connection=_
@@ -14,8 +14,8 @@ class JDBCSink(url:String,user :String,pwd:String) extends ForeachWriter[(String
     true
   }
 
-  override def process(value: (String, Long)): Unit = {
-    statement.executeUpdate(s"insert into table(key,pv) values(${value._1},${value._2})")
+  override def process(value:Row): Unit = {
+    statement.executeUpdate(s"insert into table(key,pv) values(${value.getString(0)},${value.getString(1)})")
   }
 
   override def close(errorOrNull: Throwable): Unit = {
