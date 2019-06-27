@@ -6,6 +6,9 @@ import org.apache.spark.sql.streaming.{OutputMode, ProcessingTime}
 
 
 object structedStreaming {
+  def writer={
+    private var testUtils: KafkaTestUtils = _
+  }
   def run() = {
     val sparkSession=SparkUtil.getSpark()
     import sparkSession.implicits._
